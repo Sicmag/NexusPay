@@ -1760,3 +1760,400 @@ body.dark-mode .chat-suggestion:hover {
   background: #3B82F6 !important;
   color: #FFFFFF !important;
 }
+/* ============================================================
+   RESPONSIVE - Ajustes finos para todas las pantallas
+   ============================================================ */
+
+/* ============ PREVENIR ZOOM EN iOS ============ */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  .form-input,
+  .app-form-input,
+  .app-form-select,
+  .app-form-textarea {
+    font-size: 16px !important; /* iOS no hace zoom si es >= 16px */
+  }
+}
+
+/* ============ TABLET (max 968px) ============ */
+@media (max-width: 968px) {
+
+  /* Landing */
+  .hero { padding: 60px 0 80px; }
+  .hero h1 { font-size: 42px; letter-spacing: -1.5px; }
+  .hero p { font-size: 17px; }
+  .hero-cta { flex-direction: column; align-items: stretch; gap: 12px; }
+  .hero-cta a { justify-content: center; }
+  .hero-features { gap: 16px; }
+  .hero-feature { font-size: 13px; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .stat-value { font-size: 34px; }
+
+  .section { padding: 70px 0; }
+  .section-alt { padding: 70px 0; }
+  .section-header { margin-bottom: 40px; }
+  .section-header h2 { font-size: 34px; letter-spacing: -1px; }
+  .section-header p { font-size: 16px; }
+
+  .page-header { padding: 60px 0 40px; }
+  .page-header h1 { font-size: 42px; letter-spacing: -1.5px; }
+  .page-header p { font-size: 16px; }
+
+  /* Productos */
+  .products-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .product-card { padding: 24px; }
+  .product-card h3 { font-size: 18px; }
+  .product-card p { font-size: 14px; }
+
+  .product-featured {
+    grid-template-columns: 1fr;
+    padding: 40px 28px;
+    gap: 32px;
+  }
+  .product-featured h3 { font-size: 30px; }
+  .featured-icon { font-size: 80px; }
+
+  /* Team y Values */
+  .team-grid, .values-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .team-card, .value-card { padding: 24px; }
+  .team-avatar { width: 80px; height: 80px; font-size: 32px; }
+
+  /* Steps */
+  .steps { grid-template-columns: 1fr; gap: 32px; }
+  .step-number { width: 56px; height: 56px; font-size: 20px; }
+
+  /* Contacto */
+  .contact-grid { grid-template-columns: 1fr; gap: 32px; }
+  .contact-info { padding: 24px; }
+
+  /* Footer */
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .footer { padding: 48px 0 24px; }
+
+  /* CTA */
+  .cta { padding: 60px 0; }
+  .cta h2 { font-size: 32px; letter-spacing: -1px; }
+  .cta p { font-size: 16px; }
+
+  /* Auth */
+  .auth-card { padding: 32px 24px; }
+  .auth-logo { font-size: 26px; }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+
+  /* Ingresar */
+  .ingresar-card { padding: 32px 24px; }
+  .ingresar-card h1 { font-size: 26px; }
+  .ingresar-icon { width: 64px; height: 64px; font-size: 32px; }
+
+  /* ============ APP ============ */
+  .app-layout { grid-template-columns: 1fr; }
+
+  .app-sidebar {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 280px;
+    height: 100vh;
+    z-index: 1001;
+    transition: left 0.3s ease;
+    box-shadow: none;
+    overflow-y: auto;
+  }
+  .app-sidebar.open {
+    left: 0;
+    box-shadow: 0 0 60px rgba(0,0,0,0.4);
+  }
+
+  /* Overlay oscuro detras del sidebar cuando esta abierto */
+  .app-sidebar.open::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    left: 280px;
+    background: rgba(0,0,0,0.5);
+    z-index: -1;
+  }
+
+  .menu-mobile-toggle { display: block; }
+
+  .app-main { padding: 24px 20px; }
+
+  .app-header { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 20px; }
+  .app-title { font-size: 24px; }
+  .app-subtitle { font-size: 13px; }
+
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .metric-card { padding: 16px; }
+  .metric-value { font-size: 20px; }
+  .metric-label { font-size: 11px; }
+
+  .quick-actions { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .quick-action { padding: 14px 8px; }
+  .quick-action-icon { font-size: 20px; }
+  .quick-action-label { font-size: 11px; }
+
+  .dashboard-grid-2 { grid-template-columns: 1fr; gap: 12px; }
+
+  .app-section { padding: 18px; margin-bottom: 16px; border-radius: 14px; }
+  .app-section-title { font-size: 16px; margin-bottom: 12px; }
+
+  /* Tabs con scroll horizontal */
+  .app-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .app-tabs::-webkit-scrollbar { display: none; }
+  .app-tab { padding: 10px 16px; font-size: 13px; }
+
+  /* Tablas con scroll horizontal */
+  .app-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app-table thead,
+  .app-table tbody { display: table; width: 100%; }
+  .app-table th { font-size: 12px; padding: 10px 6px; }
+  .app-table td { font-size: 13px; padding: 12px 6px; }
+
+  /* Product items */
+  .product-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .product-item-price {
+    text-align: left;
+    font-size: 16px;
+  }
+
+  /* Meta cards */
+  .meta-card { padding: 16px; }
+  .meta-nombre { font-size: 15px; }
+
+  /* Chat pantalla completa */
+  .chat-window {
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  .chat-header { padding: 14px 16px; }
+  .chat-messages { padding: 12px; }
+  .chat-message { font-size: 13px; max-width: 88%; }
+
+  /* Card credit */
+  .card-credit { padding: 24px; max-width: 100%; }
+  .card-credit-numero { font-size: 18px; letter-spacing: 2px; }
+  .card-credit-brand { font-size: 15px; }
+  .card-credit-header { margin-bottom: 24px; }
+
+  /* Video verificacion */
+  #videoCam { max-width: 100%; }
+}
+
+/* ============ MOVIL (max 640px) ============ */
+@media (max-width: 640px) {
+
+  .container { padding: 0 16px; }
+
+  /* Navbar */
+  .navbar { padding: 12px 0; }
+  .logo { font-size: 20px; }
+
+  /* Landing */
+  .hero { padding: 40px 0 60px; }
+  .hero h1 { font-size: 32px; letter-spacing: -1px; line-height: 1.15; }
+  .hero p { font-size: 15px; margin-bottom: 24px; }
+  .hero-badge { font-size: 12px; padding: 6px 12px; }
+  .hero-cta { gap: 10px; margin-bottom: 28px; }
+  .btn-large { padding: 14px 24px; font-size: 15px; }
+  .hero-features { gap: 12px; flex-direction: column; align-items: flex-start; }
+
+  .card-mockup { padding: 24px; transform: rotate(0deg); }
+  .card-amount { font-size: 32px; }
+  .card-details { gap: 12px; }
+  .detail-value { font-size: 15px; }
+
+  .stats { padding: 40px 0; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .stat-value { font-size: 26px; }
+  .stat-label { font-size: 12px; }
+
+  .section { padding: 50px 0; }
+  .section-alt { padding: 50px 0; }
+  .section-header { margin-bottom: 32px; }
+  .section-header h2 { font-size: 26px; }
+  .section-header p { font-size: 15px; }
+
+  .page-header { padding: 40px 0 32px; }
+  .page-header h1 { font-size: 28px; }
+  .page-header p { font-size: 14px; }
+
+  .products-grid { grid-template-columns: 1fr; gap: 12px; }
+  .product-card { padding: 20px; }
+  .product-card h3 { font-size: 17px; }
+  .product-card p { font-size: 13px; }
+  .product-icon { width: 48px; height: 48px; border-radius: 14px; }
+
+  .product-featured { padding: 28px 20px; gap: 24px; border-radius: 18px; }
+  .product-featured h3 { font-size: 24px; }
+  .product-featured p { font-size: 14px; }
+  .featured-icon { font-size: 60px; }
+  .featured-stat { padding: 10px 16px; }
+  .fs-value { font-size: 16px; }
+
+  .team-grid, .values-grid { grid-template-columns: 1fr; gap: 16px; }
+  .team-card, .value-card { padding: 20px; }
+  .value-icon { width: 48px; height: 48px; font-size: 24px; }
+
+  .step h3 { font-size: 17px; }
+  .step p { font-size: 13px; }
+
+  .contact-info { padding: 20px; }
+  .contact-info h3 { font-size: 20px; }
+  .contact-item { gap: 12px; }
+  .contact-icon { width: 38px; height: 38px; font-size: 17px; }
+
+  .footer { padding: 40px 0 20px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .footer-brand { font-size: 20px; }
+  .footer h4 { font-size: 13px; }
+  .footer a { font-size: 13px; }
+  .footer-bottom { font-size: 12px; padding-top: 24px; }
+
+  .cta { padding: 48px 0; }
+  .cta h2 { font-size: 24px; }
+  .cta p { font-size: 14px; }
+
+  /* Auth */
+  .auth-wrapper { padding: 24px 16px; }
+  .auth-card { padding: 28px 20px; border-radius: 20px; }
+  .auth-logo { font-size: 24px; margin-bottom: 24px; }
+  .auth-tabs { margin-bottom: 20px; }
+  .auth-tab { font-size: 13px; padding: 10px; }
+
+  /* Ingresar */
+  .ingresar-wrapper { padding: 40px 16px; }
+  .ingresar-card { padding: 28px 20px; }
+  .ingresar-card h1 { font-size: 22px; }
+  .ingresar-card p { font-size: 14px; }
+  .ingresar-feature { font-size: 14px; padding: 10px 0; }
+
+  /* ============ APP ============ */
+  .app-main { padding: 20px 16px; }
+
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-card { padding: 14px; }
+  .metric-value { font-size: 18px; }
+  .metric-label { font-size: 10px; }
+
+  .quick-action { padding: 12px 6px; border-radius: 12px; }
+  .quick-action-icon { font-size: 18px; }
+  .quick-action-label { font-size: 10px; }
+
+  .app-section { padding: 16px; border-radius: 12px; }
+  .app-section-title { font-size: 15px; }
+
+  .card-credit { padding: 20px; border-radius: 16px; }
+  .card-credit-numero { font-size: 15px; letter-spacing: 1.5px; }
+  .card-credit-brand { font-size: 13px; }
+  .card-credit-footer { font-size: 10px; }
+  .card-credit-header { margin-bottom: 20px; }
+
+  /* Chat */
+  .chat-fab { width: 52px; height: 52px; font-size: 22px; bottom: 16px; right: 16px; }
+  .chat-header { padding: 12px 14px; }
+  .chat-message { padding: 8px 12px; font-size: 13px; max-width: 92%; }
+  .chat-input-wrapper { padding: 10px; }
+  .chat-send { width: 36px; height: 36px; font-size: 14px; }
+}
+
+/* ============ MOVIL MUY PEQUEÑO (max 380px) ============ */
+@media (max-width: 380px) {
+
+  .hero h1 { font-size: 28px; }
+  .section-header h2 { font-size: 22px; }
+  .page-header h1 { font-size: 24px; }
+
+  .metrics-grid { grid-template-columns: 1fr; }
+
+  .quick-actions { grid-template-columns: repeat(2, 1fr); }
+
+  .stat-value { font-size: 22px; }
+
+  .product-featured h3 { font-size: 20px; }
+  .featured-icon { font-size: 48px; }
+
+  .app-tab { padding: 8px 12px; font-size: 12px; }
+
+  .card-credit-numero { font-size: 13px; letter-spacing: 1px; }
+}
+
+/* ============ TABLET GRANDE (969px - 1100px) ============ */
+@media (min-width: 969px) and (max-width: 1100px) {
+  .products-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-grid { gap: 24px; }
+  .hero h1 { font-size: 48px; }
+}
+
+/* ============ PANTALLAS MUY GRANDES (min 1400px) ============ */
+@media (min-width: 1400px) {
+  .container { max-width: 1320px; }
+  .hero h1 { font-size: 62px; }
+}
+
+/* ============ SCROLL SUAVE EN TODO ============ */
+html { -webkit-text-size-adjust: 100%; }
+
+/* ============ TOUCH FEEDBACK EN MOVIL ============ */
+@media (hover: none) and (pointer: coarse) {
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-white:active,
+  .quick-action:active,
+  .sidebar-link:active,
+  .product-card:active {
+    transform: scale(0.97);
+    transition: transform 0.1s;
+  }
+
+  /* Sin hover en movil */
+  .product-card:hover,
+  .team-card:hover,
+  .quick-action:hover {
+    transform: none;
+  }
+}
+
+/* ============ TABLET Y MOVIL - LANDSCAPE ============ */
+@media (max-width: 968px) and (orientation: landscape) {
+  .hero { padding: 40px 0; }
+  .hero-inner { gap: 32px; }
+
+  .chat-window {
+    height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* ============ MEJORAS DE ACCESIBILIDAD ============ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
