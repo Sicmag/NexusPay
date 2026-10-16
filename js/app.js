@@ -1,6 +1,6 @@
 // ============================================================
 // NexusPay - App Principal (SPA) - Parte 1 de 2
-// Utilidades, navegacion, Dashboard, NexusPagos, NexusCard
+// Utilidades, menú, Dashboard, NexusPagos, NexusCard, Perfil
 // ============================================================
 
 let usuarioActual = null;
@@ -31,6 +31,12 @@ function mostrarAlerta(msg, tipo) {
   return '<div class="alert alert-' + tipo + '">' + msg + '</div>';
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+
 async function crearNotificacion(userId, titulo, mensaje, tipo) {
   try {
     await supabaseClient.from('notificaciones').insert({
@@ -53,44 +59,116 @@ document.addEventListener('DOMContentLoaded', async function () {
   usuarioActual = session.user;
   datosPersonales = await obtenerDatosUsuario();
 
-  // Personalizar el chat con datos de config
-  const chatHeaderNombre = document.getElementById('chatHeaderNombre');
-  if (chatHeaderNombre) {
-    chatHeaderNombre.textContent = CONFIG.ASISTENTE_NOMBRE + ' · ' + CONFIG.ASISTENTE_ROL;
-  }
-  const chatSaludo = document.getElementById('chatSaludoInicial');
-  if (chatSaludo) {
-    chatSaludo.textContent = CONFIG.ASISTENTE_SALUDO;
-  }
+  await cargarMenuPerfil();
+  actualizarIconoTema();
 
-  await cargarSidebar();
-
-  document.querySelectorAll('.sidebar-link[data-page]').forEach(function (btn) {
+  document.querySelectorAll('.menu-link[data-page]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       navegarA(btn.getAttribute('data-page'));
     });
   });
 
-  const toggle = document.getElementById('menuMobileToggle');
-  const sidebar = document.getElementById('appSidebar');
-  if (toggle && sidebar) {
-    toggle.addEventListener('click', function () {
-      sidebar.classList.toggle('open');
-    });
-  }
-
   navegarA('dashboard');
 });
+
+// ============ MENU FULLSCREEN ============
+
+function toggleMenu() {
+  const menu = document.getElementById('appMenu');
+  const btn = document.getElementById('menuBtn');
+  const fab = document.getElementById('chatFab');
+  if (!menu) return;
+
+  const abierto = menu.classList.toggle('abierto');
+  if (btn) btn.classList.toggle('abierto', abierto);
+  if (fab) fab.classList.toggle('oculto', abierto);
+
+  document.body.style.overflow = abierto ? 'hidden' : '';
+}
+
+function cerrarMenu() {
+  const menu = document.getElementById('appMenu');
+  const btn = document.getElementById('menuBtn');
+  const fab = document.getElementById('chatFab');
+  if (!menu) return;
+
+  menu.classList.remove('abierto');
+  if (btn) btn.classList.remove('abierto');
+  if (fab) fab.classList.remove('oculto');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('appMenu');
+  const btn = document.getElementById('menuBtn');
+  if (!menu || !menu.classList.contains('abierto')) return;
+  if (menu.contains(e.target) || (btn && btn.contains(e.target))) return;
+  cerrarMenu();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    cerrarMenu();
+    const chat = document.getElementById('chatWindow');
+    if (chat && chat.classList.contains('open')) chat.classList.remove('open');
+  }
+});
+
+async function cargarMenuPerfil() {
+  const email = localStorage.getItem('user_email') || '';
+  let nombre = email.split('@')[0];
+  if (datosPersonales && datosPersonales.nombres) {
+    nombre = (datosPersonales.nombres + ' ' + (datosPersonales.apellidos || '')).trim();
+  }
+
+  const menuNombre = document.getElementById('menuNombre');
+  const menuEmail = document.getElementById('menuEmail');
+  const menuSaldo = document.getElementById('menuSaldo');
+  const menuAvatar = document.getElementById('menuAvatar');
+
+  if (menuNombre) menuNombre.textContent = nombre;
+  if (menuEmail) menuEmail.textContent = email;
+
+  // Avatar con foto si existe
+  if (menuAvatar) {
+    const userId = localStorage.getItem('user_id');
+    try {
+      const { data: profile } = await supabaseClient
+        .from('profiles').select('foto_perfil_url').eq('id', userId).single();
+
+      if (profile && profile.foto_perfil_url) {
+        menuAvatar.innerHTML = '<img src="' + profile.foto_perfil_url + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      } else {
+        const inicial = nombre.charAt(0).toUpperCase() || '👤';
+        menuAvatar.textContent = inicial;
+      }
+    } catch (e) {
+      const inicial = nombre.charAt(0).toUpperCase() || '👤';
+      menuAvatar.textContent = inicial;
+    }
+  }
+
+  const saldo = await obtenerSaldo();
+  if (menuSaldo) menuSaldo.textContent = formatearDinero(saldo);
+}
+
+function actualizarIconoTema() {
+  const icon = document.getElementById('themeIcon');
+  const label = document.getElementById('themeToggleLabel');
+  if (!icon || !label) return;
+  const esOscuro = document.body.classList.contains('dark-mode');
+  icon.textContent = esOscuro ? '☀️' : '🌙';
+  label.textContent = esOscuro ? 'Modo claro' : 'Modo oscuro';
+}
 
 // ============ NAVEGACION ============
 
 async function navegarA(page) {
-  document.querySelectorAll('.sidebar-link').forEach(function (b) { b.classList.remove('active'); });
-  const btnActivo = document.querySelector('.sidebar-link[data-page="' + page + '"]');
-  if (btnActivo) btnActivo.classList.add('active');
+  cerrarMenu();
 
-  const sidebar = document.getElementById('appSidebar');
-  if (sidebar) sidebar.classList.remove('open');
+  document.querySelectorAll('.menu-link').forEach(function (b) { b.classList.remove('active'); });
+  const linkActivo = document.querySelector('.menu-link[data-page="' + page + '"]');
+  if (linkActivo) linkActivo.classList.add('active');
 
   const titulos = {
     dashboard: ['Dashboard', 'Vista general de tu banco digital'],
@@ -102,6 +180,7 @@ async function navegarA(page) {
     flowbusiness: ['NexusBusiness', 'Cuenta empresarial para tu negocio'],
     flowanalytics: ['NexusAnalytics', 'Analisis financiero de tu actividad'],
     creditos: ['NexusCredit', 'Solicita tu credito con IA'],
+    perfil: ['Mi perfil', 'Administra tu informacion personal'],
     verificacion: ['Verificacion', 'Verifica tu identidad'],
     notificaciones: ['Notificaciones', 'Todas las alertas de tu cuenta'],
   };
@@ -123,6 +202,7 @@ async function navegarA(page) {
       case 'flowbusiness': await renderFlowBusiness(); break;
       case 'flowanalytics': await renderFlowAnalytics(); break;
       case 'creditos': await renderCreditos(); break;
+      case 'perfil': await renderPerfil(); break;
       case 'verificacion': await renderVerificacion(); break;
       case 'notificaciones': await renderNotificaciones(); break;
       default: content.innerHTML = '<p>Pagina no encontrada</p>';
@@ -135,7 +215,8 @@ async function navegarA(page) {
 
 async function actualizarSaldoSidebar() {
   const saldo = await obtenerSaldo();
-  document.getElementById('sidebarSaldo').textContent = formatearDinero(saldo);
+  const menuSaldo = document.getElementById('menuSaldo');
+  if (menuSaldo) menuSaldo.textContent = formatearDinero(saldo);
 }
 
 // ============ DATOS ============
@@ -160,18 +241,6 @@ async function obtenerCuenta() {
   const userId = localStorage.getItem('user_id');
   const { data } = await supabaseClient.from('cuentas').select('*').eq('user_id', userId).single();
   return data;
-}
-
-async function cargarSidebar() {
-  const email = localStorage.getItem('user_email');
-  let nombreCompleto = email.split('@')[0];
-  if (datosPersonales && datosPersonales.nombres) {
-    nombreCompleto = (datosPersonales.nombres + ' ' + (datosPersonales.apellidos || '')).trim();
-  }
-  document.getElementById('sidebarNombre').textContent = nombreCompleto;
-  document.getElementById('sidebarEmail').textContent = email;
-  const saldo = await obtenerSaldo();
-  document.getElementById('sidebarSaldo').textContent = formatearDinero(saldo);
 }
 
 // ============ DASHBOARD ============
@@ -345,6 +414,348 @@ async function renderDashboard() {
   `;
 
   document.getElementById('pageContent').innerHTML = html;
+}
+
+// ============ PERFIL DE USUARIO ============
+
+async function renderPerfil() {
+  const userId = localStorage.getItem('user_id');
+  const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
+  const email = localStorage.getItem('user_email');
+
+  const nombre = profile?.nombres || '';
+  const apellidos = profile?.apellidos || '';
+  const cedula = profile?.cedula || '';
+  const telefono = profile?.telefono || '';
+  const fotoUrl = profile?.foto_perfil_url || '';
+
+  const inicial = (nombre.charAt(0) || email.charAt(0) || 'U').toUpperCase();
+
+  const html = `
+    <div class="app-section" style="text-align:center;">
+      <div style="position:relative; display:inline-block; margin-bottom:16px;">
+        <div class="perfil-avatar" id="perfilAvatar">
+          ${fotoUrl
+            ? '<img src="' + fotoUrl + '" alt="Avatar">'
+            : '<span>' + inicial + '</span>'}
+        </div>
+        <button class="perfil-avatar-edit" onclick="document.getElementById('fotoInput').click()" title="Cambiar foto">
+          📷
+        </button>
+        <input type="file" id="fotoInput" accept="image/*" style="display:none;" onchange="subirFotoPerfil(event)">
+      </div>
+
+      <div style="font-size:22px; font-weight:800; color:var(--dark); margin-bottom:4px;">
+        ${(nombre + ' ' + apellidos).trim() || 'Sin nombre'}
+      </div>
+      <div style="font-size:14px; color:var(--text-light); margin-bottom:16px;">
+        ${email}
+      </div>
+      ${profile?.email_verificado
+        ? '<span class="badge badge-green">✓ Correo verificado</span>'
+        : '<span class="badge badge-yellow">⚠️ Correo sin verificar</span>'}
+    </div>
+
+    <div class="app-section">
+      <div class="app-section-title">Informacion personal</div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Nombres</label>
+        <input class="app-form-input" type="text" id="perfilNombres" value="${escapeHtml(nombre)}" placeholder="Tus nombres">
+      </div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Apellidos</label>
+        <input class="app-form-input" type="text" id="perfilApellidos" value="${escapeHtml(apellidos)}" placeholder="Tus apellidos">
+      </div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Cedula</label>
+        <input class="app-form-input" type="text" id="perfilCedula" value="${escapeHtml(cedula)}" placeholder="Numero de cedula">
+      </div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Telefono</label>
+        <input class="app-form-input" type="tel" id="perfilTelefono" value="${escapeHtml(telefono)}" placeholder="+57 300 000 0000">
+      </div>
+
+      <button class="btn-primary btn-large" style="width:100%; justify-content:center;" onclick="guardarDatosPerfil()">
+        💾 Guardar cambios
+      </button>
+    </div>
+
+    <div class="app-section">
+      <div class="app-section-title">Correo electronico</div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Correo actual</label>
+        <input class="app-form-input" type="email" value="${email}" disabled style="opacity:0.7;">
+      </div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Nuevo correo (opcional)</label>
+        <input class="app-form-input" type="email" id="perfilNuevoEmail" placeholder="nuevo@correo.com">
+      </div>
+
+      <button class="btn-secondary" style="width:100%; justify-content:center;" onclick="solicitarCambioEmail()">
+        📧 Enviar codigo de verificacion
+      </button>
+
+      <div id="codigoVerificacionBox" style="display:none; margin-top:16px;">
+        <div class="app-form-group">
+          <label class="app-form-label">Codigo de 6 digitos</label>
+          <input class="app-form-input" type="text" id="perfilCodigo" maxlength="6" placeholder="123456" style="text-align:center; font-size:20px; letter-spacing:4px; font-weight:700;">
+        </div>
+        <button class="btn-primary" style="width:100%; justify-content:center;" onclick="verificarCodigoEmail()">
+          ✅ Verificar y cambiar correo
+        </button>
+      </div>
+    </div>
+
+    <div class="app-section">
+      <div class="app-section-title">Seguridad</div>
+
+      <button class="btn-secondary" style="width:100%; justify-content:center; margin-bottom:12px;" onclick="mostrarCambioPassword()">
+        🔒 Cambiar contrasena
+      </button>
+
+      <div id="cambioPasswordBox" style="display:none; margin-top:12px;">
+        <div class="app-form-group">
+          <label class="app-form-label">Nueva contrasena</label>
+          <input class="app-form-input" type="password" id="perfilNuevaPassword" placeholder="Minimo 8 caracteres">
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Confirmar contrasena</label>
+          <input class="app-form-input" type="password" id="perfilNuevaPassword2" placeholder="Repite la contrasena">
+        </div>
+        <button class="btn-primary" style="width:100%; justify-content:center;" onclick="cambiarPassword()">
+          Guardar nueva contrasena
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('pageContent').innerHTML = html;
+}
+
+async function guardarDatosPerfil() {
+  const userId = localStorage.getItem('user_id');
+  const nombres = document.getElementById('perfilNombres').value.trim();
+  const apellidos = document.getElementById('perfilApellidos').value.trim();
+  const cedula = document.getElementById('perfilCedula').value.trim();
+  const telefono = document.getElementById('perfilTelefono').value.trim();
+
+  if (!nombres || !apellidos) {
+    if (window.toast) toast.error('Faltan datos', 'Nombres y apellidos son obligatorios');
+    return;
+  }
+
+  if (window.toast) toast.info('Guardando...', 'Actualizando tu perfil');
+
+  const { error } = await supabaseClient.from('profiles').update({
+    nombres: nombres,
+    apellidos: apellidos,
+    cedula: cedula,
+    telefono: telefono,
+  }).eq('id', userId);
+
+  if (error) {
+    if (window.toast) toast.error('Error', error.message);
+    return;
+  }
+
+  datosPersonales = { nombres, apellidos, cedula, telefono };
+  await cargarMenuPerfil();
+
+  if (window.toast) toast.success('Perfil actualizado', 'Tus datos fueron guardados');
+  renderPerfil();
+}
+
+async function subirFotoPerfil(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    if (window.toast) toast.error('Imagen muy grande', 'Maximo 2 MB');
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    if (window.toast) toast.error('Formato invalido', 'Debe ser una imagen');
+    return;
+  }
+
+  const userId = localStorage.getItem('user_id');
+  if (window.toast) toast.info('Subiendo...', 'Guardando tu foto de perfil');
+
+  try {
+    const extension = file.name.split('.').pop() || 'jpg';
+    const fileName = 'perfil_' + userId + '_' + Date.now() + '.' + extension;
+
+    const { error } = await supabaseClient.storage
+      .from('verificaciones')
+      .upload(fileName, file, { contentType: file.type, upsert: true });
+
+    if (error) throw new Error(error.message);
+
+    const { data: publicData } = supabaseClient.storage
+      .from('verificaciones')
+      .getPublicUrl(fileName);
+
+    const { error: errUpdate } = await supabaseClient.from('profiles').update({
+      foto_perfil_url: publicData.publicUrl,
+    }).eq('id', userId);
+
+    if (errUpdate) throw new Error(errUpdate.message);
+
+    const menuAvatar = document.getElementById('menuAvatar');
+    if (menuAvatar) {
+      menuAvatar.innerHTML = '<img src="' + publicData.publicUrl + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    }
+
+    if (window.toast) toast.success('Foto actualizada', 'Tu nuevo avatar esta listo');
+    renderPerfil();
+
+  } catch (e) {
+    console.error('Error subiendo foto:', e);
+    if (window.toast) toast.error('Error', e.message);
+  }
+}
+
+async function solicitarCambioEmail() {
+  const nuevoEmail = document.getElementById('perfilNuevoEmail').value.trim().toLowerCase();
+  const emailActual = localStorage.getItem('user_email');
+
+  if (!nuevoEmail) {
+    if (window.toast) toast.error('Falta correo', 'Escribe el nuevo correo');
+    return;
+  }
+
+  if (!nuevoEmail.includes('@') || !nuevoEmail.includes('.')) {
+    if (window.toast) toast.error('Correo invalido', 'Escribe un correo valido');
+    return;
+  }
+
+  if (nuevoEmail === emailActual) {
+    if (window.toast) toast.error('Mismo correo', 'Escribe uno distinto al actual');
+    return;
+  }
+
+  const codigo = String(Math.floor(100000 + Math.random() * 900000));
+  const expiraAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+  const userId = localStorage.getItem('user_id');
+
+  const { error } = await supabaseClient.from('profiles').update({
+    email_pendiente: nuevoEmail,
+    codigo_verificacion: codigo,
+    codigo_expira_at: expiraAt,
+  }).eq('id', userId);
+
+  if (error) {
+    if (window.toast) toast.error('Error', error.message);
+    return;
+  }
+
+  if (window.toast) {
+    toast.success('Codigo generado (demo)', 'Tu codigo es: ' + codigo + ' — expira en 15 min');
+  }
+
+  const box = document.getElementById('codigoVerificacionBox');
+  if (box) box.style.display = 'block';
+
+  alert('📧 Codigo de verificacion para el prototipo:\n\n' + codigo + '\n\n(En produccion se enviaria por email)');
+}
+
+async function verificarCodigoEmail() {
+  const codigoIngresado = document.getElementById('perfilCodigo').value.trim();
+  const userId = localStorage.getItem('user_id');
+
+  if (!codigoIngresado || codigoIngresado.length !== 6) {
+    if (window.toast) toast.error('Codigo invalido', 'Debe tener 6 digitos');
+    return;
+  }
+
+  const { data: profile, error } = await supabaseClient
+    .from('profiles')
+    .select('email_pendiente, codigo_verificacion, codigo_expira_at')
+    .eq('id', userId)
+    .single();
+
+  if (error || !profile) {
+    if (window.toast) toast.error('Error', 'No se pudo verificar');
+    return;
+  }
+
+  if (!profile.email_pendiente || !profile.codigo_verificacion) {
+    if (window.toast) toast.error('Sin solicitud', 'Primero pide un codigo');
+    return;
+  }
+
+  if (new Date(profile.codigo_expira_at) < new Date()) {
+    if (window.toast) toast.error('Codigo expirado', 'Solicita uno nuevo');
+    return;
+  }
+
+  if (profile.codigo_verificacion !== codigoIngresado) {
+    if (window.toast) toast.error('Codigo incorrecto', 'Verifica e intenta de nuevo');
+    return;
+  }
+
+  const nuevoEmail = profile.email_pendiente;
+  localStorage.setItem('user_email', nuevoEmail);
+
+  await supabaseClient.from('profiles').update({
+    email_verificado: true,
+    email_pendiente: null,
+    codigo_verificacion: null,
+    codigo_expira_at: null,
+  }).eq('id', userId);
+
+  await cargarMenuPerfil();
+
+  if (window.toast) toast.success('Correo actualizado', 'Ahora usas ' + nuevoEmail);
+
+  setTimeout(() => renderPerfil(), 1000);
+}
+
+function mostrarCambioPassword() {
+  const box = document.getElementById('cambioPasswordBox');
+  if (box) {
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+async function cambiarPassword() {
+  const pwd1 = document.getElementById('perfilNuevaPassword').value;
+  const pwd2 = document.getElementById('perfilNuevaPassword2').value;
+
+  if (!pwd1 || pwd1.length < 8) {
+    if (window.toast) toast.error('Contrasena corta', 'Minimo 8 caracteres');
+    return;
+  }
+
+  if (pwd1 !== pwd2) {
+    if (window.toast) toast.error('No coinciden', 'Las contrasenas no son iguales');
+    return;
+  }
+
+  if (window.toast) toast.info('Actualizando...', 'Cambiando tu contrasena');
+
+  const { error } = await supabaseClient.auth.updateUser({
+    password: pwd1,
+  });
+
+  if (error) {
+    if (window.toast) toast.error('Error', error.message);
+    return;
+  }
+
+  if (window.toast) toast.success('Contrasena actualizada', 'Usa la nueva en tu proximo inicio');
+
+  document.getElementById('perfilNuevaPassword').value = '';
+  document.getElementById('perfilNuevaPassword2').value = '';
+  document.getElementById('cambioPasswordBox').style.display = 'none';
 }
 
 // ============ NEXUSPAGOS ============
@@ -812,7 +1223,8 @@ async function pagarTarjeta() {
 // ============================================================
 // NexusPay - App Principal (SPA) - Parte 2 de 2
 // NexusSave, NexusInvest, NexusShield, NexusBusiness,
-// NexusAnalytics, NexusCredit, Verificacion, Notificaciones, Chat
+// NexusAnalytics, NexusCredit, Verificacion, Notificaciones,
+// Chat con Luci (Gemini) y Recomendacion de Inversion
 // ============================================================
 
 // ============ NEXUSSAVE ============
@@ -883,6 +1295,7 @@ async function aportarMeta(metaId) {
 async function renderFlowInvest() {
   const userId = localStorage.getItem('user_id');
   const { data: inversiones } = await supabaseClient.from('inversiones').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  const saldo = await obtenerSaldo();
 
   const productos = [
     { nombre: 'CDT Digital', rendimiento: 10.5, desc: 'Bajo riesgo' },
@@ -898,7 +1311,25 @@ async function renderFlowInvest() {
     '<div class="metric-card"><div class="metric-label">Total invertido</div><div class="metric-value">' + formatearDinero(totalInv) + '</div></div>' +
     '<div class="metric-card"><div class="metric-label">Valor actual</div><div class="metric-value">' + formatearDinero(totalAct) + '</div></div>' +
     '<div class="metric-card"><div class="metric-label">Rendimiento</div><div class="metric-value text-green">' + formatearDinero(totalAct - totalInv) + '</div></div>' +
+    '<div class="metric-card"><div class="metric-label">Saldo libre</div><div class="metric-value">' + formatearDinero(saldo) + '</div></div>' +
     '</div>';
+
+  // Bloque de Luci
+  html += `
+    <div class="app-section" style="background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%); border: 2px solid #2563EB;">
+      <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #2563EB, #10B981); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">💡</div>
+        <div style="flex: 1;">
+          <div style="font-size: 18px; font-weight: 800; color: var(--dark); margin-bottom: 4px;">Luci puede recomendarte una inversion</div>
+          <div style="font-size: 14px; color: var(--text-light);">Analiza tu saldo, tu score crediticio y tu perfil para sugerirte la mejor opcion.</div>
+        </div>
+      </div>
+      <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="recomendarInversion()">
+        ✨ Analizar con Luci
+      </button>
+      <div id="recomendacionLuci" style="margin-top: 16px;"></div>
+    </div>
+  `;
 
   html += '<div class="app-tabs"><button class="app-tab active" data-tab="mis-inv">Mis inversiones</button><button class="app-tab" data-tab="nueva-inv">Invertir</button></div><div class="app-tab-content active" id="tab-mis-inv">';
 
@@ -910,7 +1341,7 @@ async function renderFlowInvest() {
     html += '<div class="app-section"><p style="color:#64748B;">Aun no tienes inversiones.</p></div>';
   }
 
-  html += '</div><div class="app-tab-content" id="tab-nueva-inv"><div class="app-section"><div class="app-section-title">Productos</div>';
+  html += '</div><div class="app-tab-content" id="tab-nueva-inv"><div class="app-section"><div class="app-section-title">Productos disponibles</div>';
 
   productos.forEach(p => {
     html += '<div class="product-item"><div class="product-item-info"><h4>' + p.nombre + '</h4><p>' + p.desc + '</p></div><div class="product-item-price">' + p.rendimiento + '%</div></div>';
@@ -951,6 +1382,217 @@ async function crearInversion() {
   await actualizarSaldoSidebar();
   if (window.toast) toast.success('Inversion creada', producto + ' por ' + formatearDinero(monto));
   navegarA('flowinvest');
+}
+
+// ============ LUCI: RECOMENDACION DE INVERSION (GEMINI) ============
+
+async function recomendarInversion() {
+  if (window.toast) toast.info('Analizando...', 'Luci esta revisando tu perfil');
+
+  const contenedor = document.getElementById('recomendacionLuci');
+  if (!contenedor) return;
+
+  contenedor.innerHTML = '<div class="loading-spinner"></div>';
+
+  try {
+    const userId = localStorage.getItem('user_id');
+    const saldo = await obtenerSaldo();
+
+    const { data: solicitudes } = await supabaseClient
+      .from('solicitudes').select('score, decision, ingresos_mensuales, tipo_negocio')
+      .eq('user_id', userId).eq('decision', 'APROBADO')
+      .order('created_at', { ascending: false }).limit(1);
+
+    const { data: inversiones } = await supabaseClient
+      .from('inversiones').select('*').eq('user_id', userId);
+
+    const { data: movimientos } = await supabaseClient
+      .from('movimientos').select('tipo, monto')
+      .eq('user_id', userId).eq('tipo', 'ingreso')
+      .order('created_at', { ascending: false }).limit(30);
+
+    let ingresosReales = 0;
+    if (movimientos && movimientos.length > 0) {
+      const totalMovs = movimientos.reduce((s, m) => s + Number(m.monto), 0);
+      ingresosReales = Math.round(totalMovs / Math.max(movimientos.length, 1));
+    }
+
+    const score = (solicitudes && solicitudes.length > 0) ? solicitudes[0].score : 500;
+    const perfilNegocio = (solicitudes && solicitudes.length > 0) ? solicitudes[0].tipo_negocio : 'Freelancer';
+    const ingresosDeclarados = (solicitudes && solicitudes.length > 0) ? solicitudes[0].ingresos_mensuales : ingresosReales;
+
+    const totalInvertido = (inversiones || []).reduce((s, i) => s + Number(i.monto_invertido), 0);
+    const numInversiones = inversiones ? inversiones.length : 0;
+
+    const prompt = `Eres Luci, la asistente financiera de NexusPay. Recomienda UNA inversion personalizada a un emprendedor digital colombiano.
+
+DATOS DEL USUARIO:
+- Nombre: ${datosPersonales?.nombres || 'Emprendedor'}
+- Saldo disponible: ${formatearDinero(saldo)} COP
+- Score crediticio: ${score}/1000
+- Tipo de negocio: ${perfilNegocio}
+- Ingresos mensuales declarados: ${formatearDinero(ingresosDeclarados)} COP
+- Ingresos reales promedio: ${formatearDinero(ingresosReales)} COP
+- Inversiones actuales: ${numInversiones} por ${formatearDinero(totalInvertido)} COP
+
+PRODUCTOS DISPONIBLES:
+1. CDT Digital - 10.5% anual - Bajo riesgo - Plazo 90 dias
+2. Fondo Conservador - 12.0% anual - Riesgo medio - Liquidez inmediata
+3. Fondo Crecimiento - 15.5% anual - Riesgo alto - Plazo 1 año
+4. Portafolio Emprendedor - 18.0% anual - Riesgo muy alto - Diversificado
+
+REGLAS:
+- Saldo menor a $200.000: recomendar NO invertir, sugerir ahorrar
+- Score mayor a 750 y saldo mayor a $1.000.000: opciones agresivas
+- Score menor a 600: opciones conservadoras
+- Nunca mas del 40% del saldo
+
+Responde SOLO con este formato JSON valido, sin markdown, sin texto extra:
+
+{
+  "perfil_riesgo": "conservador",
+  "producto_recomendado": "CDT Digital",
+  "monto_sugerido": 500000,
+  "porcentaje_saldo": 25,
+  "plazo_recomendado": "90 dias",
+  "rendimiento_estimado_anual": 10.5,
+  "ganancia_estimada_anual": 52500,
+  "razon": "explicacion corta",
+  "alternativa": "producto alternativo",
+  "advertencia": "advertencia breve"
+}`;
+
+    const response = await fetch(CONFIG.URL_GEMINI + CONFIG.MODELO_GEMINI + ':generateContent?key=' + CONFIG.GEMINI_API_KEY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 600,
+          responseMimeType: "application/json"
+        }
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!result.candidates || !result.candidates[0]) {
+      const errMsg = result.error?.message || 'Error al consultar IA';
+      throw new Error(errMsg);
+    }
+
+    let rec;
+    const texto = result.candidates[0].content.parts[0].text;
+    try {
+      rec = JSON.parse(texto);
+    } catch (e) {
+      const match = texto.match(/\{[\s\S]*\}/);
+      rec = match ? JSON.parse(match[0]) : null;
+    }
+
+    if (!rec) throw new Error('Respuesta IA invalida');
+
+    contenedor.innerHTML = `
+      <div style="background: linear-gradient(135deg, #2563EB, #10B981); color: #FFFFFF; padding: 24px; border-radius: 16px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 22px;">💡</div>
+          <div>
+            <div style="font-weight: 800; font-size: 16px;">Recomendacion de Luci</div>
+            <div style="font-size: 13px; opacity: 0.85;">Basada en tu saldo y perfil</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 10px;">
+            <div style="font-size: 11px; opacity: 0.85; margin-bottom: 4px;">PERFIL</div>
+            <div style="font-weight: 800; font-size: 15px; text-transform: capitalize;">${rec.perfil_riesgo || 'moderado'}</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.15); padding: 12px; border-radius: 10px;">
+            <div style="font-size: 11px; opacity: 0.85; margin-bottom: 4px;">PRODUCTO</div>
+            <div style="font-weight: 800; font-size: 15px;">${rec.producto_recomendado || 'N/A'}</div>
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.15); padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+          <div style="font-size: 11px; opacity: 0.85; margin-bottom: 6px;">MONTO SUGERIDO</div>
+          <div style="font-size: 28px; font-weight: 900; letter-spacing: -0.5px;">${formatearDinero(rec.monto_sugerido || 0)}</div>
+          <div style="font-size: 12px; opacity: 0.85; margin-top: 4px;">${rec.porcentaje_saldo || 0}% de tu saldo disponible</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+          <div style="background: rgba(255,255,255,0.15); padding: 10px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 10px; opacity: 0.85; margin-bottom: 2px;">PLAZO</div>
+            <div style="font-weight: 700; font-size: 13px;">${rec.plazo_recomendado || 'N/A'}</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.15); padding: 10px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 10px; opacity: 0.85; margin-bottom: 2px;">RENDIMIENTO</div>
+            <div style="font-weight: 700; font-size: 13px;">${rec.rendimiento_estimado_anual || 0}%</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.15); padding: 10px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 10px; opacity: 0.85; margin-bottom: 2px;">GANANCIA/AÑO</div>
+            <div style="font-weight: 700; font-size: 13px;">${formatearDinero(rec.ganancia_estimada_anual || 0)}</div>
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.15); padding: 14px; border-radius: 12px;">
+          <div style="font-weight: 700; margin-bottom: 6px; font-size: 13px;">💬 ¿Por qué?</div>
+          <div style="font-size: 13px; line-height: 1.6;">${rec.razon || ''}</div>
+        </div>
+      </div>
+
+      ${rec.alternativa ? `
+        <div style="background: var(--bg-soft); padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--border);">
+          <div style="font-size: 12px; color: var(--text-light); margin-bottom: 4px;">Alternativa</div>
+          <div style="font-weight: 700; color: var(--text);">${rec.alternativa}</div>
+        </div>
+      ` : ''}
+
+      ${rec.advertencia ? `
+        <div class="alert alert-warning" style="margin-bottom: 16px;">
+          <strong>⚠️ Advertencia:</strong> ${rec.advertencia}
+        </div>
+      ` : ''}
+
+      <button class="btn-primary btn-large" style="width:100%; justify-content:center;" onclick="aplicarRecomendacion(${rec.monto_sugerido || 0}, '${(rec.producto_recomendado || '').replace(/'/g, "\\'")}')">
+        Invertir ${formatearDinero(rec.monto_sugerido || 0)} en ${rec.producto_recomendado || 'este producto'}
+      </button>
+    `;
+
+    if (window.toast) toast.success('Recomendacion lista', 'Revisa la sugerencia de Luci');
+
+  } catch (e) {
+    console.error('Error recomendacion:', e);
+    contenedor.innerHTML = `
+      <div class="alert alert-error">
+        <strong>Error:</strong> ${e.message}
+      </div>
+      <button class="btn-primary" onclick="recomendarInversion()">Intentar de nuevo</button>
+    `;
+    if (window.toast) toast.error('Error', e.message);
+  }
+}
+
+function aplicarRecomendacion(monto, producto) {
+  const montoInput = document.getElementById('invMonto');
+  const selectProducto = document.getElementById('invProducto');
+
+  if (montoInput) montoInput.value = monto;
+
+  if (selectProducto && producto) {
+    const opciones = selectProducto.options;
+    for (let i = 0; i < opciones.length; i++) {
+      if (opciones[i].value.toLowerCase().includes(producto.toLowerCase().split(' ')[0])) {
+        selectProducto.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (window.toast) toast.success('Aplicado', 'Revisa el formulario y confirma la inversion');
+
+  const formInv = document.querySelector('#tab-nueva-inv');
+  if (formInv) formInv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ============ NEXUSSHIELD ============
@@ -1148,34 +1790,52 @@ async function solicitarCredito() {
     monto: parseFloat(document.getElementById('credMonto').value),
     plazo: parseInt(document.getElementById('credPlazo').value),
     historial: document.getElementById('credHistorial').value,
-    fuentes: 'Stripe, Nequi',
   };
 
-  const prompt = 'Eres un analista de riesgo crediticio. Analiza esta solicitud de microcredito para un emprendedor digital colombiano.\n\nDATOS:\n- Tipo de negocio: ' + datos.tipo + '\n- Ingresos mensuales: ' + datos.ingresos + ' COP\n- Meses con el negocio: ' + datos.meses + '\n- Monto solicitado: ' + datos.monto + ' COP\n- Plazo: ' + datos.plazo + ' dias\n- Historial: ' + datos.historial + '\n\nResponde SOLO con este formato:\nSCORE: <numero 0-1000>\nDECISION: <APROBADO | REVISION | RECHAZADO>\nMONTO_APROBADO: <numero>\nTASA_ANUAL: <numero>\nRAZON_1: <texto>\nRAZON_2: <texto>\nRAZON_3: <texto>';
+  const prompt = `Eres un analista de riesgo crediticio. Analiza esta solicitud de microcredito para un emprendedor digital colombiano.
+
+DATOS:
+- Tipo de negocio: ${datos.tipo}
+- Ingresos mensuales: ${datos.ingresos} COP
+- Meses con el negocio: ${datos.meses}
+- Monto solicitado: ${datos.monto} COP
+- Plazo: ${datos.plazo} dias
+- Historial: ${datos.historial}
+
+Responde SOLO con este formato, sin markdown, sin texto extra:
+
+SCORE: <numero 0-1000>
+DECISION: <APROBADO | REVISION | RECHAZADO>
+MONTO_APROBADO: <numero>
+TASA_ANUAL: <numero>
+RAZON_1: <texto corto>
+RAZON_2: <texto corto>
+RAZON_3: <texto corto>
+
+REGLAS:
+- RECHAZADO: MONTO_APROBADO = 0 y TASA = 0
+- REVISION: monto maximo 1x ingresos, tasa 18-22%
+- APROBADO: monto entre 1x y 5x ingresos, tasa 8-16%
+- Score: rechazado menor 500, revision 500-700, aprobado mayor 700`;
 
   try {
-    const response = await fetch(CONFIG.URL_GROQ, {
+    const response = await fetch(CONFIG.URL_GEMINI + CONFIG.MODELO_GEMINI + ':generateContent?key=' + CONFIG.GEMINI_API_KEY, {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + CONFIG.GROQ_API_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: CONFIG.MODELO_GROQ,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 500,
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 500 }
       }),
     });
 
     const result = await response.json();
 
-    if (!result.choices || !result.choices[0]) {
+    if (!result.candidates || !result.candidates[0]) {
       const errMsg = result.error?.message || 'Error al consultar IA';
       throw new Error(errMsg);
     }
 
-    const texto = result.choices[0].message.content;
+    const texto = result.candidates[0].content.parts[0].text;
 
     let score = 0, decision = 'REVISION', montoAprobado = 0, tasa = 18;
     texto.split('\n').forEach(line => {
@@ -1437,7 +2097,7 @@ async function marcarTodasLeidas(userId) {
   navegarA('notificaciones');
 }
 
-// ============ CHAT CON LUCI ============
+// ============ CHAT CON LUCI (GEMINI) ============
 
 function toggleChat() {
   document.getElementById('chatWindow').classList.toggle('open');
@@ -1449,13 +2109,14 @@ async function enviarChat() {
   if (!mensaje) return;
 
   const mensajes = document.getElementById('chatMessages');
-  mensajes.innerHTML += '<div class="chat-message chat-user">' + mensaje + '</div>';
+
+  mensajes.innerHTML += '<div class="chat-message chat-user">' + escapeHtml(mensaje) + '</div>';
   input.value = '';
   mensajes.scrollTop = mensajes.scrollHeight;
 
   const loading = document.createElement('div');
   loading.className = 'chat-message chat-bot chat-loading';
-  loading.textContent = CONFIG.ASISTENTE_NOMBRE + ' esta escribiendo...';
+  loading.textContent = 'Luci esta escribiendo...';
   loading.id = 'chatLoading';
   mensajes.appendChild(loading);
   mensajes.scrollTop = mensajes.scrollHeight;
@@ -1489,37 +2150,32 @@ PRODUCTOS DE NEXUSPAY:
 
 Responde de forma útil, breve y con la personalidad de Luci.`;
 
-    const mensajesAPI = [
-      { role: 'system', content: systemPrompt },
-      ...chatHistorial.slice(-6).map(m => ({
-        role: m.rol === 'user' ? 'user' : 'assistant',
-        content: m.texto,
-      })),
-      { role: 'user', content: mensaje },
-    ];
+    const historialTexto = chatHistorial.slice(-6).map(m => {
+      const quien = m.rol === 'user' ? 'Usuario' : 'Luci';
+      return quien + ': ' + m.texto;
+    }).join('\n');
 
-    const response = await fetch(CONFIG.URL_GROQ, {
+    const promptCompleto = systemPrompt + '\n\n' +
+      (historialTexto ? 'CONVERSACION PREVIA:\n' + historialTexto + '\n\n' : '') +
+      'Usuario: ' + mensaje;
+
+    const response = await fetch(CONFIG.URL_GEMINI + CONFIG.MODELO_GEMINI + ':generateContent?key=' + CONFIG.GEMINI_API_KEY, {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + CONFIG.GROQ_API_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: CONFIG.MODELO_GROQ,
-        messages: mensajesAPI,
-        temperature: 0.6,
-        max_tokens: 250,
+        contents: [{ parts: [{ text: promptCompleto }] }],
+        generationConfig: { temperature: 0.6, maxOutputTokens: 250 }
       }),
     });
 
     const result = await response.json();
 
-    if (!result.choices || !result.choices[0]) {
+    if (!result.candidates || !result.candidates[0]) {
       const errMsg = result.error?.message || 'Error al consultar IA';
       throw new Error(errMsg);
     }
 
-    const respuesta = result.choices[0].message.content;
+    const respuesta = result.candidates[0].content.parts[0].text;
 
     const loadingEl = document.getElementById('chatLoading');
     if (loadingEl) loadingEl.remove();
@@ -1528,7 +2184,7 @@ Responde de forma útil, breve y con la personalidad de Luci.`;
     chatHistorial.push({ rol: 'bot', texto: respuesta });
     if (chatHistorial.length > 10) chatHistorial = chatHistorial.slice(-10);
 
-    mensajes.innerHTML += '<div class="chat-message chat-bot">' + respuesta + '</div>';
+    mensajes.innerHTML += '<div class="chat-message chat-bot">' + escapeHtml(respuesta) + '</div>';
     mensajes.scrollTop = mensajes.scrollHeight;
 
   } catch (e) {
@@ -1537,9 +2193,15 @@ Responde de forma útil, breve y con la personalidad de Luci.`;
     console.error('Error chat:', e);
 
     let msgError = 'Lo siento, hubo un error.';
-    if (e.message.includes('401')) msgError = 'La API key de Luci no es valida. Avisa al administrador.';
-    else if (e.message.includes('429')) msgError = 'Luci esta muy ocupada. Intenta en un momento.';
-    else if (e.message.includes('model')) msgError = 'Error de configuracion del modelo.';
+    if (e.message.includes('API_KEY') || e.message.includes('401') || e.message.includes('403')) {
+      msgError = 'La API key de Luci no es valida.';
+    } else if (e.message.includes('429')) {
+      msgError = 'Luci esta muy ocupada. Intenta en un momento.';
+    } else if (e.message.includes('503') || e.message.includes('UNAVAILABLE')) {
+      msgError = 'Luci esta saturada. Intenta en un minuto.';
+    } else if (e.message.includes('model')) {
+      msgError = 'Error de configuracion del modelo.';
+    }
 
     mensajes.innerHTML += '<div class="chat-message chat-bot">' + msgError + '</div>';
     mensajes.scrollTop = mensajes.scrollHeight;
