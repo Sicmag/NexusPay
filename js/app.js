@@ -1,6 +1,6 @@
 // ============================================================
-// NexusPay - App Principal (SPA) - Parte 1 de 2
-// Utilidades, menú, Dashboard, NexusPagos, NexusCard, Perfil
+// NexusPay - App Principal (SPA) - Parte 1 de 3
+// Utilidades, Menú, Dashboard, NexusBox, Perfil
 // ============================================================
 
 let usuarioActual = null;
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   navegarA('dashboard');
 });
 
-// ============ MENU FULLSCREEN ============
+// ============ MENU ============
 
 function toggleMenu() {
   const menu = document.getElementById('appMenu');
@@ -417,7 +417,7 @@ async function renderDashboard() {
   document.getElementById('pageContent').innerHTML = html;
 }
 
-// ============ NEXUSBOX - CAJITAS CON RENDIMIENTO DIARIO ============
+// ============ NEXUSBOX ============
 
 async function renderNexusBox() {
   const userId = localStorage.getItem('user_id');
@@ -832,7 +832,7 @@ async function confirmarEliminarCajita(cajitaId, nombre, saldo) {
           <div style="font-size: 48px; margin-bottom: 12px;">🗑️</div>
           <div style="font-weight: 700; font-size: 16px; margin-bottom: 8px; color: var(--dark);">¿Eliminar "${nombre}"?</div>
           <div style="font-size: 14px; color: var(--text-light);">
-            Se devolveran <strong>${formatearDinero(saldo)}</strong> a tu cuenta principal. Esta accion no se puede deshacer.
+            Se devolveran <strong>${formatearDinero(saldo)}</strong> a tu cuenta principal.
           </div>
         </div>
         <div style="display: flex; gap: 8px; margin-top: 16px;">
@@ -876,13 +876,815 @@ async function eliminarCajita(cajitaId) {
   }
 }
 
+// ============ PERFIL ============
+
+async function renderPerfil() {
+  const userId = localStorage.getItem('user_id');
+  const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
+  const email = localStorage.getItem('user_email');
+
+  const nombre = profile?.nombres || '';
+  const apellidos = profile?.apellidos || '';
+  const cedula = profile?.cedula || '';
+  const telefono = profile?.telefono || '';
+  const fotoUrl = profile?.foto_perfil_url || '';
+
+  const inicial = (nombre.charAt(0) || email.charAt(0) || 'U').toUpperCase();
+
+  const html = `
+    <div class="app-section" style="text-align:center;">
+      <div style="position:relative; display:inline-block; margin-bottom:16px;">
+        <div class="perfil-avatar" id="perfilAvatar">
+          ${fotoUrl
+            ? '<img src="' + fotoUrl + '" alt="Avatar">'
+            : '<span>' + inicial + '</span>'}
+        </div>
+        <button class="perfil-avatar-edit" onclick="document.getElementById('fotoInput').click()" title="Cambiar foto">
+          📷
+        </button>
+        <input type="file" id="fotoInput" accept="image/*" style="display:none;" onchange="subirFotoPerfil(event)">
+      </div>
+
+      <div style="font-size:22px; font-weight:800; color:var(--dark); margin-bottom:4px;">
+        ${(nombre + ' ' + apellidos).trim() || 'Sin nombre'}
+      </div>
+      <div style="font-size:14px; color:var(--text-light); margin-bottom:16px;">
+        ${email}
+      </div>
+      ${profile?.email_verificado
+        ? '<span class="badge badge-green">✓ Correo verificado</span>'
+        : '<span class="badge badge-yellow">⚠️ Correo sin verificar</span>'}
+    </div>
+
+    <div class="app-section">
+      <div class="app-section-title">Informacion personal</div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Nombres</label>
+        <input class="app-form-input" type="text" id="perfilNombres" value="${escapeHtml(nombre)}" placeholder="Tus nombres">
+      </div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Apellidos</label>
+        <input class="app-form-input" type="text" id="perfilApellidos" value="${escapeHtml(apellidos)}" placeholder="Tus apellidos">
+      </div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Cedula</label>
+        <input class="app-form-input" type="text" id="perfilCedula" value="${escapeHtml(cedula)}" placeholder="Numero de cedula">
+      </div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Telefono</label>
+        <input class="app-form-input" type="tel" id="perfilTelefono" value="${escapeHtml(telefono)}" placeholder="+57 300 000 0000">
+      </div>
+
+      <button class="btn-primary btn-large" style="width:100%; justify-content:center;" onclick="guardarDatosPerfil()">
+        💾 Guardar cambios
+      </button>
+    </div>
+
+    <div class="app-section">
+      <div class="app-section-title">Correo electronico</div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Correo actual</label>
+        <input class="app-form-input" type="email" value="${email}" disabled style="opacity:0.7;">
+      </div>
+
+      <div class="app-form-group">
+        <label class="app-form-label">Nuevo correo (opcional)</label>
+        <input class="app-form-input" type="email" id="perfilNuevoEmail" placeholder="nuevo@correo.com">
+      </div>
+
+      <button class="btn-secondary" style="width:100%; justify-content:center;" onclick="solicitarCambioEmail()">
+        📧 Enviar codigo de verificacion
+      </button>
+
+      <div id="codigoVerificacionBox" style="display:none; margin-top:16px;">
+        <div class="app-form-group">
+          <label class="app-form-label">Codigo de 6 digitos</label>
+          <input class="app-form-input" type="text" id="perfilCodigo" maxlength="6" placeholder="123456" style="text-align:center; font-size:20px; letter-spacing:4px; font-weight:700;">
+        </div>
+        <button class="btn-primary" style="width:100%; justify-content:center;" onclick="verificarCodigoEmail()">
+          ✅ Verificar y cambiar correo
+        </button>
+      </div>
+    </div>
+
+    <div class="app-section">
+      <div class="app-section-title">Seguridad</div>
+
+      <button class="btn-secondary" style="width:100%; justify-content:center; margin-bottom:12px;" onclick="mostrarCambioPassword()">
+        🔒 Cambiar contrasena
+      </button>
+
+      <div id="cambioPasswordBox" style="display:none; margin-top:12px;">
+        <div class="app-form-group">
+          <label class="app-form-label">Nueva contrasena</label>
+          <input class="app-form-input" type="password" id="perfilNuevaPassword" placeholder="Minimo 8 caracteres">
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Confirmar contrasena</label>
+          <input class="app-form-input" type="password" id="perfilNuevaPassword2" placeholder="Repite la contrasena">
+        </div>
+        <button class="btn-primary" style="width:100%; justify-content:center;" onclick="cambiarPassword()">
+          Guardar nueva contrasena
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('pageContent').innerHTML = html;
+}
+
+async function guardarDatosPerfil() {
+  const userId = localStorage.getItem('user_id');
+  const nombres = document.getElementById('perfilNombres').value.trim();
+  const apellidos = document.getElementById('perfilApellidos').value.trim();
+  const cedula = document.getElementById('perfilCedula').value.trim();
+  const telefono = document.getElementById('perfilTelefono').value.trim();
+
+  if (!nombres || !apellidos) {
+    if (window.toast) toast.error('Faltan datos', 'Nombres y apellidos son obligatorios');
+    return;
+  }
+
+  if (window.toast) toast.info('Guardando...', 'Actualizando tu perfil');
+
+  const { error } = await supabaseClient.from('profiles').update({
+    nombres: nombres,
+    apellidos: apellidos,
+    cedula: cedula,
+    telefono: telefono,
+  }).eq('id', userId);
+
+  if (error) {
+    if (window.toast) toast.error('Error', error.message);
+    return;
+  }
+
+  datosPersonales = { nombres, apellidos, cedula, telefono };
+  await cargarMenuPerfil();
+
+  if (window.toast) toast.success('Perfil actualizado', 'Tus datos fueron guardados');
+  renderPerfil();
+}
+
+async function subirFotoPerfil(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    if (window.toast) toast.error('Imagen muy grande', 'Maximo 2 MB');
+    return;
+  }
+
+  if (!file.type.startsWith('image/')) {
+    if (window.toast) toast.error('Formato invalido', 'Debe ser una imagen');
+    return;
+  }
+
+  const userId = localStorage.getItem('user_id');
+  if (window.toast) toast.info('Subiendo...', 'Guardando tu foto de perfil');
+
+  try {
+    const extension = file.name.split('.').pop() || 'jpg';
+    const fileName = 'perfil_' + userId + '_' + Date.now() + '.' + extension;
+
+    const { error } = await supabaseClient.storage
+      .from('verificaciones')
+      .upload(fileName, file, { contentType: file.type, upsert: true });
+
+    if (error) throw new Error(error.message);
+
+    const { data: publicData } = supabaseClient.storage
+      .from('verificaciones')
+      .getPublicUrl(fileName);
+
+    const { error: errUpdate } = await supabaseClient.from('profiles').update({
+      foto_perfil_url: publicData.publicUrl,
+    }).eq('id', userId);
+
+    if (errUpdate) throw new Error(errUpdate.message);
+
+    const menuAvatar = document.getElementById('menuAvatar');
+    if (menuAvatar) {
+      menuAvatar.innerHTML = '<img src="' + publicData.publicUrl + '" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    }
+
+    if (window.toast) toast.success('Foto actualizada', 'Tu nuevo avatar esta listo');
+    renderPerfil();
+
+  } catch (e) {
+    console.error('Error subiendo foto:', e);
+    if (window.toast) toast.error('Error', e.message);
+  }
+}
+
+async function solicitarCambioEmail() {
+  const nuevoEmail = document.getElementById('perfilNuevoEmail').value.trim().toLowerCase();
+  const emailActual = localStorage.getItem('user_email');
+
+  if (!nuevoEmail) {
+    if (window.toast) toast.error('Falta correo', 'Escribe el nuevo correo');
+    return;
+  }
+
+  if (!nuevoEmail.includes('@') || !nuevoEmail.includes('.')) {
+    if (window.toast) toast.error('Correo invalido', 'Escribe un correo valido');
+    return;
+  }
+
+  if (nuevoEmail === emailActual) {
+    if (window.toast) toast.error('Mismo correo', 'Escribe uno distinto al actual');
+    return;
+  }
+
+  const codigo = String(Math.floor(100000 + Math.random() * 900000));
+  const expiraAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+  const userId = localStorage.getItem('user_id');
+
+  const { error } = await supabaseClient.from('profiles').update({
+    email_pendiente: nuevoEmail,
+    codigo_verificacion: codigo,
+    codigo_expira_at: expiraAt,
+  }).eq('id', userId);
+
+  if (error) {
+    if (window.toast) toast.error('Error', error.message);
+    return;
+  }
+
+  if (window.toast) {
+    toast.success('Codigo generado (demo)', 'Tu codigo es: ' + codigo + ' — expira en 15 min');
+  }
+
+  const box = document.getElementById('codigoVerificacionBox');
+  if (box) box.style.display = 'block';
+
+  alert('📧 Codigo de verificacion para el prototipo:\n\n' + codigo + '\n\n(En produccion se enviaria por email)');
+}
+
+async function verificarCodigoEmail() {
+  const codigoIngresado = document.getElementById('perfilCodigo').value.trim();
+  const userId = localStorage.getItem('user_id');
+
+  if (!codigoIngresado || codigoIngresado.length !== 6) {
+    if (window.toast) toast.error('Codigo invalido', 'Debe tener 6 digitos');
+    return;
+  }
+
+  const { data: profile, error } = await supabaseClient
+    .from('profiles')
+    .select('email_pendiente, codigo_verificacion, codigo_expira_at')
+    .eq('id', userId)
+    .single();
+
+  if (error || !profile) {
+    if (window.toast) toast.error('Error', 'No se pudo verificar');
+    return;
+  }
+
+  if (!profile.email_pendiente || !profile.codigo_verificacion) {
+    if (window.toast) toast.error('Sin solicitud', 'Primero pide un codigo');
+    return;
+  }
+
+  if (new Date(profile.codigo_expira_at) < new Date()) {
+    if (window.toast) toast.error('Codigo expirado', 'Solicita uno nuevo');
+    return;
+  }
+
+  if (profile.codigo_verificacion !== codigoIngresado) {
+    if (window.toast) toast.error('Codigo incorrecto', 'Verifica e intenta de nuevo');
+    return;
+  }
+
+  const nuevoEmail = profile.email_pendiente;
+  localStorage.setItem('user_email', nuevoEmail);
+
+  await supabaseClient.from('profiles').update({
+    email_verificado: true,
+    email_pendiente: null,
+    codigo_verificacion: null,
+    codigo_expira_at: null,
+  }).eq('id', userId);
+
+  await cargarMenuPerfil();
+
+  if (window.toast) toast.success('Correo actualizado', 'Ahora usas ' + nuevoEmail);
+
+  setTimeout(() => renderPerfil(), 1000);
+}
+
+function mostrarCambioPassword() {
+  const box = document.getElementById('cambioPasswordBox');
+  if (box) {
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+async function cambiarPassword() {
+  const pwd1 = document.getElementById('perfilNuevaPassword').value;
+  const pwd2 = document.getElementById('perfilNuevaPassword2').value;
+
+  if (!pwd1 || pwd1.length < 8) {
+    if (window.toast) toast.error('Contrasena corta', 'Minimo 8 caracteres');
+    return;
+  }
+
+  if (pwd1 !== pwd2) {
+    if (window.toast) toast.error('No coinciden', 'Las contrasenas no son iguales');
+    return;
+  }
+
+  if (window.toast) toast.info('Actualizando...', 'Cambiando tu contrasena');
+
+  const { error } = await supabaseClient.auth.updateUser({
+    password: pwd1,
+  });
+
+  if (error) {
+    if (window.toast) toast.error('Error', error.message);
+    return;
+  }
+
+  if (window.toast) toast.success('Contrasena actualizada', 'Usa la nueva en tu proximo inicio');
+
+  document.getElementById('perfilNuevaPassword').value = '';
+  document.getElementById('perfilNuevaPassword2').value = '';
+  document.getElementById('cambioPasswordBox').style.display = 'none';
+}
+
 // ⬇️ CONTINUA EN LA PARTE 2 ⬇️
 // ============================================================
-// NexusPay - App Principal (SPA) - Parte 3 de 3
-// NexusSave, NexusInvest, NexusShield, NexusBusiness,
-// NexusAnalytics, NexusCredit, Verificacion, Notificaciones,
-// Chat Luci (Gemini)
+// NexusPay - App Principal (SPA) - Parte 2 de 3
+// NexusPagos, NexusCard, NexusSave, NexusInvest, NexusShield,
+// NexusBusiness, NexusAnalytics, NexusCredit
 // ============================================================
+
+// ============ NEXUSPAGOS ============
+
+async function renderFlowPay() {
+  const cuenta = await obtenerCuenta();
+  const saldo = cuenta ? Number(cuenta.saldo) : 0;
+  const userIdActual = localStorage.getItem('user_id');
+
+  const { data: perfil } = await supabaseClient.from('profiles').select('es_admin').eq('id', userIdActual).single();
+  const esAdmin = perfil && perfil.es_admin === true;
+
+  const { data: usuarios } = await supabaseClient.from('usuarios_registrados').select('*');
+  const otros = (usuarios || []).filter(u => u.user_id !== userIdActual);
+
+  const { data: transferencias } = await supabaseClient
+    .from('transferencias')
+    .select('*')
+    .or('emisor_id.eq.' + userIdActual + ',receptor_id.eq.' + userIdActual)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  let codigosPendientes = [];
+  if (esAdmin) {
+    const { data } = await supabaseClient.from('codigos_retiro_admin').select('*').eq('estado', 'pendiente').order('created_at', { ascending: false });
+    codigosPendientes = data || [];
+  }
+
+  const { data: misCodigos } = await supabaseClient.from('codigos_retiro').select('*').eq('user_id', userIdActual).order('created_at', { ascending: false });
+
+  let html = `
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Numero de cuenta</div>
+        <div class="metric-value" style="font-size:16px;">${cuenta ? cuenta.numero_cuenta : 'N/A'}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Saldo disponible</div>
+        <div class="metric-value">${formatearDinero(saldo)}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Rol</div>
+        <div class="metric-value" style="font-size:16px;">${esAdmin ? '👑 Administrador' : '👤 Cliente'}</div>
+      </div>
+    </div>
+
+    ${esAdmin ? '<div class="alert alert-warning"><strong>👑 Panel de Administrador</strong><br>Tienes ' + codigosPendientes.length + ' codigos de retiro pendientes.</div>' : ''}
+
+    <div class="app-tabs">
+      <button class="app-tab active" data-tab="enviar">Enviar</button>
+      <button class="app-tab" data-tab="recargar">Recargar</button>
+      <button class="app-tab" data-tab="retirar">Retirar con codigo</button>
+      <button class="app-tab" data-tab="servicios">Servicios</button>
+      ${esAdmin ? '<button class="app-tab" data-tab="admin-codigos">Validar codigos</button>' : ''}
+      <button class="app-tab" data-tab="historial">Historial</button>
+    </div>
+
+    <div class="app-tab-content active" id="tab-enviar">
+      <div class="app-section">
+        <div class="app-section-title">Nueva transferencia</div>
+        <div class="app-form-group">
+          <label class="app-form-label">Destinatario</label>
+          <select class="app-form-select" id="payReceptor">
+            <option value="">Selecciona un destinatario</option>
+            ${otros.map(u => '<option value="' + u.email + '">' + u.email + '</option>').join('')}
+          </select>
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Monto (COP)</label>
+          <input class="app-form-input" type="number" id="payMonto" min="1000" placeholder="100000">
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Concepto (opcional)</label>
+          <input class="app-form-input" type="text" id="payConcepto" placeholder="Sin concepto">
+        </div>
+        <button class="btn-primary btn-large" style="width:100%; justify-content:center;" onclick="enviarDinero()">Enviar dinero</button>
+      </div>
+    </div>
+
+    <div class="app-tab-content" id="tab-recargar">
+      <div class="app-section">
+        <div class="app-section-title">Recargar saldo</div>
+        <p style="color:#64748B; margin-bottom:16px;">Simula una recarga desde banco externo.</p>
+        <div class="app-form-group">
+          <label class="app-form-label">Monto a recargar (COP)</label>
+          <input class="app-form-input" type="number" id="recargarMonto" min="10000" value="100000">
+        </div>
+        <button class="btn-primary btn-large" style="width:100%; justify-content:center;" onclick="recargarSaldo()">Recargar</button>
+      </div>
+    </div>
+
+    <div class="app-tab-content" id="tab-retirar">
+      <div class="app-section">
+        <div class="app-section-title">Retirar con codigo</div>
+        <p style="color:#64748B; margin-bottom:16px;">Genera un codigo para retirar efectivo en un punto autorizado.</p>
+        <div class="app-form-group">
+          <label class="app-form-label">Monto a retirar (COP)</label>
+          <input class="app-form-input" type="number" id="retiroMonto" min="10000" value="50000">
+        </div>
+        <button class="btn-primary btn-large" style="width:100%; justify-content:center;" onclick="generarCodigoRetiro()">Generar codigo de retiro</button>
+      </div>
+      <div class="app-section">
+        <div class="app-section-title">Mis codigos de retiro</div>
+        ${misCodigos && misCodigos.length > 0 ? `
+          <table class="app-table">
+            <thead><tr><th>Codigo</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead>
+            <tbody>
+              ${misCodigos.map(c => '<tr><td style="font-family:monospace;font-weight:700;color:#2563EB;">' + c.codigo + '</td><td>' + formatearDinero(c.monto) + '</td><td><span class="badge ' + (c.estado === 'pendiente' ? 'badge-yellow' : 'badge-green') + '">' + c.estado + '</span></td><td>' + formatearFechaCorta(c.created_at) + '</td></tr>').join('')}
+            </tbody>
+          </table>
+        ` : '<p style="color:#64748B;">No has generado codigos de retiro.</p>'}
+      </div>
+    </div>
+
+    <div class="app-tab-content" id="tab-servicios">
+      <div class="app-section">
+        <div class="app-section-title">Pagar servicios</div>
+        <p style="color:#64748B; margin-bottom:16px;">Se descuenta directamente de tu saldo disponible.</p>
+        <div class="app-form-group">
+          <label class="app-form-label">Servicio</label>
+          <select class="app-form-select" id="servicioNombre">
+            <option value="Claro">Claro</option>
+            <option value="Movistar">Movistar</option>
+            <option value="Tigo">Tigo</option>
+            <option value="EPM">EPM</option>
+            <option value="Netflix">Netflix</option>
+            <option value="Spotify">Spotify</option>
+          </select>
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Monto (COP)</label>
+          <input class="app-form-input" type="number" id="servicioMonto" min="1000" value="45000">
+        </div>
+        <button class="btn-primary btn-large" style="width:100%; justify-content:center;" onclick="pagarServicio()">Pagar servicio</button>
+      </div>
+    </div>
+
+    ${esAdmin ? `
+      <div class="app-tab-content" id="tab-admin-codigos">
+        <div class="app-section">
+          <div class="app-section-title">👑 Codigos pendientes de validar</div>
+          ${codigosPendientes && codigosPendientes.length > 0 ? `
+            <table class="app-table">
+              <thead><tr><th>Codigo</th><th>Cliente</th><th>Monto</th><th></th></tr></thead>
+              <tbody>
+                ${codigosPendientes.map(c => '<tr><td style="font-family:monospace;font-weight:700;color:#2563EB;">' + c.codigo + '</td><td>' + c.cliente_email + '</td><td style="font-weight:700;">' + formatearDinero(c.monto) + '</td><td><button class="btn-primary" style="font-size:12px;padding:6px 12px;" onclick="validarCodigo(' + c.id + ', \'' + c.codigo + '\')">✅ Validar</button></td></tr>').join('')}
+              </tbody>
+            </table>
+          ` : '<p style="color:#64748B;">No hay codigos pendientes.</p>'}
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="app-tab-content" id="tab-historial">
+      <div class="app-section">
+        <div class="app-section-title">Historial de transferencias</div>
+        ${transferencias && transferencias.length > 0 ? `
+          <table class="app-table">
+            <thead><tr><th>Fecha</th><th>Tipo</th><th>Contraparte</th><th style="text-align:right;">Monto</th><th></th></tr></thead>
+            <tbody>
+              ${transferencias.map(t => {
+                const esEmisor = t.emisor_id === userIdActual;
+                const signo = esEmisor ? '-' : '+';
+                const clase = esEmisor ? 'text-red' : 'text-green';
+                const contraparte = esEmisor ? t.receptor_email : t.emisor_email;
+                return '<tr><td>' + formatearFecha(t.created_at) + '</td><td>' + (esEmisor ? '📤' : '📥') + '</td><td>' + contraparte + '</td><td class="' + clase + '" style="text-align:right;">' + signo + formatearDinero(t.monto) + '</td><td><button class="btn-secondary-sm" onclick="generarReciboPDF(' + t.id + ')" style="font-size:11px;padding:4px 8px;">📄</button></td></tr>';
+              }).join('')}
+            </tbody>
+          </table>
+        ` : '<p style="color:#64748B;">Aun no has realizado transferencias.</p>'}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('pageContent').innerHTML = html;
+  activarTabs();
+}
+
+function activarTabs() {
+  document.querySelectorAll('.app-tab').forEach(tab => {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.app-tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+}
+
+async function enviarDinero() {
+  const receptor = document.getElementById('payReceptor').value;
+  const monto = parseFloat(document.getElementById('payMonto').value);
+  const concepto = document.getElementById('payConcepto').value || 'Sin concepto';
+
+  if (!receptor || !monto || monto <= 0) {
+    if (window.toast) toast.error('Campos incompletos', 'Completa todos los campos');
+    return;
+  }
+
+  if (window.toast) toast.info('Procesando...', 'Enviando transferencia');
+
+  const { data, error } = await supabaseClient.rpc('transferir_dinero', {
+    p_receptor_email: receptor.toLowerCase(),
+    p_monto: monto,
+    p_concepto: concepto,
+  });
+
+  if (error) {
+    if (window.toast) toast.error('Error', error.message);
+    return;
+  }
+
+  if (data && data.success) {
+    const { data: receptorInfo } = await supabaseClient.from('usuarios_registrados').select('user_id').eq('email', receptor.toLowerCase()).single();
+    if (receptorInfo) {
+      await crearNotificacion(receptorInfo.user_id, '💸 Dinero recibido', 'Recibiste ' + formatearDinero(monto) + ' de ' + localStorage.getItem('user_email'), 'success');
+    }
+    await crearNotificacion(localStorage.getItem('user_id'), '✅ Transferencia enviada', 'Enviaste ' + formatearDinero(monto) + ' a ' + receptor, 'success');
+    if (window.toast) toast.success('Transferencia exitosa', 'Enviaste ' + formatearDinero(monto) + ' a ' + receptor);
+    await actualizarSaldoSidebar();
+    setTimeout(() => navegarA('flowpay'), 1500);
+  } else {
+    if (window.toast) toast.error('Error', (data ? data.message : 'No se pudo transferir'));
+  }
+}
+
+async function recargarSaldo() {
+  const monto = parseFloat(document.getElementById('recargarMonto').value);
+  if (!monto || monto <= 0) {
+    if (window.toast) toast.error('Monto invalido', 'Ingresa un monto mayor a 0');
+    return;
+  }
+  const { data } = await supabaseClient.rpc('recargar_saldo', { p_monto: monto });
+  if (data && data.success) {
+    await crearNotificacion(localStorage.getItem('user_id'), '💰 Recarga exitosa', 'Recargaste ' + formatearDinero(monto), 'success');
+    if (window.toast) toast.success('Recarga exitosa', 'Recargaste ' + formatearDinero(monto));
+    await actualizarSaldoSidebar();
+    setTimeout(() => navegarA('flowpay'), 1500);
+  } else {
+    if (window.toast) toast.error('Error', (data ? data.message : 'No se pudo recargar'));
+  }
+}
+
+async function pagarServicio() {
+  const servicio = document.getElementById('servicioNombre').value;
+  const monto = parseFloat(document.getElementById('servicioMonto').value);
+  if (!monto || monto <= 0) {
+    if (window.toast) toast.error('Monto invalido', 'Ingresa un monto mayor a 0');
+    return;
+  }
+  const { data } = await supabaseClient.rpc('pagar_servicio', { p_servicio: servicio, p_monto: monto });
+  if (data && data.success) {
+    await crearNotificacion(localStorage.getItem('user_id'), '💡 Pago exitoso', 'Pagaste ' + servicio + ' por ' + formatearDinero(monto), 'success');
+    if (window.toast) toast.success('Pago exitoso', 'Pagaste ' + servicio + ' por ' + formatearDinero(monto));
+    await actualizarSaldoSidebar();
+    setTimeout(() => navegarA('flowpay'), 1500);
+  } else {
+    if (window.toast) toast.error('Error', (data ? data.message : 'No se pudo pagar'));
+  }
+}
+
+async function generarCodigoRetiro() {
+  const monto = parseFloat(document.getElementById('retiroMonto').value);
+  if (!monto || monto < 10000) {
+    if (window.toast) toast.error('Monto minimo', 'Minimo $10.000 COP');
+    return;
+  }
+  if (window.toast) toast.info('Generando...', 'Creando tu codigo de retiro');
+  const { data } = await supabaseClient.rpc('generar_codigo_retiro', { p_monto: monto });
+  if (data && data.success) {
+    await crearNotificacion(localStorage.getItem('user_id'), '🎫 Codigo generado', 'Codigo: ' + data.codigo + ' por ' + formatearDinero(monto), 'info');
+    if (window.toast) toast.success('Codigo generado', data.codigo + ' — guardalo para retirar');
+    await actualizarSaldoSidebar();
+    setTimeout(() => navegarA('flowpay'), 3000);
+  } else {
+    if (window.toast) toast.error('Error', (data ? data.message : 'No se pudo generar'));
+  }
+}
+
+async function validarCodigo(codigoId, codigo) {
+  if (!confirm('¿Confirmas que entregaste el efectivo?\n\nCodigo: ' + codigo)) return;
+  const userId = localStorage.getItem('user_id');
+  const { error } = await supabaseClient.from('codigos_retiro').update({
+    estado: 'usado', usado_at: new Date().toISOString(), usado_por: userId,
+  }).eq('id', codigoId);
+  if (error) {
+    if (window.toast) toast.error('Error', error.message);
+    return;
+  }
+  await crearNotificacion(userId, '✅ Codigo validado', 'Validaste el codigo ' + codigo, 'success');
+  if (window.toast) toast.success('Codigo validado', 'Codigo ' + codigo + ' marcado como usado');
+  navegarA('flowpay');
+}
+
+async function generarReciboPDF(transferenciaId) {
+  const { data: t } = await supabaseClient.from('transferencias').select('*').eq('id', transferenciaId).single();
+  if (!t) {
+    if (window.toast) toast.error('No encontrada', 'Transferencia no encontrada');
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(37, 99, 235);
+  doc.text('NEXUSPAY', 105, 30, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Comprobante de Transferencia', 105, 38, { align: 'center' });
+  doc.setDrawColor(37, 99, 235);
+  doc.setLineWidth(0.8);
+  doc.line(20, 44, 190, 44);
+  doc.setFontSize(11);
+  doc.setTextColor(51, 65, 85);
+  doc.text('Numero: #' + t.id, 20, 60);
+  doc.text('Fecha: ' + formatearFecha(t.created_at), 20, 70);
+  doc.text('Emisor: ' + t.emisor_email, 20, 80);
+  doc.text('Receptor: ' + t.receptor_email, 20, 90);
+  doc.text('Monto: ' + formatearDinero(t.monto) + ' COP', 20, 100);
+  doc.text('Concepto: ' + (t.concepto || 'Sin concepto'), 20, 110);
+  doc.save('recibo_nexuspay_' + t.id + '.pdf');
+  if (window.toast) toast.success('PDF descargado', 'Comprobante #' + t.id);
+}
+
+// ============ NEXUSCARD ============
+
+async function renderFlowCard() {
+  const userId = localStorage.getItem('user_id');
+  let { data: tarjeta } = await supabaseClient.from('tarjetas').select('*').eq('user_id', userId).single();
+
+  if (!tarjeta) {
+    const numero = '4000 ' + Array.from({length: 3}, () => Math.floor(1000 + Math.random() * 9000)).join(' ');
+    const cvv = String(Math.floor(100 + Math.random() * 900));
+    const mes = String(Math.floor(1 + Math.random() * 12)).padStart(2, '0');
+    const anio = String(new Date().getFullYear() + 4).slice(-2);
+    const { data } = await supabaseClient.from('tarjetas').insert({
+      user_id: userId, numero, cvv, fecha_expiracion: mes + '/' + anio, cupo_total: 3000000, cupo_disponible: 3000000
+    }).select().single();
+    tarjeta = data;
+  }
+
+  const nombreTitular = datosPersonales && datosPersonales.nombres
+    ? (datosPersonales.nombres + ' ' + (datosPersonales.apellidos || '')).toUpperCase()
+    : (localStorage.getItem('user_email').split('@')[0]).toUpperCase();
+
+  const claseCard = tarjeta.estado === 'activa' ? 'card-credit' : 'card-credit frozen';
+  const deuda = Number(tarjeta.cupo_total) - Number(tarjeta.cupo_disponible);
+
+  const html = `
+    <div class="${claseCard}">
+      <div class="card-credit-header">
+        <span class="card-credit-brand">NEXUSPAY</span>
+        <span style="font-size:24px;">💳</span>
+      </div>
+      <div class="card-credit-numero">${tarjeta.numero}</div>
+      <div class="card-credit-footer">
+        <div><div>TITULAR</div><div>${nombreTitular}</div></div>
+        <div><div>VENCE</div><div>${tarjeta.fecha_expiracion}</div></div>
+        <div><div>CVV</div><div>${tarjeta.cvv}</div></div>
+      </div>
+      <div style="margin-top:24px; text-align:right; font-weight:900; font-size:18px;">VISA</div>
+    </div>
+
+    <div style="max-width:420px; margin:0 auto;">
+      <div class="metrics-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="metric-card"><div class="metric-label">Cupo total</div><div class="metric-value">${formatearDinero(tarjeta.cupo_total)}</div></div>
+        <div class="metric-card"><div class="metric-label">Cupo disponible</div><div class="metric-value" style="color:#10B981;">${formatearDinero(tarjeta.cupo_disponible)}</div></div>
+        <div class="metric-card" style="grid-column:span 2;"><div class="metric-label">Deuda actual</div><div class="metric-value" style="color:${deuda > 0 ? '#EF4444' : '#10B981'};">${formatearDinero(deuda)}</div></div>
+      </div>
+
+      <div class="app-section">
+        <div class="app-section-title">Estado: ${tarjeta.estado === 'activa' ? '🟢 Activa' : '🔒 Congelada'}</div>
+        <button class="btn-primary btn-large" style="width:100%;justify-content:center;" onclick="toggleTarjeta(${tarjeta.id}, '${tarjeta.estado}')">
+          ${tarjeta.estado === 'activa' ? '🔒 Congelar' : '🔓 Descongelar'}
+        </button>
+      </div>
+
+      <div class="app-tabs">
+        <button class="app-tab active" data-tab="sacar-cupo">💸 Sacar cupo</button>
+        <button class="app-tab" data-tab="pagar-tarjeta">💳 Pagar tarjeta</button>
+      </div>
+
+      <div class="app-tab-content active" id="tab-sacar-cupo">
+        <div class="app-section">
+          <div class="app-section-title">Sacar cupo a tu cuenta</div>
+          <p style="color:#64748B;margin-bottom:16px;">Retira dinero de tu cupo hacia tu saldo principal.</p>
+          <div class="app-form-group">
+            <label class="app-form-label">Monto a retirar (COP)</label>
+            <input class="app-form-input" type="number" id="montoSacarCupo" min="10000" value="100000">
+          </div>
+          <button class="btn-primary btn-large" style="width:100%;justify-content:center;" onclick="sacarCupo()">💸 Sacar cupo</button>
+        </div>
+      </div>
+
+      <div class="app-tab-content" id="tab-pagar-tarjeta">
+        <div class="app-section">
+          <div class="app-section-title">Pagar tarjeta</div>
+          <p style="color:#64748B;margin-bottom:16px;">Paga tu deuda para recuperar cupo.</p>
+          <div class="app-form-group">
+            <label class="app-form-label">Monto a pagar (COP)</label>
+            <input class="app-form-input" type="number" id="montoPagarTarjeta" min="1000" value="${deuda > 0 ? Math.min(deuda, 100000) : 0}">
+          </div>
+          <button class="btn-primary btn-large" style="width:100%;justify-content:center;" onclick="pagarTarjeta()">💳 Pagar tarjeta</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('pageContent').innerHTML = html;
+  activarTabs();
+}
+
+async function toggleTarjeta(id, estadoActual) {
+  const nuevoEstado = estadoActual === 'activa' ? 'congelada' : 'activa';
+  await supabaseClient.from('tarjetas').update({ estado: nuevoEstado }).eq('id', id);
+  if (window.toast) {
+    if (nuevoEstado === 'congelada') {
+      toast.warning('Tarjeta congelada', 'No se podra usar hasta descongelarla');
+    } else {
+      toast.success('Tarjeta activada', 'Ya puedes usarla');
+    }
+  }
+  navegarA('flowcard');
+}
+
+async function sacarCupo() {
+  const monto = parseFloat(document.getElementById('montoSacarCupo').value);
+  if (!monto || monto < 10000) {
+    if (window.toast) toast.error('Monto minimo', 'Minimo $10.000');
+    return;
+  }
+  if (window.toast) toast.info('Procesando...', 'Sacando cupo');
+  const { data } = await supabaseClient.rpc('usar_cupo_tarjeta', { p_monto: monto });
+  if (data && data.success) {
+    await crearNotificacion(localStorage.getItem('user_id'), '💸 Avance de cupo', 'Retiraste ' + formatearDinero(monto), 'success');
+    if (window.toast) toast.success('Cupo retirado', 'Retiraste ' + formatearDinero(monto) + ' a tu cuenta');
+    await actualizarSaldoSidebar();
+    setTimeout(() => navegarA('flowcard'), 1500);
+  } else {
+    if (window.toast) toast.error('Error', (data ? data.message : 'No se pudo sacar'));
+  }
+}
+
+async function pagarTarjeta() {
+  const monto = parseFloat(document.getElementById('montoPagarTarjeta').value);
+  if (!monto || monto <= 0) {
+    if (window.toast) toast.error('Monto invalido', 'Ingresa un monto mayor a 0');
+    return;
+  }
+  if (window.toast) toast.info('Procesando...', 'Pagando tarjeta');
+  const { data } = await supabaseClient.rpc('pagar_tarjeta', { p_monto: monto });
+  if (data && data.success) {
+    const pagoReal = data.pago_real || monto;
+    await crearNotificacion(localStorage.getItem('user_id'), '💳 Pago de tarjeta', 'Pagaste ' + formatearDinero(pagoReal), 'success');
+    if (window.toast) toast.success('Pago realizado', 'Pagaste ' + formatearDinero(pagoReal) + ' a tu tarjeta');
+    await actualizarSaldoSidebar();
+    setTimeout(() => navegarA('flowcard'), 1500);
+  } else {
+    if (window.toast) toast.error('Error', (data ? data.message : 'No se pudo pagar'));
+  }
+}
 
 // ============ NEXUSSAVE ============
 
@@ -1040,7 +1842,7 @@ async function crearInversion() {
   navegarA('flowinvest');
 }
 
-// ============ LUCI: RECOMENDACION DE INVERSION (GEMINI) ============
+// ============ LUCI: RECOMENDACION DE INVERSION ============
 
 async function recomendarInversion() {
   if (window.toast) toast.info('Analizando...', 'Luci esta revisando tu perfil');
@@ -1629,6 +2431,12 @@ async function generarContratoPDF(creditoId) {
   if (window.toast) toast.success('PDF descargado', 'Contrato #' + creditoId);
 }
 
+// ⬇️ CONTINUA EN LA PARTE 3 ⬇️
+// ============================================================
+// NexusPay - App Principal (SPA) - Parte 3 de 3
+// Verificacion, Notificaciones, Chat con Luci (Gemini)
+// ============================================================
+
 // ============ VERIFICACION ============
 
 async function renderVerificacion() {
@@ -1753,7 +2561,7 @@ async function marcarTodasLeidas(userId) {
   navegarA('notificaciones');
 }
 
-// ============ CHAT CON LUCI (GEMINI) ============
+// ============ CHAT CON LUCI ============
 
 function toggleChat() {
   document.getElementById('chatWindow').classList.toggle('open');
