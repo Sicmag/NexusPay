@@ -4,29 +4,119 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NexusPay - El banco digital para emprendedores</title>
-  <meta name="description" content="Transferencias, tarjeta digital, ahorro, inversiones, seguros y creditos con IA. Todo en una sola app para emprendedores digitales.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" type="image/png" href="logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3">
-
+  
+  <!-- ESTILOS EXCLUSIVOS DE LA LANDING -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #2563EB; --primary-dark: #1D4ED8; --primary-light: #60A5FA;
+      --green: #10B981; --dark: #0F0F1E; --text: #1E293B; --text-light: #64748B;
+      --bg-soft: #F8FAFC; --border: #E2E8F0;
+    }
+    body { font-family: 'Inter', sans-serif; color: var(--text); background: #FFFFFF; line-height: 1.6; overflow-x: hidden; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    
+    /* NAVBAR */
+    .navbar { position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 1000; padding: 16px 0; }
+    .nav-inner { display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 24px; font-weight: 900; color: var(--dark); letter-spacing: -0.5px; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .logo span { background: linear-gradient(135deg, var(--primary) 0%, var(--green) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a { color: var(--text); text-decoration: none; font-weight: 500; font-size: 15px; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+    
+    /* BOTONES */
+    .btn-primary { background: var(--primary); color: #FFFFFF !important; padding: 12px 28px; border-radius: 100px; text-decoration: none; font-weight: 600; font-size: 15px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3); }
+    .btn-secondary { background: #FFFFFF; color: var(--dark); padding: 12px 28px; border-radius: 100px; text-decoration: none; font-weight: 600; font-size: 15px; border: 2px solid var(--border); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-large { padding: 16px 32px; font-size: 16px; }
+    .btn-white { background: #FFFFFF; color: var(--primary); padding: 16px 40px; border-radius: 100px; text-decoration: none; font-weight: 700; font-size: 17px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+    
+    /* HERO */
+    .hero { padding: 80px 0 100px; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%); position: relative; }
+    .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 10px; background: rgba(37, 99, 235, 0.08); color: var(--primary); padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
+    .dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; }
+    .hero h1 { font-size: 56px; font-weight: 900; line-height: 1.1; letter-spacing: -2px; margin-bottom: 24px; color: var(--dark); }
+    .gradient-text { background: linear-gradient(135deg, var(--primary) 0%, var(--green) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 18px; color: var(--text-light); margin-bottom: 32px; max-width: 500px; }
+    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 40px; }
+    
+    /* TARJETA MOCKUP */
+    .card-mockup { background: #FFFFFF; border-radius: 24px; padding: 32px; box-shadow: 0 30px 80px rgba(15, 15, 30, 0.15); transform: rotate(-2deg); transition: transform 0.3s; }
+    .card-mockup:hover { transform: rotate(0deg) scale(1.02); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .card-brand { font-weight: 900; color: var(--primary); font-size: 14px; letter-spacing: 1px; }
+    .card-status { background: #D1FAE5; color: #059669; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; }
+    .card-amount { font-size: 42px; font-weight: 900; color: var(--dark); margin-bottom: 8px; letter-spacing: -1px; }
+    .card-label { color: var(--text-light); font-size: 14px; margin-bottom: 24px; }
+    .card-details { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .detail-label { font-size: 12px; color: var(--text-light); margin-bottom: 4px; }
+    .detail-value { font-size: 18px; font-weight: 700; color: var(--dark); }
+    
+    /* STATS Y SECCIONES */
+    .stats { padding: 60px 0; border-bottom: 1px solid var(--border); }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; text-align: center; }
+    .stat-value { font-size: 42px; font-weight: 900; color: var(--dark); margin-bottom: 8px; }
+    .stat-label { color: var(--text-light); font-size: 14px; }
+    .section-header { text-align: center; margin-bottom: 60px; }
+    .section-header h2 { font-size: 44px; font-weight: 900; color: var(--dark); margin-bottom: 16px; }
+    .section-header p { color: var(--text-light); font-size: 18px; }
+    
+    /* PRODUCTOS */
+    .products { padding: 100px 0; }
+    .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .product-card { background: #FFFFFF; border-radius: 20px; padding: 32px; border: 2px solid transparent; transition: all 0.3s; }
+    .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(15, 15, 30, 0.1); border-color: rgba(37, 99, 235, 0.2); }
+    .product-icon { width: 56px; height: 56px; background: rgba(37, 99, 235, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .product-card h3 { font-size: 20px; font-weight: 800; color: var(--dark); margin-bottom: 12px; }
+    .product-card p { color: var(--text-light); font-size: 15px; }
+    
+    /* CTA Y FOOTER */
+    .cta { padding: 80px 0; background: linear-gradient(135deg, var(--primary) 0%, var(--green) 100%); color: #FFFFFF; text-align: center; }
+    .cta h2 { font-size: 44px; font-weight: 900; margin-bottom: 20px; }
+    .cta p { font-size: 18px; margin-bottom: 32px; }
+    .footer { background: var(--dark); color: rgba(255, 255, 255, 0.7); padding: 60px 0 30px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    .footer-brand { color: #FFFFFF; font-size: 24px; font-weight: 900; margin-bottom: 16px; }
+    .footer-brand span { color: var(--primary-light); }
+    .footer h4 { color: #FFFFFF; font-size: 14px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; }
+    .footer a { display: block; color: rgba(255, 255, 255, 0.7); text-decoration: none; font-size: 14px; margin-bottom: 10px; }
+    .footer a:hover { color: var(--primary-light); }
+    .footer-bottom { padding-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.1); text-align: center; font-size: 13px; }
+    
+    @media (max-width: 968px) {
+      .hero-inner, .footer-grid { grid-template-columns: 1fr; }
+      .products-grid, .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero h1 { font-size: 40px; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 640px) {
+      .products-grid, .stats-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 32px; }
+    }
+  </style>
 </head>
 <body>
 
   <nav class="navbar">
     <div class="container nav-inner">
-      <a href="index.html" class="logo">Nexus<span>Pay</span></a>
-      <div class="nav-links" id="navLinks">
+      <!-- LOGO -->
+      <a href="index.html" class="logo">
+        <img src="logo.png" alt="NexusPay" style="width: 40px; height: 40px; border-radius: 10px; object-fit: cover;">
+        Nexus<span>Pay</span>
+      </a>
+      
+      <div class="nav-links">
         <a href="productos.html">Productos</a>
         <a href="nosotros.html">Nosotros</a>
         <a href="contacto.html">Contacto</a>
         <a href="login.html" class="btn-primary">Ingresar</a>
       </div>
-      <button class="menu-toggle" id="menuToggle" aria-label="Menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
     </div>
   </nav>
 
@@ -40,25 +130,8 @@
         <h1>El banco digital para <span class="gradient-text">emprendedores</span> latinoamericanos</h1>
         <p>Transferencias, tarjeta digital, ahorro, inversiones, seguros y creditos con inteligencia artificial. Todo en una sola app diseñada para emprendedores.</p>
         <div class="hero-cta">
-          <a href="login.html" class="btn-primary btn-large">
-            Empezar gratis
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </a>
+          <a href="login.html" class="btn-primary btn-large">Empezar gratis</a>
           <a href="productos.html" class="btn-secondary btn-large">Ver productos</a>
-        </div>
-        <div class="hero-features">
-          <div class="hero-feature">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Sin papeleo
-          </div>
-          <div class="hero-feature">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            Aprobacion en 24h
-          </div>
-          <div class="hero-feature">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-            100% digital
-          </div>
         </div>
       </div>
 
@@ -71,22 +144,10 @@
           <div class="card-amount">$2.500.000</div>
           <div class="card-label">Linea de credito disponible</div>
           <div class="card-details">
-            <div>
-              <div class="detail-label">Score crediticio</div>
-              <div class="detail-value">742/1000</div>
-            </div>
-            <div>
-              <div class="detail-label">Tasa anual</div>
-              <div class="detail-value">12.0%</div>
-            </div>
-            <div>
-              <div class="detail-label">Plazo</div>
-              <div class="detail-value">90 dias</div>
-            </div>
-            <div>
-              <div class="detail-label">Cuotas</div>
-              <div class="detail-value">3 meses</div>
-            </div>
+            <div><div class="detail-label">Score</div><div class="detail-value">742/1000</div></div>
+            <div><div class="detail-label">Tasa anual</div><div class="detail-value">12.0%</div></div>
+            <div><div class="detail-label">Plazo</div><div class="detail-value">90 dias</div></div>
+            <div><div class="detail-label">Cuotas</div><div class="detail-value">3 meses</div></div>
           </div>
         </div>
       </div>
@@ -95,161 +156,60 @@
 
   <section class="stats">
     <div class="container stats-grid">
-      <div class="stat">
-        <div class="stat-value">15.000+</div>
-        <div class="stat-label">Emprendedores atendidos</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">$18.5B</div>
-        <div class="stat-label">En creditos otorgados</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">94%</div>
-        <div class="stat-label">Tasa de recuperacion</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">&lt;24h</div>
-        <div class="stat-label">Tiempo de aprobacion</div>
-      </div>
+      <div><div class="stat-value">15.000+</div><div class="stat-label">Emprendedores atendidos</div></div>
+      <div><div class="stat-value">$18.5B</div><div class="stat-label">En creditos otorgados</div></div>
+      <div><div class="stat-value">94%</div><div class="stat-label">Tasa de recuperacion</div></div>
+      <div><div class="stat-value">&lt;24h</div><div class="stat-label">Tiempo de aprobacion</div></div>
     </div>
   </section>
 
-  <section class="products" id="productos">
+  <section class="products">
     <div class="container">
       <div class="section-header">
         <h2>Nuestro ecosistema financiero</h2>
         <p>Soluciones pensadas para cada etapa de tu emprendimiento digital</p>
       </div>
 
-      <div class="product-featured">
-        <div class="featured-content">
-          <span class="featured-badge">⭐ PRODUCTO ESTRELLA</span>
-          <h3>NexusCredit</h3>
-          <p>Microcreditos inteligentes con IA. Analizamos tu flujo de caja digital, calculamos tu score en segundos y aprobamos en menos de 24 horas. Hasta $5.000.000 COP con tasas desde 8% anual.</p>
-          <a href="login.html" class="btn-primary">Explorar NexusCredit</a>
-        </div>
-        <div class="featured-visual">
-          <div class="featured-icon">💳</div>
-          <div class="featured-stats">
-            <div class="featured-stat">
-              <div class="fs-label">Aprobacion</div>
-              <div class="fs-value">&lt; 24h</div>
-            </div>
-            <div class="featured-stat">
-              <div class="fs-label">Tasa desde</div>
-              <div class="fs-value">8%</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="products-grid">
         <div class="product-card">
-          <div class="product-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-          </div>
+          <div class="product-icon">💸</div>
           <h3>NexusPagos</h3>
-          <p>Transferencias digitales instantaneas, recargas, retiros y pagos de servicios. Todo desde una sola app.</p>
+          <p>Transferencias digitales instantaneas, recargas, retiros y pagos de servicios.</p>
         </div>
-
         <div class="product-card">
-          <div class="product-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-          </div>
+          <div class="product-icon">💳</div>
           <h3>NexusCard</h3>
-          <p>Tarjeta debito digital con congelamiento en un toque. Control total de tu cupo y movimientos.</p>
+          <p>Tarjeta debito digital con congelamiento en un toque. Control total de tu cupo.</p>
         </div>
-
         <div class="product-card">
-          <div class="product-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>
-          </div>
+          <div class="product-icon">🏦</div>
           <h3>NexusSave</h3>
-          <p>Ahorro programado con metas personalizadas. Visualiza tu progreso y alcanza tus objetivos.</p>
+          <p>Ahorro programado con metas personalizadas. Visualiza tu progreso.</p>
         </div>
-
         <div class="product-card">
-          <div class="product-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-          </div>
+          <div class="product-icon">📈</div>
           <h3>NexusInvest</h3>
-          <p>Portafolios diversificados con rendimientos del 10% al 18% anual. Invierte desde $100.000 COP.</p>
+          <p>Portafolios diversificados con rendimientos del 10% al 18% anual.</p>
         </div>
-
         <div class="product-card">
-          <div class="product-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          </div>
+          <div class="product-icon">🛡️</div>
           <h3>NexusShield</h3>
-          <p>Seguros digitales: vida, negocio, fraude y mas. Proteccion desde $12.000 COP al mes.</p>
+          <p>Seguros digitales: vida, negocio, fraude y mas. Proteccion total.</p>
         </div>
-
         <div class="product-card">
-          <div class="product-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
-          </div>
+          <div class="product-icon">💼</div>
           <h3>NexusBusiness</h3>
-          <p>Cuenta empresarial para separar las finanzas de tu negocio. Multiples usuarios y reportes.</p>
-        </div>
-
-        <div class="product-card">
-          <div class="product-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-          </div>
-          <h3>NexusAnalytics</h3>
-          <p>Analisis financiero avanzado. Visualiza el rendimiento de tu negocio en tiempo real.</p>
-        </div>
-
-        <div class="product-card">
-          <div class="product-icon">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          </div>
-          <h3>NexusSimulator</h3>
-          <p>Simulador de credito interactivo. Juega con montos y plazos para ver cuotas al instante.</p>
-        </div>
-      </div>
-
-      <div style="text-align:center; margin-top:40px;">
-        <a href="productos.html" class="btn-secondary btn-large">Ver todos los productos</a>
-      </div>
-    </div>
-  </section>
-
-  <section class="how" id="como-funciona">
-    <div class="container">
-      <div class="section-header">
-        <h2>Como funciona NexusCredit</h2>
-        <p>Tres pasos para obtener tu credito</p>
-      </div>
-
-      <div class="steps">
-        <div class="step">
-          <div class="step-number">1</div>
-          <h3>Verifica tu identidad</h3>
-          <p>Solo cedula y una selfie. Reconocimiento facial en segundos con IA.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">2</div>
-          <h3>Solicita tu credito</h3>
-          <p>Conecta tus fuentes digitales. Nuestra IA analiza tu flujo de caja al instante.</p>
-        </div>
-        <div class="step">
-          <div class="step-number">3</div>
-          <h3>Recibe el desembolso</h3>
-          <p>En menos de 24 horas. Firma digital del contrato incluida en la app.</p>
+          <p>Cuenta empresarial para separar las finanzas de tu negocio.</p>
         </div>
       </div>
     </div>
   </section>
 
   <section class="cta">
-    <div class="container cta-content">
+    <div class="container">
       <h2>Empieza hoy tu camino financiero</h2>
-      <p>Miles de emprendedores digitales ya confian en NexusPay. Se parte del cambio.</p>
-      <a href="login.html" class="btn-white btn-large">
-        Acceder a la plataforma
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-      </a>
+      <p>Miles de emprendedores digitales ya confian en NexusPay.</p>
+      <a href="login.html" class="btn-white btn-large">Acceder a la plataforma</a>
     </div>
   </section>
 
@@ -258,26 +218,23 @@
       <div class="footer-grid">
         <div>
           <div class="footer-brand">Nexus<span>Pay</span></div>
-          <p class="footer-desc">Fintech colombiana enfocada en democratizar el acceso al credito para emprendedores digitales de Latinoamerica.</p>
+          <p style="font-size: 14px;">Fintech colombiana enfocada en democratizar el acceso al credito para emprendedores digitales.</p>
         </div>
         <div>
           <h4>Productos</h4>
-          <a href="productos.html">NexusCredit</a>
-          <a href="productos.html">NexusPagos</a>
-          <a href="productos.html">NexusCard</a>
-          <a href="productos.html">NexusSave</a>
+          <a href="#">NexusCredit</a>
+          <a href="#">NexusPagos</a>
+          <a href="#">NexusCard</a>
         </div>
         <div>
           <h4>Compania</h4>
           <a href="nosotros.html">Sobre nosotros</a>
           <a href="contacto.html">Contacto</a>
-          <a href="login.html">Ingresar</a>
         </div>
         <div>
           <h4>Legal</h4>
           <a href="terminos.html">Terminos</a>
           <a href="privacidad.html">Privacidad</a>
-          <a href="privacidad.html#derechos">Ley 1581</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -286,7 +243,5 @@
     </div>
   </footer>
 
-  <script src="script.js"></script>
-  <script src="js/theme.js"></script>
 </body>
 </html>
