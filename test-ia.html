@@ -14,7 +14,7 @@
       padding: 24px;
       min-height: 100vh;
     }
-    .container { max-width: 800px; margin: 0 auto; }
+    .container { max-width: 900px; margin: 0 auto; }
     h1 {
       font-size: 28px;
       font-weight: 900;
@@ -25,6 +25,7 @@
       margin-bottom: 8px;
     }
     .sub { color: #94A3B8; font-size: 14px; margin-bottom: 24px; }
+
     .card {
       background: #1E293B;
       border: 1px solid #334155;
@@ -38,6 +39,7 @@
       margin-bottom: 12px;
       color: #F1F5F9;
     }
+
     .status {
       display: inline-block;
       padding: 4px 12px;
@@ -65,8 +67,8 @@
       margin-bottom: 8px;
       transition: all 0.2s;
     }
-    button:hover { background: #1D4ED8; transform: translateY(-1px); }
-    button:disabled { background: #475569; cursor: not-allowed; transform: none; }
+    button:hover { background: #1D4ED8; }
+    button:disabled { background: #475569; cursor: not-allowed; }
     button.green { background: #10B981; }
     button.green:hover { background: #059669; }
 
@@ -92,6 +94,18 @@
       margin-bottom: 6px;
       color: #94A3B8;
     }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
 
     .chat-box {
       background: #0F172A;
@@ -107,118 +121,198 @@
       padding: 10px 14px;
       border-radius: 12px;
       margin-bottom: 8px;
-      max-width: 80%;
+      max-width: 85%;
       line-height: 1.5;
       white-space: pre-wrap;
     }
-    .msg.user {
-      background: #2563EB;
-      color: white;
-      margin-left: auto;
-    }
-    .msg.bot {
-      background: #1E293B;
-      border: 1px solid #334155;
-      color: #E2E8F0;
-    }
-    .msg.error {
-      background: #7F1D1D;
-      color: #FCA5A5;
-    }
-    .msg.info {
-      background: #1E3A8A;
-      color: #BFDBFE;
-      font-size: 13px;
-    }
+    .msg.user { background: #2563EB; color: white; margin-left: auto; }
+    .msg.bot { background: #1E293B; border: 1px solid #334155; color: #E2E8F0; }
+    .msg.error { background: #7F1D1D; color: #FCA5A5; }
+    .msg.info { background: #1E3A8A; color: #BFDBFE; font-size: 13px; }
 
     pre {
       background: #0F172A;
       border: 1px solid #334155;
       border-radius: 10px;
-      padding: 12px;
+      padding: 16px;
       font-size: 12px;
       color: #6EE7B7;
       overflow-x: auto;
       white-space: pre-wrap;
       word-break: break-all;
-      max-height: 300px;
+      max-height: 500px;
       overflow-y: auto;
+      font-family: 'Consolas', monospace;
+      line-height: 1.5;
     }
 
-    .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .row button { flex: 1; min-width: 140px; }
-
-    video, canvas {
-      width: 100%;
-      max-width: 320px;
+    /* Tarjeta de recomendación (preview de cómo se vería en la app) */
+    .preview-recomendacion {
+      background: linear-gradient(135deg, #2563EB, #10B981);
+      color: #FFFFFF;
+      padding: 24px;
+      border-radius: 16px;
+      margin-top: 16px;
+    }
+    .preview-recomendacion h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .preview-item {
+      background: rgba(255,255,255,0.15);
+      padding: 12px;
+      border-radius: 10px;
+    }
+    .preview-item-label {
+      font-size: 11px;
+      opacity: 0.85;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .preview-item-value {
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .preview-monto {
+      background: rgba(255,255,255,0.15);
+      padding: 16px;
       border-radius: 12px;
-      background: #000;
-      display: block;
-      margin: 0 auto 12px;
+      margin-bottom: 12px;
     }
-    canvas { display: none; }
+    .preview-monto-value {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .preview-monto-sub {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>🧪 Test Luci IA</h1>
+  <h1>🧪 Test IA - NexusPay</h1>
   <p class="sub">Página de diagnóstico — no afecta tu app</p>
 
-  <!-- ============ CONFIG ============ -->
+  <!-- CONFIG -->
   <div class="card">
     <h2>1. Configuración <span class="status idle" id="status-config">Pendiente</span></h2>
     <pre id="output-config">Esperando...</pre>
   </div>
 
-  <!-- ============ TEST 1: SCORING ============ -->
+  <!-- TEST SCORING -->
   <div class="card">
-    <h2>2. Test scoring (Groq) <span class="status idle" id="status-scoring">Pendiente</span></h2>
-    <p style="color:#94A3B8; font-size:13px; margin-bottom:12px;">
-      Prueba simple: la IA debe responder con texto.
-    </p>
+    <h2>2. Test scoring (crédito) <span class="status idle" id="status-scoring">Pendiente</span></h2>
     <button onclick="testScoring()" id="btn-scoring">Probar scoring</button>
     <pre id="output-scoring" style="display:none; margin-top:12px;"></pre>
   </div>
 
-  <!-- ============ TEST 2: CHAT ============ -->
+  <!-- TEST CHAT -->
   <div class="card">
     <h2>3. Test chat (Luci) <span class="status idle" id="status-chat">Pendiente</span></h2>
-    <p style="color:#94A3B8; font-size:13px; margin-bottom:12px;">
-      Simula el chat con contexto de usuario de prueba.
-    </p>
     <div class="chat-box" id="chatBox">
       <div class="msg info">Envía un mensaje para probar a Luci.</div>
     </div>
-    <div class="row">
-      <input id="chatInput" placeholder="Escribe algo..." onkeypress="if(event.key==='Enter') testChat()" style="flex:2; margin-bottom:0;">
-      <button onclick="testChat()" id="btn-chat" style="flex:0; margin-bottom:0;">Enviar</button>
+    <div style="display:flex; gap:8px; align-items:flex-start;">
+      <input id="chatInput" placeholder="Escribe algo..." onkeypress="if(event.key==='Enter') testChat()" style="margin-bottom:0;">
+      <button onclick="testChat()" id="btn-chat" style="margin:0;">Enviar</button>
     </div>
     <pre id="output-chat" style="display:none; margin-top:12px;"></pre>
   </div>
 
-  <!-- ============ TEST 3: FACE ============ -->
+  <!-- TEST RECOMENDACIÓN DE INVERSIÓN (NUEVO) -->
   <div class="card">
-    <h2>4. Test reconocimiento facial (Gemini) <span class="status idle" id="status-face">Pendiente</span></h2>
-    <p style="color:#94A3B8; font-size:13px; margin-bottom:12px;">
-      Sube una foto o usa la cámara para verificar si Gemini la analiza.
+    <h2>4. Test recomendación de inversión <span class="status idle" id="status-invest">Pendiente</span></h2>
+    <p style="color:#94A3B8; font-size:13px; margin-bottom:16px;">
+      Simula distintos perfiles de usuario y verifica que Luci recomienda una inversión adecuada.
     </p>
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
+
+    <!-- Formulario para simular usuario -->
     <div class="row">
-      <button onclick="activarCamara()" id="btn-cam">📸 Activar cámara</button>
-      <button onclick="testFaceCamara()" class="green" id="btn-face-cam" disabled>✅ Analizar foto</button>
+      <div>
+        <label>Nombre</label>
+        <input type="text" id="invNombre" value="Carlos Viloria">
+      </div>
+      <div>
+        <label>Saldo disponible (COP)</label>
+        <input type="number" id="invSaldo" value="3000000">
+      </div>
     </div>
-    <div style="margin-top:12px;">
-      <label>O sube una foto:</label>
-      <input type="file" id="fileInput" accept="image/*" onchange="testFaceArchivo(event)">
+
+    <div class="row-3">
+      <div>
+        <label>Score crediticio</label>
+        <input type="number" id="invScore" value="780" min="0" max="1000">
+      </div>
+      <div>
+        <label>Ingresos mensuales (COP)</label>
+        <input type="number" id="invIngresos" value="4500000">
+      </div>
+      <div>
+        <label>Tipo de negocio</label>
+        <select id="invTipo">
+          <option>E-commerce</option>
+          <option>Creador de contenido</option>
+          <option>Servicios digitales</option>
+          <option>SaaS / App</option>
+          <option>Marketing digital</option>
+        </select>
+      </div>
     </div>
-    <pre id="output-face" style="display:none; margin-top:12px;"></pre>
+
+    <div class="row-3">
+      <div>
+        <label>Inversiones actuales</label>
+        <input type="number" id="invActuales" value="0" min="0">
+      </div>
+      <div>
+        <label>Total invertido (COP)</label>
+        <input type="number" id="invTotalInvertido" value="0">
+      </div>
+      <div>
+        <label>Ingresos reales (promedio)</label>
+        <input type="number" id="invIngresosReales" value="4200000">
+      </div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <button onclick="testInversion()" class="green" id="btn-invest">💡 Probar recomendación</button>
+      <button onclick="limpiarInversion()" style="background:#475569;">Limpiar</button>
+    </div>
+
+    <!-- Presets rápidos -->
+    <div style="margin-top:16px; padding-top:16px; border-top:1px solid #334155;">
+      <label style="margin-bottom:12px;">Presets rápidos:</label>
+      <div>
+        <button onclick="preset('nuevo')" style="background:#10B981; font-size:12px; padding:8px 16px;">👶 Emprendedor nuevo</button>
+        <button onclick="preset('estable')" style="background:#2563EB; font-size:12px; padding:8px 16px;">💼 Freelancer estable</button>
+        <button onclick="preset('top')" style="background:#F59E0B; font-size:12px; padding:8px 16px;">🚀 Top emprendedor</button>
+        <button onclick="preset('pobre')" style="background:#EF4444; font-size:12px; padding:8px 16px;">💸 Saldo bajo</button>
+      </div>
+    </div>
+
+    <div id="previewInversion" style="margin-top:20px;"></div>
+    <pre id="output-invest" style="display:none; margin-top:16px;"></pre>
   </div>
 
 </div>
 
-<!-- ============ SCRIPTS ============ -->
+<script src="js/config.js"></script>
+
+<script>
 <script src="js/config.js"></script>
 
 <script>
@@ -231,15 +325,14 @@ window.addEventListener('DOMContentLoaded', function () {
   try {
     const info = {
       SUPABASE_URL: CONFIG.SUPABASE_URL || '❌ FALTA',
-      AI_FUNCTION_URL: CONFIG.AI_FUNCTION_URL || '❌ FALTA',
-      GROQ_API_KEY: CONFIG.GROQ_API_KEY ? '✅ Configurada' : '❌ FALTA',
       GEMINI_API_KEY: CONFIG.GEMINI_API_KEY ? '✅ Configurada' : '❌ FALTA',
-      ASISTENTE_NOMBRE: CONFIG.ASISTENTE_NOMBRE || '❌ FALTA',
+      MODELO_GEMINI: CONFIG.MODELO_GEMINI || '❌ FALTA',
+      URL_GEMINI: CONFIG.URL_GEMINI || '❌ FALTA',
     };
 
     out.textContent = JSON.stringify(info, null, 2);
 
-    const todoOk = CONFIG.AI_FUNCTION_URL && CONFIG.GROQ_API_KEY && CONFIG.GEMINI_API_KEY;
+    const todoOk = CONFIG.GEMINI_API_KEY && CONFIG.MODELO_GEMINI;
     status.className = 'status ' + (todoOk ? 'ok' : 'error');
     status.textContent = todoOk ? 'OK' : 'Falta config';
 
@@ -264,7 +357,13 @@ function showOutput(id, data) {
   el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
-// ============ TEST 1: SCORING ============
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+
+// ============ TEST SCORING ============
 
 async function testScoring() {
   const btn = document.getElementById('btn-scoring');
@@ -275,12 +374,14 @@ async function testScoring() {
   try {
     const inicio = Date.now();
 
-    const r = await fetch(CONFIG.AI_FUNCTION_URL, {
+    const prompt = 'Responde solo con este texto: OK FUNCIONA';
+
+    const r = await fetch(CONFIG.URL_GEMINI + CONFIG.MODELO_GEMINI + ':generateContent?key=' + CONFIG.GEMINI_API_KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        tipo: 'scoring',
-        prompt: 'Responde solo: OK FUNCIONA',
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 100 }
       }),
     });
 
@@ -295,8 +396,16 @@ async function testScoring() {
     }
 
     const j = await r.json();
+
+    if (!j.candidates || !j.candidates[0]) {
+      setStatus('status-scoring', 'error', 'Sin respuesta');
+      showOutput('output-scoring', j);
+      btn.disabled = false;
+      return;
+    }
+
     setStatus('status-scoring', 'ok', dur + 'ms');
-    showOutput('output-scoring', j);
+    showOutput('output-scoring', j.candidates[0].content.parts[0].text);
 
   } catch (e) {
     setStatus('status-scoring', 'error', 'Fallo');
@@ -306,7 +415,7 @@ async function testScoring() {
   btn.disabled = false;
 }
 
-// ============ TEST 2: CHAT ============
+// ============ TEST CHAT ============
 
 const historialChat = [];
 
@@ -334,25 +443,21 @@ async function testChat() {
   try {
     const inicio = Date.now();
 
-    const r = await fetch(CONFIG.AI_FUNCTION_URL, {
+    const systemPrompt = 'Eres Luci, la asistente virtual de NexusPay. Eres cálida, cercana y breve. Respondes en español, máximo 3 líneas.';
+
+    const historialTexto = historialChat.slice(-6).map(m => {
+      const quien = m.rol === 'user' ? 'Usuario' : 'Luci';
+      return quien + ': ' + m.texto;
+    }).join('\n');
+
+    const promptCompleto = systemPrompt + '\n\n' + (historialTexto ? 'CONVERSACION:\n' + historialTexto + '\n\n' : '') + 'Usuario: ' + mensaje;
+
+    const r = await fetch(CONFIG.URL_GEMINI + CONFIG.MODELO_GEMINI + ':generateContent?key=' + CONFIG.GEMINI_API_KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        tipo: 'chat',
-        mensaje: mensaje,
-        historial: historialChat,
-        contexto: {
-          nombre: 'Carlos',
-          saldo: '3.000.000',
-          score: 780,
-          creditos_activos: 1,
-          proxima_cuota: '$450.000 (vence 2026-11-01)',
-          tarjeta_estado: 'activa',
-          cupo_disponible: '2.500.000',
-          metas_count: 2,
-          inversiones_count: 1,
-          seguros_count: 0,
-        },
+        contents: [{ parts: [{ text: promptCompleto }] }],
+        generationConfig: { temperature: 0.6, maxOutputTokens: 250 }
       }),
     });
 
@@ -362,35 +467,31 @@ async function testChat() {
 
     if (!r.ok) {
       const err = await r.text();
-      box.innerHTML += '<div class="msg error">HTTP ' + r.status + ': ' + escapeHtml(err.substring(0, 200)) + '</div>';
+      box.innerHTML += '<div class="msg error">HTTP ' + r.status + ': ' + escapeHtml(err.substring(0, 300)) + '</div>';
       setStatus('status-chat', 'error', 'HTTP ' + r.status);
-      showOutput('output-chat', { status: r.status, error: err });
       btn.disabled = false;
       return;
     }
 
     const j = await r.json();
-    showOutput('output-chat', j);
-    setStatus('status-chat', 'ok', dur + 'ms');
 
-    if (j.ok && j.respuesta) {
-      box.innerHTML += '<div class="msg bot"><strong>Luci:</strong><br>' + escapeHtml(j.respuesta) + '</div>';
-      if (j.accion && j.accion !== 'ninguna') {
-        box.innerHTML += '<div class="msg info">🎯 Acción: ' + j.accion + ' → ' + (j.parametro || 'sin destino') + '</div>';
-      }
-      if (j.sugerencias && j.sugerencias.length > 0) {
-        box.innerHTML += '<div class="msg info">💡 Sugerencias: ' + j.sugerencias.join(' · ') + '</div>';
-      }
-
-      historialChat.push({ rol: 'user', texto: mensaje });
-      historialChat.push({ rol: 'bot', texto: j.respuesta });
-
-    } else {
-      box.innerHTML += '<div class="msg error">' + escapeHtml(j.error || j.mensaje || 'Respuesta inválida') + '</div>';
+    if (!j.candidates || !j.candidates[0]) {
+      box.innerHTML += '<div class="msg error">Respuesta invalida</div>';
+      showOutput('output-chat', j);
       setStatus('status-chat', 'error', 'Sin respuesta');
+      btn.disabled = false;
+      return;
     }
 
+    const respuesta = j.candidates[0].content.parts[0].text;
+
+    box.innerHTML += '<div class="msg bot"><strong>Luci:</strong> ' + escapeHtml(respuesta) + '</div>';
     box.scrollTop = box.scrollHeight;
+
+    historialChat.push({ rol: 'user', texto: mensaje });
+    historialChat.push({ rol: 'bot', texto: respuesta });
+
+    setStatus('status-chat', 'ok', dur + 'ms');
 
   } catch (e) {
     const loadingEl = document.getElementById('chatLoading');
@@ -398,77 +499,81 @@ async function testChat() {
     box.innerHTML += '<div class="msg error">Error: ' + escapeHtml(e.message) + '</div>';
     box.scrollTop = box.scrollHeight;
     setStatus('status-chat', 'error', 'Excepción');
-    showOutput('output-chat', 'Error: ' + e.message + '\n\nStack:\n' + e.stack);
   }
 
   btn.disabled = false;
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, function (c) {
-    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-  });
-}
+// ============ TEST RECOMENDACIÓN DE INVERSIÓN ============
 
-// ============ TEST 3: FACE ============
+async function testInversion() {
+  const btn = document.getElementById('btn-invest');
+  btn.disabled = true;
+  setStatus('status-invest', 'testing', 'Analizando...');
+  showOutput('output-invest', 'Analizando perfil...');
 
-let streamCamara = null;
-
-async function activarCamara() {
-  try {
-    streamCamara = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: 640, height: 480 }
-    });
-    document.getElementById('video').srcObject = streamCamara;
-    document.getElementById('btn-face-cam').disabled = false;
-    document.getElementById('btn-cam').textContent = '📸 Cámara activa';
-  } catch (e) {
-    setStatus('status-face', 'error', 'Sin cámara');
-    showOutput('output-face', 'No se pudo acceder a la cámara: ' + e.message);
-  }
-}
-
-async function testFaceCamara() {
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-
-  if (!video.srcObject) {
-    showOutput('output-face', 'Activa la cámara primero');
-    return;
-  }
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  const imagenBase64 = canvas.toDataURL('image/jpeg', 0.85);
-
-  await enviarFace(imagenBase64);
-}
-
-async function testFaceArchivo(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = async function (e) {
-    await enviarFace(e.target.result);
+  const datos = {
+    nombre: document.getElementById('invNombre').value || 'Emprendedor',
+    saldo: parseFloat(document.getElementById('invSaldo').value) || 0,
+    score: parseInt(document.getElementById('invScore').value) || 0,
+    ingresos: parseFloat(document.getElementById('invIngresos').value) || 0,
+    tipo: document.getElementById('invTipo').value || 'Freelancer',
+    inversionesActuales: parseInt(document.getElementById('invActuales').value) || 0,
+    totalInvertido: parseFloat(document.getElementById('invTotalInvertido').value) || 0,
+    ingresosReales: parseFloat(document.getElementById('invIngresosReales').value) || 0,
   };
-  reader.readAsDataURL(file);
-}
 
-async function enviarFace(imagenBase64) {
-  setStatus('status-face', 'testing', 'Analizando...');
-  showOutput('output-face', 'Enviando imagen (' + Math.round(imagenBase64.length / 1024) + ' KB)...');
+  const prompt = `Eres Luci, asistente financiera de NexusPay. Recomienda UNA inversion personalizada.
+
+DATOS:
+- Nombre: ${datos.nombre}
+- Saldo: $${datos.saldo.toLocaleString('es-CO')} COP
+- Score: ${datos.score}/1000
+- Tipo negocio: ${datos.tipo}
+- Ingresos declarados: $${datos.ingresos.toLocaleString('es-CO')} COP
+- Ingresos reales: $${datos.ingresosReales.toLocaleString('es-CO')} COP
+- Inversiones: ${datos.inversionesActuales} por $${datos.totalInvertido.toLocaleString('es-CO')} COP
+
+PRODUCTOS:
+1. CDT Digital - 10.5% anual - Bajo riesgo - Plazo 90 dias
+2. Fondo Conservador - 12.0% anual - Riesgo medio - Liquidez inmediata
+3. Fondo Crecimiento - 15.5% anual - Riesgo alto - Plazo 1 año
+4. Portafolio Emprendedor - 18.0% anual - Riesgo muy alto - Diversificado
+
+REGLAS:
+- Saldo < $200.000: recomendar NO invertir, sugerir ahorrar
+- Score > 750 y saldo > $1.000.000: opciones agresivas
+- Score < 600: opciones conservadoras
+- Nunca mas del 40% del saldo
+
+Responde SOLO con este formato JSON valido, sin markdown, sin texto extra:
+
+{
+  "perfil_riesgo": "conservador",
+  "producto_recomendado": "CDT Digital",
+  "monto_sugerido": 500000,
+  "porcentaje_saldo": 25,
+  "plazo_recomendado": "90 dias",
+  "rendimiento_estimado_anual": 10.5,
+  "ganancia_estimada_anual": 52500,
+  "razon": "explicacion corta",
+  "alternativa": "producto alternativo",
+  "advertencia": "advertencia breve"
+}`;
 
   try {
     const inicio = Date.now();
 
-    const r = await fetch(CONFIG.AI_FUNCTION_URL, {
+    const r = await fetch(CONFIG.URL_GEMINI + CONFIG.MODELO_GEMINI + ':generateContent?key=' + CONFIG.GEMINI_API_KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        tipo: 'face',
-        imagen_base64: imagenBase64,
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.4,
+          maxOutputTokens: 600,
+          responseMimeType: "application/json"
+        }
       }),
     });
 
@@ -476,21 +581,142 @@ async function enviarFace(imagenBase64) {
 
     if (!r.ok) {
       const err = await r.text();
-      setStatus('status-face', 'error', 'HTTP ' + r.status);
-      showOutput('output-face', 'Error HTTP ' + r.status + '\n\n' + err);
+      setStatus('status-invest', 'error', 'HTTP ' + r.status);
+      showOutput('output-invest', 'Error HTTP ' + r.status + '\n\n' + err);
+      btn.disabled = false;
       return;
     }
 
     const j = await r.json();
-    setStatus('status-face', j.ok ? 'ok' : 'error', dur + 'ms');
-    showOutput('output-face', j);
+
+    if (!j.candidates || !j.candidates[0]) {
+      setStatus('status-invest', 'error', 'Sin respuesta');
+      showOutput('output-invest', j);
+      btn.disabled = false;
+      return;
+    }
+
+    let rec;
+    const texto = j.candidates[0].content.parts[0].text;
+
+    try {
+      rec = JSON.parse(texto);
+    } catch (e) {
+      const match = texto.match(/\{[\s\S]*\}/);
+      rec = match ? JSON.parse(match[0]) : null;
+    }
+
+    if (!rec) {
+      setStatus('status-invest', 'error', 'JSON invalido');
+      showOutput('output-invest', 'Texto crudo:\n\n' + texto);
+      btn.disabled = false;
+      return;
+    }
+
+    setStatus('status-invest', 'ok', dur + 'ms');
+    showOutput('output-invest', rec);
+
+    renderPreview(rec, datos);
 
   } catch (e) {
-    setStatus('status-face', 'error', 'Excepción');
-    showOutput('output-face', 'Error: ' + e.message + '\n\nStack:\n' + e.stack);
+    setStatus('status-invest', 'error', 'Excepción');
+    showOutput('output-invest', 'Error: ' + e.message);
+  }
+
+  btn.disabled = false;
+}
+
+function renderPreview(rec, datos) {
+  const cont = document.getElementById('previewInversion');
+  const formato = (n) => '$' + Math.round(n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  cont.innerHTML = `
+    <div class="preview-recomendacion">
+      <h3>💡 Recomendación de Luci</h3>
+      <div class="preview-grid">
+        <div class="preview-item">
+          <div class="preview-item-label">Perfil de riesgo</div>
+          <div class="preview-item-value" style="text-transform: capitalize;">${rec.perfil_riesgo || 'moderado'}</div>
+        </div>
+        <div class="preview-item">
+          <div class="preview-item-label">Producto</div>
+          <div class="preview-item-value">${rec.producto_recomendado || 'N/A'}</div>
+        </div>
+      </div>
+      <div class="preview-monto">
+        <div class="preview-item-label">Monto sugerido</div>
+        <div class="preview-monto-value">${formato(rec.monto_sugerido)}</div>
+        <div class="preview-monto-sub">${rec.porcentaje_saldo || 0}% de tu saldo</div>
+      </div>
+      <div class="preview-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="preview-item" style="text-align: center;">
+          <div class="preview-item-label">Plazo</div>
+          <div class="preview-item-value" style="font-size: 13px;">${rec.plazo_recomendado || 'N/A'}</div>
+        </div>
+        <div class="preview-item" style="text-align: center;">
+          <div class="preview-item-label">Rendimiento</div>
+          <div class="preview-item-value" style="font-size: 13px;">${rec.rendimiento_estimado_anual || 0}%</div>
+        </div>
+        <div class="preview-item" style="text-align: center;">
+          <div class="preview-item-label">Ganancia/año</div>
+          <div class="preview-item-value" style="font-size: 13px;">${formato(rec.ganancia_estimada_anual)}</div>
+        </div>
+      </div>
+      <div class="preview-item" style="margin-top: 16px;">
+        <div class="preview-item-label">💬 ¿Por qué?</div>
+        <div style="font-size: 13px; line-height: 1.6; margin-top: 6px;">${rec.razon || ''}</div>
+      </div>
+      ${rec.alternativa ? `<div class="preview-item" style="margin-top: 12px;"><div class="preview-item-label">Alternativa</div><div style="font-weight: 700; margin-top: 4px;">${rec.alternativa}</div></div>` : ''}
+      ${rec.advertencia ? `<div style="margin-top: 16px; background: rgba(255,255,255,0.2); padding: 12px; border-radius: 10px; font-size: 13px;">⚠️ <strong>Advertencia:</strong> ${rec.advertencia}</div>` : ''}
+    </div>
+  `;
+}
+
+function limpiarInversion() {
+  document.getElementById('previewInversion').innerHTML = '';
+  document.getElementById('output-invest').style.display = 'none';
+  setStatus('status-invest', 'idle', 'Pendiente');
+}
+
+function preset(tipo) {
+  const set = (id, val) => { document.getElementById(id).value = val; };
+
+  if (tipo === 'nuevo') {
+    set('invNombre', 'María Fernández');
+    set('invSaldo', 800000);
+    set('invScore', 550);
+    set('invIngresos', 1500000);
+    set('invTipo', 'Creador de contenido');
+    set('invActuales', 0);
+    set('invTotalInvertido', 0);
+    set('invIngresosReales', 1400000);
+  } else if (tipo === 'estable') {
+    set('invNombre', 'Carlos Viloria');
+    set('invSaldo', 3000000);
+    set('invScore', 780);
+    set('invIngresos', 4500000);
+    set('invTipo', 'Servicios digitales');
+    set('invActuales', 1);
+    set('invTotalInvertido', 500000);
+    set('invIngresosReales', 4200000);
+  } else if (tipo === 'top') {
+    set('invNombre', 'Andrés Gómez');
+    set('invSaldo', 15000000);
+    set('invScore', 900);
+    set('invIngresos', 12000000);
+    set('invTipo', 'SaaS / App');
+    set('invActuales', 3);
+    set('invTotalInvertido', 5000000);
+    set('invIngresosReales', 11500000);
+  } else if (tipo === 'pobre') {
+    set('invNombre', 'Juan Pérez');
+    set('invSaldo', 150000);
+    set('invScore', 500);
+    set('invIngresos', 800000);
+    set('invTipo', 'E-commerce');
+    set('invActuales', 0);
+    set('invTotalInvertido', 0);
+    set('invIngresosReales', 700000);
   }
 }
 </script>
-
-</body>
-</html>
