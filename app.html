@@ -2,163 +2,116 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NexusPay - Tu banco digital</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="icon" type="image/png" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=25">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    .servicios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    .servicio-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px 8px; background: var(--bg-card); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s ease; }
+    .servicio-item:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1); }
+    .servicio-item.selected { border-color: var(--primary); background: rgba(37, 99, 235, 0.05); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15); }
+    .servicio-logo { width: 48px; height: 48px; border-radius: 50%; object-fit: contain; background: #FFFFFF; padding: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .servicio-logo-fallback { width: 48px; height: 48px; border-radius: 50%; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .servicio-item span { font-size: 12px; font-weight: 700; color: var(--text); }
+    @media (max-width: 400px) { .servicios-grid { grid-template-columns: repeat(2, 1fr); } }
+    
+    .support-fab { position: fixed; bottom: 24px; left: 24px; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4); z-index: 1000; transition: transform 0.2s; }
+    .support-fab:hover { transform: scale(1.1); }
+  </style>
 </head>
 <body class="app-body">
 
-  <!-- ============ TOPBAR ============ -->
-  <header class="app-topbar">
-    <a href="app.html" class="topbar-logo">
-      <span class="logo-icon">🛡️</span>
-      <span class="logo-text">Nexus<span>Pay</span></span>
-    </a>
+  <!-- SONIDO DE APP -->
+  <audio id="sonidoApp" src="https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3" preload="auto"></audio>
 
-    <button class="menu-btn" id="menuBtn" aria-label="Abrir menu" onclick="toggleMenu()">
-      <span class="menu-btn-line"></span>
-      <span class="menu-btn-line"></span>
-      <span class="menu-btn-line"></span>
-    </button>
-  </header>
+  <!-- SIDEBAR -->
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 24px;">
+      <img src="logo.png" alt="NexusPay Logo" style="width: 40px; height: 40px; border-radius: 10px; object-fit: cover;">
+      <a href="app.html" class="logo-text" style="font-size: 20px; text-decoration: none; margin: 0;">Nexus<span>Pay</span></a>
+    </div>
 
-  <!-- ============ MENU FULLSCREEN ============ -->
-  <nav class="app-menu" id="appMenu">
-    <div class="menu-content">
-
-      <!-- Perfil -->
-      <div class="menu-profile">
-        <div class="menu-avatar" id="menuAvatar">👤</div>
-        <div class="menu-profile-info">
-          <div class="menu-profile-name" id="menuNombre">Cargando...</div>
-          <div class="menu-profile-email" id="menuEmail">...</div>
-          <div class="menu-profile-saldo" id="menuSaldo">$0</div>
-        </div>
+    <div class="sidebar-menu">
+      <div id="menuNaturalSidebar" style="display:none;">
+        <button class="sidebar-link active" data-page="dashboard" onclick="navegarA('dashboard')"><span class="icon">🏠</span> Dashboard</button>
+        <button class="sidebar-link" data-page="flowpay" onclick="navegarA('flowpay')"><span class="icon">💸</span> Cuenta de Ahorros</button>
+        <button class="sidebar-link" data-page="flowcard" onclick="navegarA('flowcard')"><span class="icon">💳</span> Tarjeta Débito</button>
+        <button class="sidebar-link" data-page="flowinvest" onclick="navegarA('flowinvest')"><span class="icon">📈</span> CDT</button>
+        <button class="sidebar-link" data-page="nexusbox" onclick="navegarA('nexusbox')"><span class="icon">🎁</span> Cajitas</button>
+        <button class="sidebar-link" data-page="flowsave" onclick="navegarA('flowsave')"><span class="icon">🏦</span> Ahorro Programado</button>
+        <button class="sidebar-link" data-page="flowshield" onclick="navegarA('flowshield')"><span class="icon">🛡️</span> Seguros</button>
+        <button class="sidebar-link" data-page="creditos" onclick="navegarA('creditos')"><span class="icon">💳</span> Créditos</button>
+        <button class="sidebar-link" data-page="simulador" onclick="navegarA('simulador')"><span class="icon">🧮</span> Simulador</button>
       </div>
 
-      <!-- Cuenta -->
-      <div class="menu-section">
-        <div class="menu-section-title">Cuenta</div>
-        <div class="menu-links">
-          <button class="menu-link" data-page="perfil" onclick="navegarA('perfil')">
-            <span class="menu-link-icon">👤</span>
-            <span class="menu-link-label">Mi perfil</span>
-          </button>
-          <button class="menu-link" data-page="verificacion" onclick="navegarA('verificacion')">
-            <span class="menu-link-icon">✓</span>
-            <span class="menu-link-label">Verificación</span>
-          </button>
-          <button class="menu-link" data-page="notificaciones" onclick="navegarA('notificaciones')">
-            <span class="menu-link-icon">🔔</span>
-            <span class="menu-link-label">Notificaciones</span>
-          </button>
-          <button class="menu-link" onclick="toggleTema()">
-            <span class="menu-link-icon" id="themeIcon">🌙</span>
-            <span class="menu-link-label" id="themeToggleLabel">Modo oscuro</span>
-          </button>
-        </div>
+      <div id="menuEmprendedorSidebar" style="display:none;">
+        <button class="sidebar-link active" data-page="dashboard" onclick="navegarA('dashboard')"><span class="icon">🏠</span> Dashboard</button>
+        <button class="sidebar-link" data-page="flowpay" onclick="navegarA('flowpay')"><span class="icon">💸</span> NexusPagos</button>
+        <button class="sidebar-link" data-page="flowcard" onclick="navegarA('flowcard')"><span class="icon">💳</span> NexusCard</button>
+        <button class="sidebar-link" data-page="flowinvest" onclick="navegarA('flowinvest')"><span class="icon">📈</span> NexusInvest</button>
+        <button class="sidebar-link" data-page="nexusbox" onclick="navegarA('nexusbox')"><span class="icon">🎁</span> NexusBox</button>
+        <button class="sidebar-link" data-page="flowsave" onclick="navegarA('flowsave')"><span class="icon">🏦</span> NexusSave</button>
+        <button class="sidebar-link" data-page="flowshield" onclick="navegarA('flowshield')"><span class="icon">🛡️</span> NexusShield</button>
+        <button class="sidebar-link" data-page="flowbusiness" onclick="navegarA('flowbusiness')"><span class="icon">💼</span> NexusBusiness</button>
+        <button class="sidebar-link" data-page="flowanalytics" onclick="navegarA('flowanalytics')"><span class="icon">📊</span> NexusAnalytics</button>
+        <button class="sidebar-link" data-page="creditos" onclick="navegarA('creditos')"><span class="icon">💳</span> NexusCredit</button>
+        <button class="sidebar-link" data-page="simulador" onclick="navegarA('simulador')"><span class="icon">🧮</span> Simulador</button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      
+      <button class="sidebar-link" data-page="perfil" onclick="navegarA('perfil')"><span class="icon">⚙️</span> Configuración</button>
+      <button class="sidebar-link" data-page="verificacion" onclick="navegarA('verificacion')"><span class="icon">✓</span> Verificación</button>
+      <button class="sidebar-link" data-page="notificaciones" onclick="navegarA('notificaciones')"><span class="icon">🔔</span> Notificaciones</button>
+      <button class="sidebar-link" data-page="ayuda" onclick="navegarA('ayuda')"><span class="icon">❓</span> Centro de Ayuda</button>
+      <button class="sidebar-link logout-btn" onclick="cerrarSesion()"><span class="icon">🚪</span> Cerrar Sesión</button>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="app-main">
+    <header class="app-topbar-new">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <h1 class="topbar-title" id="pageTitle">Overview</h1>
       </div>
       
-      <!-- Productos -->
-      <div class="menu-section">
-        <div class="menu-section-title">Productos</div>
-        <div class="menu-links">
-          <button class="menu-link" data-page="dashboard" onclick="navegarA('dashboard')">
-            <span class="menu-link-icon">📊</span>
-            <span class="menu-link-label">Dashboard</span>
-          </button>
-          <button class="menu-link" data-page="flowpay" onclick="navegarA('flowpay')">
-            <span class="menu-link-icon">💸</span>
-            <span class="menu-link-label">NexusPagos</span>
-          </button>
-          <button class="menu-link" data-page="flowcard" onclick="navegarA('flowcard')">
-            <span class="menu-link-icon">🎴</span>
-            <span class="menu-link-label">NexusCard</span>
-          </button>
-          <button class="menu-link" data-page="flowsave" onclick="navegarA('flowsave')">
-            <span class="menu-link-icon">🏦</span>
-            <span class="menu-link-label">NexusSave</span>
-          </button>
-          <button class="menu-link" data-page="flowinvest" onclick="navegarA('flowinvest')">
-            <span class="menu-link-icon">📈</span>
-            <span class="menu-link-label">NexusInvest</span>
-          </button>
-          <button class="menu-link" data-page="flowshield" onclick="navegarA('flowshield')">
-            <span class="menu-link-icon">🛡️</span>
-            <span class="menu-link-label">NexusShield</span>
-          </button>
-          <button class="menu-link" data-page="flowbusiness" onclick="navegarA('flowbusiness')">
-            <span class="menu-link-icon">💼</span>
-            <span class="menu-link-label">NexusBusiness</span>
-          </button>
-          <button class="menu-link" data-page="flowanalytics" onclick="navegarA('flowanalytics')">
-            <span class="menu-link-icon">📊</span>
-            <span class="menu-link-label">NexusAnalytics</span>
-          </button>
-          <button class="menu-link" data-page="nexusbox" onclick="navegarA('nexusbox')">
-  <span class="menu-link-icon">🎁</span>
-  <span class="menu-link-label">NexusBox</span>
-</button>
-          <button class="menu-link" data-page="creditos" onclick="navegarA('creditos')">
-            <span class="menu-link-icon">💳</span>
-            <span class="menu-link-label">NexusCredit</span>
-          </button>
+      <div class="topbar-right">
+        <div class="search-bar">
+          <span>🔍</span>
+          <input type="text" placeholder="Search for something">
+        </div>
+        <button class="theme-toggle-btn" onclick="toggleTema()">🌙</button>
+        <button class="notification-btn" onclick="navegarA('notificaciones')">🔔</button>
+        <div class="user-profile-top" onclick="navegarA('perfil')">
+          <div class="avatar-small" id="topAvatar">👤</div>
         </div>
       </div>
+    </header>
 
-      
-
-      <!-- Info -->
-      <div class="menu-section">
-        <div class="menu-section-title">Información</div>
-        <div class="menu-links">
-          <a href="privacidad.html" target="_blank" class="menu-link">
-            <span class="menu-link-icon">🔒</span>
-            <span class="menu-link-label">Privacidad</span>
-          </a>
-          <a href="terminos.html" target="_blank" class="menu-link">
-            <span class="menu-link-icon">📄</span>
-            <span class="menu-link-label">Términos</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Cerrar sesión -->
-      <div class="menu-section">
-        <button class="menu-link menu-link-danger" onclick="cerrarSesion()">
-          <span class="menu-link-icon">🚪</span>
-          <span class="menu-link-label">Cerrar sesión</span>
-        </button>
-      </div>
-
-      <!-- Footer del menú -->
-      <div class="menu-footer">
-        <div class="menu-footer-brand">NexusPay · 2026</div>
-        <div class="menu-footer-sub">Proyecto SENA</div>
-      </div>
-
-    </div>
-  </nav>
-
-  <!-- ============ CONTENIDO PRINCIPAL ============ -->
-  <main class="app-content">
-    <div class="page-header-app">
-      <h1 class="page-title" id="pageTitle">Dashboard</h1>
-      <p class="page-subtitle" id="pageSubtitle">Vista general de tu banco digital</p>
-    </div>
-    <div id="pageContent">
+    <div class="page-content" id="pageContent">
       <div class="loading-spinner"></div>
     </div>
   </main>
 
-  <!-- ============ FAB CHAT LUCI ============ -->
+  <!-- FAB CHAT LUCI -->
   <button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Chat con Luci">💬</button>
 
-  <!-- ============ CHAT WINDOW ============ -->
+  <!-- BOTÓN DE SOPORTE (WhatsApp) -->
+  <a href="https://wa.me/573000000000?text=Hola,%20necesito%20ayuda%20con%20mi%20cuenta%20NexusPay" target="_blank" class="support-fab" title="Soporte por WhatsApp">
+    <svg viewBox="0 0 24 24" width="32" height="32" fill="#FFFFFF">
+      <path d="M12.031 2c-5.523 0-10 4.477-10 10 0 1.752.455 3.428 1.303 4.908l-1.381 5.033 5.164-1.354c1.432.783 3.075 1.228 4.914 1.228 5.523 0 10-4.477 10-10s-4.477-10-10-10zm5.354 14.16c-.235.662-1.368 1.244-1.89 1.29-.475.042-1.023.118-1.874-.225-.514-.208-1.146-.475-1.87-.912-3.302-1.992-3.834-5.234-3.834-5.424 0-.19.143-.99.598-1.464.177-.184.384-.276.576-.276.192 0 .384.008.552.016.18.008.422-.07.661.504.247.593.851 2.077.925 2.226.074.149.123.322.025.514-.099.192-.148.31-.296.479-.149.169-.312.377-.446.506-.148.144-.304.3-.131.601.173.301.769 1.267 1.65 2.053 1.137 1.015 1.962 1.31 2.24 1.445.278.135.44.118.604-.07.164-.188.709-.826.898-1.108.189-.282.378-.235.64-.141.262.094 1.662.784 1.949.927.287.143.478.212.547.334.069.121.069.698-.166 1.36z"></path>
+    </svg>
+  </a>
+
+  <!-- CHAT WINDOW -->
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
       <div class="chat-header-info">
@@ -168,9 +121,7 @@
       <button class="chat-close" onclick="toggleChat()">×</button>
     </div>
     <div class="chat-messages" id="chatMessages">
-      <div class="chat-message chat-bot">
-        Hola! Soy Luci, tu asistente de NexusPay. ¿En qué te ayudo hoy? 💜
-      </div>
+      <div class="chat-message chat-bot">Hola! Soy Luci, tu asistente de NexusPay. ¿En qué te ayudo hoy? 💜</div>
     </div>
     <div class="chat-input-wrapper">
       <input class="chat-input" id="chatInput" placeholder="Escribe tu pregunta..." onkeypress="if(event.key==='Enter') enviarChat()">
@@ -178,13 +129,11 @@
     </div>
   </div>
 
-  <!-- ============ SCRIPTS ============ -->
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/toast.js"></script>
   <script src="js/app.js"></script>
-  <script src="js/loader.js"></script>
 </body>
 </html>
