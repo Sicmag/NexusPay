@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NexusPay - Tu banco digital</title>
+  <title>FinNex - Tu banco digital</title>
   <link rel="icon" type="image/png" href="logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=25">
@@ -35,7 +35,7 @@
   <aside class="app-sidebar" id="appSidebar">
     <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 24px;">
       <img src="logo.png" alt="NexusPay Logo" style="width: 40px; height: 40px; border-radius: 10px; object-fit: cover;">
-      <a href="app.html" class="logo-text" style="font-size: 20px; text-decoration: none; margin: 0;">Nexus<span>Pay</span></a>
+      <a href="app.html" class="logo-text" style="font-size: 20px; text-decoration: none; margin: 0;">Fin<span>Nex</span></a>
     </div>
 
     <div class="sidebar-menu">
@@ -60,6 +60,9 @@
         <button class="sidebar-link" data-page="flowsave" onclick="navegarA('flowsave')"><span class="icon">🏦</span> NexusSave</button>
         <button class="sidebar-link" data-page="flowshield" onclick="navegarA('flowshield')"><span class="icon">🛡️</span> NexusShield</button>
         <button class="sidebar-link" data-page="flowbusiness" onclick="navegarA('flowbusiness')"><span class="icon">💼</span> NexusBusiness</button>
+                <button class="sidebar-link" data-page="activos" onclick="navegarA('activos')">
+          <span class="icon">♻️</span> Activos Circulares
+        </button>
         <button class="sidebar-link" data-page="flowanalytics" onclick="navegarA('flowanalytics')"><span class="icon">📊</span> NexusAnalytics</button>
         <button class="sidebar-link" data-page="creditos" onclick="navegarA('creditos')"><span class="icon">💳</span> NexusCredit</button>
         <button class="sidebar-link" data-page="simulador" onclick="navegarA('simulador')"><span class="icon">🧮</span> Simulador</button>
@@ -101,8 +104,10 @@
     </div>
   </main>
 
-  <!-- FAB CHAT LUCI -->
-  <button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Chat con Luci">💬</button>
+      <!-- FAB CHAT CON EL ROBOT -->
+  <button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Chat con Luci">
+    <img src="robot.png" alt="Luci">
+  </button>
 
   <!-- BOTÓN DE SOPORTE (WhatsApp) -->
   <a href="https://wa.me/573000000000?text=Hola,%20necesito%20ayuda%20con%20mi%20cuenta%20NexusPay" target="_blank" class="support-fab" title="Soporte por WhatsApp">

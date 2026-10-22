@@ -1,21 +1,22 @@
 /* ============================================================
-   NEXUSPAY - CSS UNIFICADO (v16 - BankDash Style)
+   FINNEX - HOJA DE ESTILOS UNIFICADA (v5 - Burbuja de Luci)
    ============================================================ */
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --primary: #2563EB;
-  --primary-dark: #1D4ED8;
-  --primary-light: #60A5FA;
+  /* Paleta FINNEX - Modo Claro */
+  --primary: #0D2750;       /* Azul corporativo */
+  --primary-light: #1A3C70;
+  --lila: #CCB3E2;          /* Lila principal */
+  --lila-dark: #9C89B7;     /* Lila oscuro */
+  --gold: #D1B474;          /* Dorado metálico */
+  --gold-dark: #AC8A48;     /* Dorado oscuro */
+  
   --green: #10B981;
-  --green-dark: #059669;
   --red: #EF4444;
   --yellow: #F59E0B;
+  
   --dark: #0F172A;
   --text: #1E293B;
   --text-light: #64748B;
@@ -26,448 +27,141 @@
 }
 
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--bg-page); line-height: 1.6; overflow-x: hidden; }
+body.app-body { display: flex; min-height: 100vh; }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--text);
-  background: var(--bg-page);
-  line-height: 1.6;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  transition: background-color 0.3s ease, color 0.3s ease;
+/* ============================================================
+   BOTONES (Arreglados para no verse negros)
+   ============================================================ */
+.btn-primary {
+  background: var(--primary); color: #FFFFFF !important; padding: 12px 24px;
+  border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 15px;
+  border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;
+}
+.btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
+
+.btn-secondary {
+  background: var(--bg-card); color: var(--primary); padding: 12px 24px;
+  border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 15px;
+  border: 2px solid var(--border); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: var(--lila-dark); color: var(--lila-dark); }
+
+.btn-large { padding: 16px 32px; font-size: 16px; width: 100%; justify-content: center; }
+.btn-secondary-sm { background: var(--bg-soft); color: var(--text); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-weight: 600; font-size: 13px; }
+.btn-secondary-sm:hover { border-color: var(--primary); color: var(--primary); }
+
+/* Botón del ojito en las tarjetas */
+.eye-btn { 
+  background: transparent !important; 
+  border: none !important; 
+  font-size: 16px; 
+  cursor: pointer; 
+  color: inherit; 
+  padding: 0; 
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* ============================================================
-   LAYOUT DESKTOP (SIDEBAR + MAIN)
+   LAYOUT APP
    ============================================================ */
+.app-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); position: fixed; height: 100vh; z-index: 100; display: flex; flex-direction: column; transition: background 0.3s; }
+.sidebar-header { padding: 24px; display: flex; align-items: center; gap: 12px; }
+.logo-text { font-size: 22px; font-weight: 800; color: var(--primary); text-decoration: none; }
+.logo-text span { color: var(--gold-dark); }
 
-body.app-body {
-  display: flex;
-  min-height: 100vh;
-}
+.sidebar-menu { padding: 12px; flex: 1; overflow-y: auto; }
+.sidebar-link { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; border: none; background: transparent; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text-light); cursor: pointer; transition: all 0.2s; margin-bottom: 4px; text-align: left; }
+.sidebar-link:hover { background: var(--bg-soft); color: var(--primary); }
+.sidebar-link.active { background: rgba(204, 179, 226, 0.2); color: var(--lila-dark); font-weight: 700; }
+.sidebar-link.logout-btn { color: var(--red); margin-top: 8px; }
+.sidebar-link.logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
 
-/* --- SIDEBAR --- */
-.app-sidebar {
-  width: 260px;
-  background: var(--bg-card);
-  border-right: 1px solid var(--border);
-  position: fixed;
-  height: 100vh;
-  top: 0;
-  left: 0;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease, background-color 0.3s ease;
-}
+.app-main { flex: 1; margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; }
 
-.sidebar-header {
-  padding: 24px;
-  border-bottom: 1px solid transparent;
-}
+/* TOPBAR */
+.app-topbar-new { height: 80px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
+.topbar-title { font-size: 22px; font-weight: 700; color: var(--primary); }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.theme-toggle-btn, .notification-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.theme-toggle-btn:hover, .notification-btn:hover { background: var(--bg-soft); }
+.avatar-small { width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; overflow: hidden; }
+.avatar-small img { width: 100%; height: 100%; object-fit: cover; }
 
-.logo-text {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--dark);
-  text-decoration: none;
-}
-
-.logo-text span {
-  color: var(--primary);
-}
-
-.sidebar-menu {
-  padding: 12px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  background: transparent;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-light);
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-  margin-bottom: 4px;
-}
-
-.sidebar-link:hover {
-  background: var(--bg-soft);
-  color: var(--dark);
-}
-
-.sidebar-link.active {
-  background: #EFF6FF;
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.sidebar-link .icon {
-  font-size: 18px;
-}
-
-.sidebar-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 16px 0;
-}
-
-.logout-btn { color: var(--red); }
-.logout-btn:hover { background: #FEE2E2; color: #DC2626; }
-
-/* --- MAIN CONTENT --- */
-.app-main {
-  flex: 1;
-  margin-left: 260px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* --- TOPBAR --- */
-.app-topbar-new {
-  height: 80px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 32px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.topbar-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--dark);
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.search-bar {
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 250px;
-}
-
-.search-bar input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-family: inherit;
-  font-size: 14px;
-  width: 100%;
-  color: var(--text);
-}
-
-.theme-toggle-btn, .notification-btn {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--text-light);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.theme-toggle-btn:hover, .notification-btn:hover {
-  background: var(--bg-soft);
-}
-
-.avatar-small {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--green) 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.avatar-small img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* --- PAGE CONTENT --- */
-.page-content {
-  padding: 32px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.loading-spinner {
-  width: 40px; height: 40px;
-  border: 4px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 40px auto;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+.page-content { padding: 32px; max-width: 1400px; margin: 0 auto; width: 100%; }
 
 /* ============================================================
-   WIDGETS DASHBOARD
+   DASHBOARD (Tarjetas y Widgets)
    ============================================================ */
+.dash-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.dash-grid-3col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
 
-.dash-grid-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
-}
+.section-heading { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.section-heading a { font-size: 14px; color: var(--lila-dark); text-decoration: none; font-weight: 600; }
 
-.dash-grid-3col {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.section-heading {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--dark);
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.section-heading a {
-  font-size: 14px;
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-/* Tarjetas Horizontales */
 .credit-card-horizontal {
-  border-radius: 20px;
-  padding: 24px;
-  color: white;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 200px;
+  border-radius: 20px; padding: 24px; color: white; position: relative;
+  display: flex; flex-direction: column; justify-content: space-between; height: 200px;
 }
-
-.credit-card-horizontal.blue {
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
-}
-
-.credit-card-horizontal.white {
-  background: var(--bg-card);
-  color: var(--dark);
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
-}
+.credit-card-horizontal.blue { background: linear-gradient(135deg, var(--primary) 0%, #1A3C70 100%); box-shadow: 0 10px 30px rgba(13, 39, 80, 0.3); }
+.credit-card-horizontal.white { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05); }
 
 .cc-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .cc-balance-label { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
 .cc-balance { font-size: 24px; font-weight: 800; }
-.cc-chip { font-size: 24px; }
+.cc-chip { font-size: 24px; color: var(--gold); }
 .cc-middle { display: flex; justify-content: space-between; margin-top: 20px; }
 .cc-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
 .cc-value { font-size: 14px; font-weight: 600; }
 .cc-bottom { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
 .cc-number { font-size: 20px; font-weight: 600; letter-spacing: 2px; font-family: monospace; }
-.cc-logo { font-size: 20px; font-weight: 800; }
+.cc-logo { font-size: 20px; font-weight: 800; color: var(--gold); }
 
-/* Widgets de métricas */
-.widget-metric {
-  background: var(--bg-card);
-  border-radius: 20px;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border: 1px solid var(--border);
-}
-
-.widget-icon {
-  width: 56px; height: 56px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px; flex-shrink: 0;
-}
-
-.widget-icon.blue { background: #EFF6FF; color: #2563EB; }
-.widget-icon.green { background: #ECFDF5; color: #10B981; }
-.widget-icon.red { background: #FEF2F2; color: #EF4444; }
-.widget-icon.yellow { background: #FFFBEB; color: #F59E0B; }
-
+.widget-metric { background: var(--bg-card); border-radius: 20px; padding: 24px; display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); }
+.widget-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.widget-icon.blue { background: rgba(13, 39, 80, 0.1); color: var(--primary); }
+.widget-icon.green { background: rgba(16, 185, 129, 0.1); color: var(--green); }
+.widget-icon.red { background: rgba(239, 68, 68, 0.1); color: var(--red); }
+.widget-icon.yellow { background: rgba(245, 158, 11, 0.1); color: var(--yellow); }
 .widget-info .label { font-size: 14px; color: var(--text-light); font-weight: 500; margin-bottom: 4px; }
-.widget-info .value { font-size: 24px; font-weight: 800; color: var(--dark); }
+.widget-info .value { font-size: 24px; font-weight: 800; color: var(--text); }
 
-/* Tabla de transacciones */
-.transaction-list {
-  background: var(--bg-card);
-  border-radius: 20px;
-  padding: 8px;
-  border: 1px solid var(--border);
-}
-
-.transaction-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px; border-bottom: 1px solid var(--bg-soft);
-}
+/* Tablas de Transacciones */
+.transaction-list { background: var(--bg-card); border-radius: 20px; padding: 8px; border: 1px solid var(--border); }
+.transaction-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border); }
 .transaction-item:last-child { border-bottom: none; }
-
-.t-icon {
-  width: 48px; height: 48px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; margin-right: 16px; flex-shrink: 0;
-}
-.t-icon.in { background: #ECFDF5; color: #10B981; }
-.t-icon.out { background: #FEF2F2; color: #EF4444; }
-
-.t-info { flex: 1; }
-.t-title { font-size: 15px; font-weight: 600; color: var(--dark); margin-bottom: 2px; }
+.t-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 16px; flex-shrink: 0; }
+.t-icon.in { background: rgba(16, 185, 129, 0.1); color: var(--green); }
+.t-icon.out { background: rgba(239, 68, 68, 0.1); color: var(--red); }
+.t-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
 .t-date { font-size: 13px; color: var(--text-light); }
 .t-amount { font-size: 15px; font-weight: 700; }
-.t-amount.in { color: #10B981; }
-.t-amount.out { color: #EF4444; }
+.t-amount.in { color: var(--green); }
+.t-amount.out { color: var(--red); }
 
-/* ============================================================
-   MODALES Y ALERTAS
-   ============================================================ */
+/* Tabs */
+.app-tabs { display: flex; gap: 24px; border-bottom: 2px solid var(--border); margin-bottom: 24px; overflow-x: auto; }
+.app-tab { padding: 12px 4px; border: none; background: transparent; font-family: inherit; font-weight: 600; font-size: 15px; color: var(--text-light); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.app-tab.active { color: var(--lila-dark); border-bottom-color: var(--lila-dark); }
+.app-tab-content { display: none; }
+.app-tab-content.active { display: block; }
 
-.app-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-.app-section-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--dark);
-  margin-bottom: 16px;
-}
-
-.alert {
-  padding: 14px 18px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  font-weight: 500;
-}
-.alert-success { background: #D1FAE5; color: #065F46; }
-.alert-error { background: #FEE2E2; color: #991B1B; }
-.alert-info { background: #DBEAFE; color: #1E40AF; }
-.alert-warning { background: #FEF3C7; color: #92400E; }
-
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(15, 15, 30, 0.6);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 9999; padding: 16px;
-}
-.modal-card {
-  background: var(--bg-card); border-radius: 20px; padding: 24px;
-  max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto;
-  box-shadow: 0 24px 70px rgba(15, 15, 30, 0.3);
-}
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.modal-title { font-size: 20px; font-weight: 800; color: var(--dark); }
-.modal-close { background: none; border: none; cursor: pointer; font-size: 28px; color: var(--text-light); }
-
-/* Botones */
-.btn-primary {
-  background: var(--primary); color: #FFFFFF; padding: 12px 28px;
-  border-radius: 100px; font-weight: 600; font-size: 15px;
-  border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-}
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-secondary {
-  background: var(--bg-card); color: var(--dark); padding: 12px 28px;
-  border-radius: 100px; font-weight: 600; font-size: 15px;
-  border: 2px solid var(--border); cursor: pointer;
-}
-.btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
-.btn-large { padding: 16px 32px; font-size: 16px; width: 100%; justify-content: center; }
-.btn-secondary-sm {
-  background: var(--bg-soft); color: var(--text); padding: 8px 16px;
-  border-radius: 100px; border: 1px solid var(--border); cursor: pointer;
-  font-weight: 600; font-size: 13px;
-}
-
-/* Formularios */
+/* Secciones y Formularios */
+.app-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 24px; }
+.app-section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
 .app-form-group { margin-bottom: 16px; }
-.app-form-label { display: block; font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
-.app-form-input, .app-form-select, .app-form-textarea {
-  width: 100%; padding: 12px 16px; border: 2px solid var(--border);
-  border-radius: 10px; font-family: inherit; font-size: 14px;
-  background: var(--bg-card); color: var(--text); transition: all 0.2s;
-}
-.app-form-input:focus, .app-form-select:focus, .app-form-textarea:focus {
-  outline: none; border-color: var(--primary);
-}
-
-/* Chat */
-.chat-fab {
-  position: fixed; bottom: 24px; right: 24px; width: 64px; height: 64px;
-  border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--green));
-  color: white; border: none; font-size: 26px; cursor: pointer;
-  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4); z-index: 1001;
-}
-.chat-window {
-  position: fixed; bottom: 100px; right: 24px; width: 380px; height: 520px;
-  background: var(--bg-card); border-radius: 20px; box-shadow: 0 24px 70px rgba(15, 15, 30, 0.25);
-  display: none; flex-direction: column; overflow: hidden; z-index: 1002;
-}
-.chat-window.open { display: flex; }
-.chat-header { background: var(--primary); color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
-.chat-messages { flex: 1; padding: 16px; overflow-y: auto; background: var(--bg-soft); display: flex; flex-direction: column; }
-.chat-message { padding: 10px 14px; border-radius: 16px; margin-bottom: 10px; max-width: 85%; font-size: 14px; }
-.chat-bot { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); align-self: flex-start; }
-.chat-user { background: var(--primary); color: white; margin-left: auto; align-self: flex-end; }
-.chat-input-wrapper { display: flex; border-top: 1px solid var(--border); padding: 12px; background: var(--bg-card); }
-.chat-input { flex: 1; border: none; outline: none; padding: 10px; font-family: inherit; background: transparent; color: var(--text); }
-.chat-send { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+.app-form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.app-form-input, .app-form-select { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--bg-card); color: var(--text); }
+.app-form-input:focus, .app-form-select:focus { outline: none; border-color: var(--lila); box-shadow: 0 0 0 3px rgba(204, 179, 226, 0.3); }
 
 /* ============================================================
-   MODO OSCURO
+   MODO OSCURO (Ajustado con Lila y Azul)
    ============================================================ */
-
 body.dark-mode {
+  --primary: #CCB3E2;       /* En modo oscuro, el lila resalta más */
+  --primary-light: #9C89B7;
   --dark: #F1F5F9;
   --text: #E2E8F0;
   --text-light: #94A3B8;
@@ -477,162 +171,233 @@ body.dark-mode {
   --border: #334155;
 }
 
-body.dark-mode .sidebar-link.active { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
-body.dark-mode .logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
-body.dark-mode .widget-icon.blue { background: rgba(37, 99, 235, 0.2); }
-body.dark-mode .widget-icon.green { background: rgba(16, 185, 129, 0.2); }
-body.dark-mode .widget-icon.red { background: rgba(239, 68, 68, 0.2); }
-body.dark-mode .widget-icon.yellow { background: rgba(245, 158, 11, 0.2); }
-body.dark-mode .t-icon.in { background: rgba(16, 185, 129, 0.15); }
-body.dark-mode .t-icon.out { background: rgba(239, 68, 68, 0.15); }
+body.dark-mode .logo-text, body.dark-mode .topbar-title, body.dark-mode .section-heading { color: #F1F5F9; }
+body.dark-mode .sidebar-link { color: #94A3B8; }
+body.dark-mode .sidebar-link:hover { background: #334155; color: #F1F5F9; }
+body.dark-mode .sidebar-link.active { background: rgba(204, 179, 226, 0.15); color: #E9D5FF; }
+body.dark-mode .btn-primary { color: #0F172A !important; } /* Letras oscuras en botón lila */
+body.dark-mode .btn-secondary { background: transparent; color: #F1F5F9; border-color: #334155; }
+body.dark-mode .credit-card-horizontal.white { color: #F1F5F9; }
+body.dark-mode .credit-card-horizontal.white .cc-number { color: #F1F5F9 !important; }
+body.dark-mode .t-title { color: #F1F5F9; }
+body.dark-mode .widget-info .value { color: #F1F5F9; }
+body.dark-mode .app-form-label { color: #F1F5F9; }
+body.dark-mode .app-section-title { color: #CCB3E2; }
 body.dark-mode .transaction-item { border-bottom-color: #334155; }
 
 /* ============================================================
-   RESPONSIVE
+   CHAT FLOTANTE (Luci)
    ============================================================ */
 
-.mobile-menu-btn {
-  display: none;
-  background: none; border: none; font-size: 24px; cursor: pointer; color: var(--dark);
-}
-
-@media (max-width: 1024px) {
-  .app-sidebar { transform: translateX(-100%); }
-  .app-sidebar.open { transform: translateX(0); }
-  .app-main { margin-left: 0; }
-  .mobile-menu-btn { display: block; }
-}
-
-@media (max-width: 768px) {
-  .dash-grid-2col, .dash-grid-3col { grid-template-columns: 1fr; }
-  .search-bar { display: none; }
-  .page-content { padding: 16px; }
-  .chat-window { bottom: 0; right: 0; width: 100%; height: 100vh; border-radius: 0; }
-}
-/* ============================================================
-   TABS / PESTAÑAS (Enviar, Recargar, etc.)
-   ============================================================ */
-
-.app-tabs {
-  display: flex;
-  gap: 24px;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 24px;
-  overflow-x: auto;
-}
-
-.app-tab {
-  padding: 12px 4px;
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text-light);
+/* Botón flotante del robot - Estilo Burbuja/Chat */
+.chat-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%); /* Fondo blanco con un toque gris */
+  border: 3px solid var(--primary); /* Borde del color corporativo (Azul FINNEX) */
   cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  margin-bottom: -2px; /* Para que la línea azul quede pegada al borde */
-}
-
-.app-tab:hover {
-  color: var(--primary);
-}
-
-.app-tab.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-}
-
-.app-tab-content { 
-  display: none; 
-}
-
-.app-tab-content.active { 
-  display: block; 
-}
-
-/* Modo Oscuro para las pestañas */
-body.dark-mode .app-tab {
-  color: #94A3B8;
-}
-body.dark-mode .app-tab:hover {
-  color: #60A5FA;
-}
-body.dark-mode .app-tab.active {
-  color: #60A5FA;
-  border-bottom-color: #60A5FA;
-}
-/* ============================================================
-   NUEVAS FUNCIONALIDADES: TABS, SIMULADOR, FAQ, CONTACTOS
-   ============================================================ */
-
-/* Tabs (Pestañas) */
-.app-tabs {
+  z-index: 1001;
+  padding: 0;
   display: flex;
-  gap: 24px;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 24px;
-  overflow-x: auto;
-}
-.app-tab {
-  padding: 12px 4px;
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text-light);
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  margin-bottom: -2px;
-}
-.app-tab:hover { color: var(--primary); }
-.app-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-.app-tab-content { display: none; }
-.app-tab-content.active { display: block; }
-
-/* Acordeón (FAQ) */
-.faq-item {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  background: var(--bg-card);
-  overflow: hidden;
-}
-.faq-question {
-  padding: 16px 20px;
-  font-weight: 600;
-  color: var(--dark);
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(13, 39, 80, 0.25); /* Sombra suave para dar relieve */
+  transition: all 0.3s ease;
 }
-.faq-answer {
-  padding: 0 20px;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease, padding 0.3s ease;
-  color: var(--text-light);
-  font-size: 14px;
-}
-.faq-item.active .faq-answer {
-  padding: 0 20px 20px 20px;
-  max-height: 500px;
-}
-.faq-item.active .faq-question { color: var(--primary); }
 
-/* Contactos (Avatares) */
+.chat-fab:hover {
+  transform: translateY(-5px) scale(1.05); /* Se eleva al pasar el mouse */
+  box-shadow: 0 15px 35px rgba(13, 39, 80, 0.4);
+  border-color: var(--lila); /* Cambia al color Lila al pasar el mouse */
+}
+
+.chat-fab img {
+  width: 90%; /* La imagen ocupa casi todo el círculo */
+  height: 90%;
+  object-fit: contain; /* Evita que el robot se deforme */
+  border-radius: 50%;
+}
+
+/* La "colita" de la burbuja de chat */
+.chat-fab::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  width: 15px;
+  height: 15px;
+  background: var(--primary);
+  border-radius: 0 0 100% 0; /* Hace la forma de la colita */
+  transform: rotate(-45deg);
+  z-index: -1;
+}
+
+/* Ventana del chat */
+.chat-window { position: fixed; bottom: 100px; right: 24px; width: 380px; height: 520px; background: var(--bg-card); border-radius: 20px; display: none; flex-direction: column; overflow: hidden; z-index: 1002; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+.chat-window.open { display: flex; }
+.chat-header { background: var(--primary); color: #0F172A; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+body:not(.dark-mode) .chat-header { color: #FFFFFF; }
+.chat-messages { flex: 1; padding: 16px; overflow-y: auto; background: var(--bg-page); display: flex; flex-direction: column; }
+.chat-message { padding: 10px 14px; border-radius: 16px; margin-bottom: 10px; max-width: 85%; font-size: 14px; }
+.chat-bot { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); align-self: flex-start; }
+.chat-user { background: var(--lila-dark); color: white; margin-left: auto; align-self: flex-end; }
+.chat-input-wrapper { display: flex; border-top: 1px solid var(--border); padding: 12px; background: var(--bg-card); }
+.chat-input { flex: 1; border: none; outline: none; padding: 10px; background: transparent; color: var(--text); }
+.chat-send { background: var(--primary); color: #0F172A; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+body:not(.dark-mode) .chat-send { color: #FFFFFF; } /* En modo claro el botón es azul oscuro: letra blanca */
+/* ============================================================
+   DISEÑO RESPONSIVE (TABLETS Y CELULARES)
+   ============================================================ */
+
+/* --- TABLETS Y LAPTOPS PEQUEÑAS (Max 1024px) --- */
+@media (max-width: 1024px) {
+  /* El menú lateral se oculta por defecto y se vuelve deslizable */
+  .app-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .app-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 5px 0 30px rgba(0, 0, 0, 0.2);
+  }
+
+  /* El contenido principal ocupa toda la pantalla */
+  .app-main {
+    margin-left: 0;
+  }
+
+  /* Mostramos el botón de hamburguesa */
+  .mobile-menu-btn {
+    display: block;
+  }
+
+  /* Ajustamos las gráficas y grids a 1 columna */
+  .dash-grid-2col, .dash-grid-3col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- CELULARES (Max 768px) --- */
+@media (max-width: 768px) {
+  /* Ajustes del Topbar */
+  .app-topbar-new {
+    padding: 0 16px;
+    height: 70px;
+  }
+
+  .topbar-title {
+    font-size: 18px;
+  }
+
+  /* Ocultamos el buscador en celular para que no ocupe espacio */
+  .search-bar {
+    display: none;
+  }
+
+  /* Ajustes del contenido principal */
+  .page-content {
+    padding: 16px;
+  }
+
+  /* Tarjetas horizontales (se apilan una debajo de otra) */
+  .dash-grid-2col > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hacemos que las tarjetas de crédito no sean tan altas */
+  .credit-card-horizontal {
+    height: 180px;
+  }
+
+  /* Los formularios se adaptan */
+  .app-form-group {
+    margin-bottom: 12px;
+  }
+
+  /* Las tablas permiten scroll horizontal si son muy anchas */
+  .app-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* El chat de Luci ocupa toda la pantalla en celular */
+  .chat-window {
+    width: 100%;
+    height: 100vh;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+    max-width: 100%;
+    max-height: 100vh;
+    z-index: 9999;
+  }
+
+  .chat-fab {
+    bottom: 16px;
+    right: 16px;
+    width: 55px;
+    height: 55px;
+  }
+
+  /* Títulos más pequeños */
+  .section-heading { font-size: 16px; }
+  .app-section-title { font-size: 16px; }
+  .widget-info .value { font-size: 20px; }
+  .cc-balance { font-size: 20px; }
+  .cc-number { font-size: 16px; letter-spacing: 1px; }
+}
+/* ============================================================
+   ARREGLOS RESPONSIVE Y CONTACTOS (Móvil)
+   ============================================================ */
+
+/* 1. Estilo correcto para los Tabs (Pestañas) */
+.app-tabs {
+  display: flex;
+  gap: 16px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 24px;
+  overflow-x: auto; /* Permite scroll si hay muchos */
+  -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+  scrollbar-width: none; /* Oculta la barra de scroll en Firefox */
+}
+.app-tabs::-webkit-scrollbar { 
+  display: none; /* Oculta la barra blanca fea en Chrome/Safari */
+}
+
+.app-tab {
+  padding: 12px 4px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-light);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+}
+.app-tab.active {
+  color: var(--lila-dark);
+  border-bottom-color: var(--lila-dark);
+}
+
+/* 2. Estilo para los Contactos Frecuentes (Círculos) */
 .contactos-grid {
   display: flex;
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 12px;
+  margin-bottom: 16px;
+  scrollbar-width: none;
 }
+.contactos-grid::-webkit-scrollbar { display: none; }
+
 .contacto-item {
   display: flex;
   flex-direction: column;
@@ -641,6 +406,7 @@ body.dark-mode .app-tab.active {
   cursor: pointer;
   min-width: 70px;
 }
+
 .contacto-avatar {
   width: 56px;
   height: 56px;
@@ -655,12 +421,15 @@ body.dark-mode .app-tab.active {
   border: 2px solid var(--border);
   transition: all 0.2s;
 }
-.contacto-item:hover .contacto-avatar {
-  border-color: var(--primary);
+
+.contacto-item:hover .contacto-avatar,
+.contacto-item:focus .contacto-avatar {
+  border-color: var(--lila);
   transform: scale(1.05);
 }
+
 .contacto-nombre {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
   text-align: center;
@@ -670,102 +439,133 @@ body.dark-mode .app-tab.active {
   max-width: 70px;
 }
 
-/* Botón de ojo (Privacidad) */
-.eye-btn {
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: var(--text-light);
-  margin-left: 8px;
-  vertical-align: middle;
+/* 3. Arreglar el botón del Robot (Luci) para que no tenga fondo blanco */
+.chat-fab {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 65px;
+  height: 65px;
 }
-
-/* Simulador de Crédito */
-.slider-container {
-  margin: 24px 0;
-}
-.slider {
+.chat-fab img {
   width: 100%;
-  height: 8px;
-  border-radius: 5px;
-  background: var(--border);
-  outline: none;
-  -webkit-appearance: none;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
 }
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--primary);
-  cursor: pointer;
-  border: 3px solid var(--bg-card);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-/* Modo Oscuro para FAQ */
-body.dark-mode .faq-question { color: #F1F5F9; }
-body.dark-mode .faq-answer { color: #94A3B8; }
-body.dark-mode .app-tab { color: #94A3B8; }
-body.dark-mode .app-tab.active { color: #60A5FA; border-bottom-color: #60A5FA; }
 /* ============================================================
-   GRID DE SERVICIOS
+   CORRECCIÓN DEFINITIVA DE TOPBAR, TABS Y RESPONSIVE
    ============================================================ */
 
-.servicios-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
+/* 1. Arreglar la barra de búsqueda para que sea una píldora elegante */
+.search-bar {
+  background: var(--bg-soft) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 100px !important; /* Fuerza el borde redondeado */
+  padding: 8px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 250px !important;
+  max-width: 100% !important;
 }
 
-.servicio-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px 8px;
-  background: var(--bg-card);
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.search-bar input {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  color: var(--text) !important;
+  width: 100% !important;
 }
 
-.servicio-item:hover {
-  border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+.search-bar input::placeholder {
+  color: var(--text-light) !important;
 }
 
-.servicio-item.selected {
-  border-color: var(--primary);
-  background: rgba(37, 99, 235, 0.05);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+/* 2. Arreglar los botones (sol, campana, hamburguesa) para que no sean cuadros */
+button.mobile-menu-btn,
+button.theme-toggle-btn,
+button.notification-btn {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 20px !important;
+  color: var(--text-light) !important;
+  border-radius: 50% !important; /* Círculo perfecto */
+  transition: background 0.2s !important;
 }
 
-.servicio-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+button.mobile-menu-btn:hover,
+button.theme-toggle-btn:hover,
+button.notification-btn:hover {
+  background: var(--bg-soft) !important;
+  color: var(--primary) !important;
 }
 
-.servicio-item span {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text);
+/* 3. Arreglar los Tabs (Enviar, Recargar, etc.) y quitar la barra blanca fea */
+.app-tabs {
+  display: flex !important;
+  gap: 20px !important;
+  border-bottom: 2px solid var(--border) !important;
+  margin-bottom: 24px !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important; /* Firefox */
 }
 
-/* Responsive para móviles */
-@media (max-width: 400px) {
-  .servicios-grid {
-    grid-template-columns: repeat(2, 1fr);
+.app-tabs::-webkit-scrollbar {
+  display: none !important; /* Chrome/Safari */
+}
+
+.app-tab {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 3px solid transparent !important;
+  padding: 12px 4px !important;
+  font-family: inherit !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: var(--text-light) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  margin-bottom: -2px !important;
+}
+
+.app-tab.active {
+  color: var(--lila-dark) !important;
+  border-bottom-color: var(--lila-dark) !important;
+}
+
+/* ============================================================
+   ARREGLOS RESPONSIVE (Para que en celular no se rompa)
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Ocultar la barra de búsqueda en celular para que quepan los botones */
+  .search-bar {
+    display: none !important; 
+  }
+
+  /* Ajustar el topbar en celular */
+  .app-topbar-new {
+    padding: 0 16px !important;
+    height: 70px !important;
+  }
+
+  /* Hacer que el título sea más pequeño */
+  .topbar-title {
+    font-size: 18px !important;
+  }
+
+  /* Mostrar el botón hamburguesa (que por defecto está oculto en PC) */
+  .mobile-menu-btn {
+    display: flex !important;
   }
 }
