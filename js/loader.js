@@ -144,19 +144,12 @@
 
     const loader = document.createElement('div');
     loader.id = LOADER_ID;
-    loader.innerHTML = `
-      <div class="nx-loader-icon">
-        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-      </div>
+        loader.innerHTML = `
+      <img src="logo.png" alt="NexusPay" style="width: 80px; height: 80px; border-radius: 20px; box-shadow: 0 10px 30px rgba(37,99,235,0.3); margin-bottom: 24px; animation: nx-float 2.2s ease-in-out infinite;">
       <div class="nx-loader-logo">Nexus<span>Pay</span></div>
       <div class="nx-loader-texto">Cargando tu banco digital...</div>
       <div class="nx-loader-barra"></div>
     `;
-
-    document.body.insertBefore(loader, document.body.firstChild);
-  }
 
   // ============ OCULTAR LOADER ============
   function ocultarLoader() {

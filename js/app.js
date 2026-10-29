@@ -1,5 +1,6 @@
 // ============================================================
-// NexusPay - App Principal (SPA) - v22 (Unificado y Corregido)
+// NexusPay - App Principal (SPA) - v28 (Crédito bancario para personas naturales)
+// Alineado al Proyecto SENA
 // ============================================================
 
 let usuarioActual = null;
@@ -45,6 +46,19 @@ function togglePrivacidad() {
   navegarA(currentPage);
 }
 
+function reproducirSonido() {
+  try {
+    const audio = document.getElementById('sonidoApp');
+    if (audio) { audio.currentTime = 0; audio.play(); }
+  } catch (e) { console.log('Audio bloqueado por el navegador'); }
+}
+
+function seleccionarServicio(elemento, nombreServicio) {
+  document.querySelectorAll('.servicio-item').forEach(el => el.classList.remove('selected'));
+  elemento.classList.add('selected');
+  document.getElementById('servicioNombre').value = nombreServicio;
+}
+
 async function crearNotificacion(userId, titulo, mensaje, tipo) {
   try {
     await supabaseClient.from('notificaciones').insert({
@@ -58,6 +72,8 @@ async function crearNotificacion(userId, titulo, mensaje, tipo) {
 // ============ INICIALIZACION ============
 
 document.addEventListener('DOMContentLoaded', async function () {
+  iniciarMenuMovil();
+
   const session = await verificarSesion();
   if (!session) return;
 
@@ -81,9 +97,49 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 // ============ MENU Y NAVEGACION ============
 
+// ---- Menú lateral responsive (sidebar + overlay + bloqueo de scroll) ----
+
+function obtenerSidebar() {
+  return document.getElementById('appSidebar') || document.querySelector('.app-sidebar');
+}
+
+// Si el HTML no tiene la capa oscura, se crea sola
+function obtenerOverlay() {
+  let overlay = document.getElementById('sidebarOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'sidebarOverlay';
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+  }
+  return overlay;
+}
+
+function toggleMenu(open) {
+  const sidebar = obtenerSidebar();
+  if (!sidebar) return;
+  sidebar.classList.toggle('open', open);
+  obtenerOverlay().classList.toggle('show', open);
+  document.body.classList.toggle('no-scroll', open);
+}
+
 function toggleSidebar() {
-  const sidebar = document.getElementById('appSidebar');
-  if (sidebar) sidebar.classList.toggle('open');
+  const sidebar = obtenerSidebar();
+  if (sidebar) toggleMenu(!sidebar.classList.contains('open'));
+}
+
+function cerrarMenu() { toggleMenu(false); }
+
+function iniciarMenuMovil() {
+  obtenerOverlay().addEventListener('click', cerrarMenu);
+
+  // Si el botón ya tiene onclick="toggleSidebar()" en el HTML, no se duplica el evento
+  const menuBtn = document.querySelector('.mobile-menu-btn');
+  if (menuBtn && !menuBtn.hasAttribute('onclick')) menuBtn.addEventListener('click', toggleSidebar);
+
+  document.querySelectorAll('.sidebar-link').forEach(l => l.addEventListener('click', cerrarMenu));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarMenu(); });
+  window.addEventListener('resize', () => { if (window.innerWidth > 1024) cerrarMenu(); });
 }
 
 function ocultarProductosSegunTipo() {
@@ -136,15 +192,14 @@ function actualizarIconoTema() {
 }
 
 async function navegarA(page) {
-  const sidebar = document.getElementById('appSidebar');
-  if (sidebar && sidebar.classList.contains('open')) sidebar.classList.remove('open');
+  cerrarMenu();
 
   document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
   const linkActivo = document.querySelector('.sidebar-link[data-page="' + page + '"]');
   if (linkActivo) linkActivo.classList.add('active');
 
   const titulos = {
-    dashboard: ['Overview', 'Resumen de tu cuenta'],
+    dashboard: ['Inicio', 'Resumen de tu cuenta'],
     flowpay: ['Transactions', 'Transferencias y pagos'],
     flowcard: ['Credit Cards', 'Tu tarjeta digital'],
     flowsave: ['Savings', 'Ahorro programado'],
@@ -153,7 +208,8 @@ async function navegarA(page) {
     flowbusiness: ['Services', 'Cuenta empresarial'],
     flowanalytics: ['Analytics', 'Análisis financiero'],
     nexusbox: ['Accounts', 'Cajitas con rendimiento'],
-    creditos: ['Loans', 'Solicita tu crédito'],
+    activos: ['Activos Circulares', 'Economía circular para tu negocio'],
+    creditos: tipoUsuario === 'natural' ? ['Crédito Personal', 'Libre inversión'] : ['FAMILIA NEXAR', 'Microcrédito, Leasing y Factoring'],
     simulador: ['Simulator', 'Calcula tu cuota'],
     perfil: ['Setting', 'Configuración de cuenta'],
     verificacion: ['Verification', 'Verifica tu identidad'],
@@ -171,16 +227,6 @@ async function navegarA(page) {
     switch (page) {
       case 'dashboard': await renderDashboard(); break;
       case 'flowpay': await renderFlowPay(); break;
-      function seleccionarServicio(elemento, nombreServicio) {
-  // Quitar la clase 'selected' a todos los servicios
-  document.querySelectorAll('.servicio-item').forEach(el => el.classList.remove('selected'));
-  
-  // Agregar la clase 'selected' al que se hizo clic
-  elemento.classList.add('selected');
-  
-  // Guardar el valor en el input oculto
-  document.getElementById('servicioNombre').value = nombreServicio;
-}
       case 'flowcard': await renderFlowCard(); break;
       case 'flowsave': await renderFlowSave(); break;
       case 'flowinvest':
@@ -191,6 +237,7 @@ async function navegarA(page) {
       case 'flowbusiness': await renderFlowBusiness(); break;
       case 'flowanalytics': await renderFlowAnalytics(); break;
       case 'nexusbox': await renderNexusBox(); break;
+      case 'activos': await renderActivosCirculares(); break;
       case 'creditos': await renderCreditos(); break;
       case 'simulador': await renderSimulador(); break;
       case 'perfil': await renderPerfil(); break;
@@ -271,16 +318,21 @@ async function renderDashboard() {
     });
   }
 
+  // --- LÓGICA FIN-360 (PRESUPUESTO) ---
+  const presupuestoGuardado = localStorage.getItem('nexus_presupuesto') || 2000000;
+  const porcentajeGastado = presupuestoGuardado > 0 ? (totalEgresos / presupuestoGuardado) * 100 : 0;
+  const colorBarra = porcentajeGastado > 90 ? '#EF4444' : (porcentajeGastado > 70 ? '#F59E0B' : '#10B981');
+
   const html = `
     <div class="dash-grid-2col">
       <div>
-        <div class="section-heading">My Cards <a href="#" onclick="navegarA('flowcard'); return false;">See All</a></div>
+        <div class="section-heading">Mis Tarjetas <a href="#" onclick="navegarA('flowcard'); return false;">Ver todas</a></div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           
           <div class="credit-card-horizontal blue">
             <div class="cc-top">
               <div>
-                <div class="cc-balance-label">Balance <button class="eye-btn" onclick="togglePrivacidad()" style="color:white; font-size:14px;">${iconoOjo}</button></div>
+                <div class="cc-balance-label">Balance <button class="eye-btn" onclick="togglePrivacidad()" style="color:white; font-size:16px; background:none; border:none;">${iconoOjo}</button></div>
                 <div class="cc-balance">${formatearDinero(saldo)}</div>
               </div>
               <div class="cc-chip">💳</div>
@@ -317,7 +369,7 @@ async function renderDashboard() {
       </div>
 
       <div>
-        <div class="section-heading">Recent Transaction</div>
+        <div class="section-heading">Transacciones Recientes</div>
         <div class="transaction-list">
           ${movimientos && movimientos.length > 0 ? movimientos.map(m => {
             const isIngreso = m.tipo === 'ingreso';
@@ -336,6 +388,21 @@ async function renderDashboard() {
           }).join('') : '<p style="padding:16px; color:#64748B;">No hay transacciones.</p>'}
         </div>
       </div>
+    </div>
+
+    <div class="app-section" style="background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%); border: 2px solid #2563EB; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="font-size: 16px; font-weight: 800; color: var(--dark);">FIN-360: Presupuesto Mensual</div>
+        <button class="btn-secondary-sm" onclick="editarPresupuesto()">⚙️ Editar</button>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-light); margin-bottom: 8px;">
+        <span>Gastado: <strong>${formatearDinero(totalEgresos)}</strong></span>
+        <span>Límite: <strong>${formatearDinero(presupuestoGuardado)}</strong></span>
+      </div>
+      <div style="width: 100%; height: 12px; background: var(--bg-soft); border-radius: 100px; overflow: hidden;">
+        <div style="height: 100%; width: ${Math.min(porcentajeGastado, 100)}%; background: ${colorBarra}; border-radius: 100px; transition: width 0.5s;"></div>
+      </div>
+      <div style="text-align: right; font-size: 12px; font-weight: 700; color: ${colorBarra}; margin-top: 6px;">${porcentajeGastado.toFixed(1)}% consumido</div>
     </div>
 
     <div class="dash-grid-2col" style="margin-bottom: 24px;">
@@ -373,28 +440,47 @@ async function renderDashboard() {
   setTimeout(() => {
     const ctxWeekly = document.getElementById('chartWeekly');
     if (ctxWeekly) {
-      new Chart(ctxWeekly.getContext('2d'), {
+      new Chart(ctxWeekly, {
         type: 'bar',
         data: {
           labels: diasSemana,
           datasets: [
-            { label: 'Ingresos', data: ingresosPorDia, backgroundColor: '#2563EB', borderRadius: 4 },
-            { label: 'Egresos', data: egresosPorDia, backgroundColor: '#14B8A6', borderRadius: 4 }
+            { label: 'Ingresos', data: ingresosPorDia, backgroundColor: '#CCB3E2', borderRadius: 4 }, // Lila
+            { label: 'Egresos', data: egresosPorDia, backgroundColor: '#D1B474', borderRadius: 4 } // Dorado
           ]
         },
-        options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: document.body.classList.contains('dark-mode') ? '#E2E8F0' : '#1E293B' } } },
+          scales: {
+            y: { beginAtZero: true, grid: { display: false }, ticks: { color: document.body.classList.contains('dark-mode') ? '#94A3B8' : '#64748B' } },
+            x: { grid: { display: false }, ticks: { color: document.body.classList.contains('dark-mode') ? '#94A3B8' : '#64748B' } }
+          }
+        }
       });
     }
 
     const ctxPie = document.getElementById('chartPie');
     if (ctxPie) {
+      let gastosServicios = 0, gastosTarjeta = 0, gastosCreditos = 0, otros = 0;
+      if (movimientos) {
+        movimientos.forEach(m => {
+          if (m.tipo === 'egreso') {
+            const desc = (m.descripcion || '').toLowerCase();
+            if (desc.includes('servicio') || desc.includes('claro') || desc.includes('netflix')) gastosServicios += Number(m.monto);
+            else if (desc.includes('tarjeta')) gastosTarjeta += Number(m.monto);
+            else if (desc.includes('credito') || desc.includes('cuota')) gastosCreditos += Number(m.monto);
+            else otros += Number(m.monto);
+          }
+        });
+      }
       new Chart(ctxPie.getContext('2d'), {
         type: 'doughnut',
         data: {
-          labels: ['Entretenimiento', 'Servicios', 'Inversión', 'Otros'],
+          labels: ['Servicios', 'Tarjeta', 'Créditos', 'Otros'],
           datasets: [{
-            data: [30, 15, 20, 35],
-            backgroundColor: ['#334155', '#F59E0B', '#D946EF', '#2563EB'],
+            data: [gastosServicios, gastosTarjeta, gastosCreditos, otros],
+            backgroundColor: ['#D946EF', '#2563EB', '#F59E0B', '#334155'],
             borderWidth: 0
           }]
         },
@@ -404,9 +490,22 @@ async function renderDashboard() {
   }, 100);
 }
 
+// ============ FIN-360 (PRESUPUESTO) ============
+
+function editarPresupuesto() {
+  const actual = localStorage.getItem('nexus_presupuesto') || '2000000';
+  const nuevo = prompt('Ingresa tu límite de gastos mensual (COP):', actual);
+  if (nuevo && !isNaN(nuevo) && Number(nuevo) > 0) {
+    localStorage.setItem('nexus_presupuesto', Number(nuevo));
+    if (window.toast) toast.success('Presupuesto actualizado', 'Tu límite FIN-360 ha cambiado');
+    renderDashboard();
+  }
+}
+
 // ============ SIMULADOR ============
 
 async function renderSimulador() {
+  if (tipoUsuario === 'natural') return renderSimuladorNatural();
   const html = `
     <div class="app-section">
       <div class="app-section-title">Simulador de Crédito</div>
@@ -445,6 +544,7 @@ async function renderSimulador() {
 }
 
 function calcularSimulacion() {
+  if (tipoUsuario === 'natural') return calcularSimulacionNatural();
   const montoEl = document.getElementById('simMonto');
   const plazoEl = document.getElementById('simPlazo');
   if (!montoEl || !plazoEl) return;
@@ -479,9 +579,9 @@ async function renderCDT() {
   const saldo = await obtenerSaldo();
 
   const productos = [
-    { nombre: 'CDT 90 dias', rendimiento: 10.5, desc: 'Plazo 90 dias · Tasa fija' },
-    { nombre: 'CDT 180 dias', rendimiento: 12.0, desc: 'Plazo 180 dias · Tasa fija' },
-    { nombre: 'CDT 360 dias', rendimiento: 15.5, desc: 'Plazo 360 dias · Tasa fija' },
+    { nombre: 'NEXO - CDT 90 dias', rendimiento: 10.5, desc: 'Plazo 90 dias · Tasa fija' },
+    { nombre: 'NEXO - CDT 180 dias', rendimiento: 12.0, desc: 'Plazo 180 dias · Tasa fija' },
+    { nombre: 'NEXO - CDT 360 dias', rendimiento: 15.5, desc: 'Plazo 360 dias · Tasa fija' },
   ];
 
   let totalInv = 0, totalAct = 0;
@@ -489,7 +589,7 @@ async function renderCDT() {
 
   let html = `
     <div class="app-section" style="background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%); border: 2px solid #2563EB;">
-      <div style="font-size: 18px; font-weight: 800; color: var(--dark); margin-bottom: 8px;">CDT - Certificado de Deposito a Termino</div>
+      <div style="font-size: 18px; font-weight: 800; color: var(--dark); margin-bottom: 8px;">NEXO - Certificado de Deposito a Termino</div>
       <div style="font-size: 14px; color: var(--text-light); margin-bottom: 16px;">Invierte tu dinero con tasas garantizadas. Sin riesgo, con rentabilidad fija.</div>
     </div>
 
@@ -543,7 +643,7 @@ async function abrirCDT() {
   const seleccion = document.getElementById('cdtPlazo').value.split('|');
   const plazo = seleccion[0];
   const rendimiento = parseFloat(seleccion[1]);
-  const nombreProducto = 'CDT ' + plazo + ' dias';
+  const nombreProducto = 'NEXO - CDT ' + plazo + ' dias';
 
   if (!monto || monto < 100000) { if (window.toast) toast.error('Monto minimo', 'Minimo $100.000'); return; }
   const saldo = await obtenerSaldo();
@@ -557,6 +657,7 @@ async function abrirCDT() {
   });
   await supabaseClient.rpc('retirar_saldo', { p_monto: monto });
   await actualizarSaldoSidebar();
+  reproducirSonido();
   if (window.toast) toast.success('CDT abierto', 'Invertiste ' + formatearDinero(monto));
   renderCDT();
 }
@@ -584,7 +685,7 @@ async function renderFlowPay() {
       <div class="widget-metric">
         <div class="widget-icon blue">🏦</div>
         <div class="widget-info">
-          <div class="label">Numero de cuenta</div>
+          <div class="label">Cuenta NEXA</div>
           <div class="value" style="font-size:18px;">${cuenta ? cuenta.numero_cuenta : 'N/A'}</div>
         </div>
       </div>
@@ -608,7 +709,17 @@ async function renderFlowPay() {
     <div class="app-tab-content active" id="tab-enviar">
       <div class="app-section">
         <div class="app-section-title">Nueva transferencia</div>
-        ${otros.slice(0, 4).length > 0 ? `<label class="app-form-label">Contactos frecuentes</label><div class="contactos-grid">${otros.slice(0, 4).map(c => `<div class="contacto-item" onclick="document.getElementById('payReceptor').value='${c.email}'"><div class="contacto-avatar">${c.email.charAt(0).toUpperCase()}</div><div class="contacto-nombre">${c.email.split('@')[0]}</div></div>`).join('')}</div>` : ''}
+        ${otros.slice(0, 4).length > 0 ? `
+          <label class="app-form-label">Contactos frecuentes</label>
+          <div class="contactos-grid">
+            ${otros.slice(0, 4).map(c => `
+              <div class="contacto-item" onclick="document.getElementById('payReceptor').value='${c.email}'">
+                <div class="contacto-avatar">${c.email.charAt(0).toUpperCase()}</div>
+                <div class="contacto-nombre">${c.email.split('@')[0]}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
         <div class="app-form-group">
           <label class="app-form-label">Destinatario (Correo)</label>
           <select class="app-form-select" id="payReceptor">
@@ -708,7 +819,7 @@ async function renderFlowPay() {
       <div class="app-section">
         <div class="app-section-title">Historial de transferencias</div>
         ${transferencias && transferencias.length > 0 ? `
-          <table class="app-table">
+          <div class="table-wrap"><table class="app-table">
             <thead><tr><th>Fecha</th><th>Tipo</th><th>Contraparte</th><th style="text-align:right;">Monto</th><th></th></tr></thead>
             <tbody>
               ${transferencias.map(t => {
@@ -719,7 +830,7 @@ async function renderFlowPay() {
                 return '<tr><td>' + formatearFecha(t.created_at) + '</td><td>' + (esEmisor ? '📤' : '📥') + '</td><td>' + contraparte + '</td><td class="' + clase + '" style="text-align:right;">' + signo + formatearDinero(t.monto) + '</td><td><button class="btn-secondary-sm" onclick="generarReciboPDF(' + t.id + ')" style="font-size:11px;padding:4px 8px;">📄</button></td></tr>';
               }).join('')}
             </tbody>
-          </table>
+          </table></div>
         ` : '<p style="color:#64748B;">Aun no has realizado transferencias.</p>'}
       </div>
     </div>
@@ -759,6 +870,7 @@ async function enviarDinero() {
     if (receptorInfo) await crearNotificacion(receptorInfo.user_id, '💸 Dinero recibido', 'Recibiste ' + formatearDinero(monto) + ' de ' + localStorage.getItem('user_email'), 'success');
     await crearNotificacion(localStorage.getItem('user_id'), '✅ Transferencia enviada', 'Enviaste ' + formatearDinero(monto) + ' a ' + receptor, 'success');
     if (window.toast) toast.success('Transferencia exitosa', 'Enviaste ' + formatearDinero(monto) + ' a ' + receptor);
+    reproducirSonido();
     await actualizarSaldoSidebar();
     setTimeout(() => navegarA('flowpay'), 1500);
   } else {
@@ -773,6 +885,7 @@ async function recargarSaldo() {
   if (data && data.success) {
     await crearNotificacion(localStorage.getItem('user_id'), '💰 Recarga exitosa', 'Recargaste ' + formatearDinero(monto), 'success');
     if (window.toast) toast.success('Recarga exitosa', 'Recargaste ' + formatearDinero(monto));
+    reproducirSonido();
     await actualizarSaldoSidebar();
     setTimeout(() => navegarA('flowpay'), 1500);
   } else {
@@ -783,11 +896,13 @@ async function recargarSaldo() {
 async function pagarServicio() {
   const servicio = document.getElementById('servicioNombre').value;
   const monto = parseFloat(document.getElementById('servicioMonto').value);
+  if (!servicio) { if (window.toast) toast.error('Falta servicio', 'Selecciona un servicio del grid'); return; }
   if (!monto || monto <= 0) { if (window.toast) toast.error('Monto invalido', 'Ingresa un monto mayor a 0'); return; }
   const { data } = await supabaseClient.rpc('pagar_servicio', { p_servicio: servicio, p_monto: monto });
   if (data && data.success) {
     await crearNotificacion(localStorage.getItem('user_id'), '💡 Pago exitoso', 'Pagaste ' + servicio + ' por ' + formatearDinero(monto), 'success');
     if (window.toast) toast.success('Pago exitoso', 'Pagaste ' + servicio + ' por ' + formatearDinero(monto));
+    reproducirSonido();
     await actualizarSaldoSidebar();
     setTimeout(() => navegarA('flowpay'), 1500);
   } else {
@@ -903,7 +1018,7 @@ async function renderFlowCard() {
 
   const html = `
     <div class="section-heading">My Cards</div>
-    <div class="dash-grid-2col" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-bottom: 32px;">
+    <div class="dash-grid-2col" style="grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); margin-bottom: 32px;">
       
       <!-- Tarjeta Azul -->
       <div class="credit-card-horizontal blue">
@@ -1028,7 +1143,7 @@ async function renderFlowSave() {
   const userId = localStorage.getItem('user_id');
   const { data: metas } = await supabaseClient.from('metas_ahorro').select('*').eq('user_id', userId).order('created_at', { ascending: false });
 
-  let html = '<div class="app-tabs"><button class="app-tab active" data-tab="mis-metas">Mis metas</button><button class="app-tab" data-tab="nueva-meta">Nueva meta</button></div><div class="app-tab-content active" id="tab-mis-metas">';
+  let html = '<div class="app-tabs"><button class="app-tab active" data-tab="mis-metas">Mis metas (VELA)</button><button class="app-tab" data-tab="nueva-meta">Nueva meta</button></div><div class="app-tab-content active" id="tab-mis-metas">';
 
   if (metas && metas.length > 0) {
     metas.forEach(meta => {
@@ -1073,11 +1188,12 @@ async function aportarMeta(metaId) {
   const { data } = await supabaseClient.from('metas_ahorro').select('monto_actual').eq('id', metaId).single();
   const actual = data ? Number(data.monto_actual) : 0;
   await supabaseClient.from('metas_ahorro').update({ monto_actual: actual + monto }).eq('id', metaId);
+  reproducirSonido();
   if (window.toast) toast.success('Aporte registrado', formatearDinero(monto) + ' guardados');
   navegarA('flowsave');
 }
 
-// ============ NEXUSINVEST ============
+// ============ NEXUSINVEST (EMPRENDEDOR) ============
 
 async function renderFlowInvest() {
   const userId = localStorage.getItem('user_id');
@@ -1085,7 +1201,7 @@ async function renderFlowInvest() {
   const saldo = await obtenerSaldo();
 
   const productos = [
-    { nombre: 'CDT Digital', rendimiento: 10.5, desc: 'Bajo riesgo' },
+    { nombre: 'NEXO - CDT Digital', rendimiento: 10.5, desc: 'Bajo riesgo' },
     { nombre: 'Fondo Conservador', rendimiento: 12.0, desc: 'Riesgo medio' },
     { nombre: 'Fondo Crecimiento', rendimiento: 15.5, desc: 'Riesgo alto' },
     { nombre: 'Portafolio Emprendedor', rendimiento: 18.0, desc: 'Diversificado' },
@@ -1138,6 +1254,7 @@ async function crearInversion() {
   await supabaseClient.from('inversiones').insert({ user_id: userId, producto, monto_invertido: monto, rendimiento_anual: rend, valor_actual: monto });
   await supabaseClient.rpc('retirar_saldo', { p_monto: monto });
   await actualizarSaldoSidebar();
+  reproducirSonido();
   if (window.toast) toast.success('Inversion creada', producto + ' por ' + formatearDinero(monto));
   navegarA('flowinvest');
 }
@@ -1191,6 +1308,7 @@ async function contratarSeguro() {
   const cobertura = parseFloat(sel.options[sel.selectedIndex].getAttribute('data-cob'));
   const prima = parseFloat(sel.options[sel.selectedIndex].getAttribute('data-prima'));
   await supabaseClient.from('seguros').insert({ user_id: userId, tipo, cobertura, prima_mensual: prima });
+  reproducirSonido();
   if (window.toast) toast.success('Poliza contratada', 'Seguro de ' + tipo + ' activo');
   navegarA('flowshield');
 }
@@ -1229,6 +1347,7 @@ async function crearEmpresa() {
   if (!nombre) { if (window.toast) toast.error('Falta nombre', 'Escribe el nombre del negocio'); return; }
   if (!nit) { if (window.toast) toast.error('Falta NIT', 'El NIT es obligatorio'); return; }
   await supabaseClient.from('cuentas_empresariales').insert({ user_id: userId, nombre_negocio: nombre, nit, categoria, saldo: 0 });
+  reproducirSonido();
   if (window.toast) toast.success('Cuenta empresarial creada', nombre);
   navegarA('flowbusiness');
 }
@@ -1252,19 +1371,505 @@ async function renderFlowAnalytics() {
   html += '<div class="app-section"><div class="app-section-title">Historial completo</div>';
 
   if (movs && movs.length > 0) {
-    html += '<table class="app-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripcion</th><th style="text-align:right;">Monto</th></tr></thead><tbody>';
+    html += '<div class="table-wrap"><table class="app-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Descripcion</th><th style="text-align:right;">Monto</th></tr></thead><tbody>';
     movs.slice(0, 30).forEach(m => {
       const signo = m.tipo === 'ingreso' ? '+' : '-';
       const clase = m.tipo === 'ingreso' ? 'text-green' : 'text-red';
       html += '<tr><td>' + formatearFechaCorta(m.created_at) + '</td><td>' + (m.tipo === 'ingreso' ? '🟢' : '🔴') + '</td><td>' + m.descripcion + '</td><td class="' + clase + '" style="text-align:right;">' + signo + formatearDinero(m.monto) + '</td></tr>';
     });
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
   } else {
     html += '<p style="color:var(--text-light);">No hay movimientos.</p>';
   }
 
   html += '</div>';
   document.getElementById('pageContent').innerHTML = html;
+}
+
+// ============ FINNEX ACTIVOS CIRCULARES (ECONOMÍA CIRCULAR) ============
+
+async function renderActivosCirculares() {
+  const equipos = [
+    { id: 1, nombre: 'Computador de Escritorio Core i5', estado: 'Reacondicionado', precio: 1200000, tipo: 'Venta', icono: '💻' },
+    { id: 2, nombre: 'Impresora Multifuncional Láser', estado: 'Usado - Excelente', precio: 450000, tipo: 'Venta', icono: '🖨️' },
+    { id: 3, nombre: 'Máquina de Coser Industrial', estado: 'Reacondicionada', precio: 150000, tipo: 'Alquiler (mes)', icono: '🧵' },
+    { id: 4, nombre: 'Taladro Percutor Profesional', estado: 'Usado - Bueno', precio: 80000, tipo: 'Alquiler (semana)', icono: '🛠️' }
+  ];
+
+  let html = `
+    <div class="app-section" style="background: linear-gradient(135deg, #ECFDF5 0%, #EFF6FF 100%); border: 2px solid #10B981;">
+      <div style="display: flex; align-items: flex-start; gap: 16px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #10B981, #2563EB); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">♻️</div>
+        <div>
+          <div style="font-size: 18px; font-weight: 800; color: var(--dark); margin-bottom: 4px;">FINNEX Activos Circulares</div>
+          <div style="font-size: 14px; color: var(--text-light);">Accede a equipos productivos mediante reutilización, reacondicionamiento o alquiler. Una alternativa sostenible para tu negocio.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-tabs">
+      <button class="app-tab active" data-tab="catalogo">Catálogo</button>
+      <button class="app-tab" data-tab="mis-solicitudes">Mis Solicitudes</button>
+    </div>
+
+    <div class="app-tab-content active" id="tab-catalogo">
+      <div class="cajitas-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+  `;
+
+  equipos.forEach(eq => {
+    html += `
+      <div class="cajita-card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:20px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="font-size:32px;">${eq.icono}</div>
+          <div>
+            <div style="font-size:16px; font-weight:700; color:var(--dark);">${eq.nombre}</div>
+            <div style="font-size:12px; color:#10B981; font-weight:600;">${eq.estado}</div>
+          </div>
+        </div>
+        <div style="font-size:24px; font-weight:800; color:var(--dark); margin-bottom:4px;">${formatearDinero(eq.precio)}</div>
+        <div style="font-size:13px; color:var(--text-light); margin-bottom:16px;">Modalidad: ${eq.tipo}</div>
+        <button class="btn-primary" style="width:100%; justify-content:center;" onclick="solicitarActivo(${eq.id}, '${eq.nombre}', ${eq.precio}, '${eq.tipo}')">Solicitar</button>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+    </div>
+    <div class="app-tab-content" id="tab-mis-solicitudes">
+      <div class="app-section"><p style="color:var(--text-light);">Aún no has solicitado activos circulares.</p></div>
+    </div>
+  `;
+
+  document.getElementById('pageContent').innerHTML = html;
+  activarTabs();
+}
+
+async function solicitarActivo(id, nombre, precio, tipo) {
+  if (!confirm(`¿Deseas solicitar el activo: ${nombre} por ${formatearDinero(precio)} (${tipo})?`)) return;
+  
+  if (window.toast) toast.info('Procesando...', 'Registrando tu solicitud de activo circular');
+  
+  const userId = localStorage.getItem('user_id');
+  
+  await supabaseClient.from('movimientos').insert({
+    user_id: userId,
+    tipo: 'egreso',
+    monto: tipo.includes('Alquiler') ? precio : 0,
+    descripcion: `Solicitud Activo Circular: ${nombre} (${tipo})`
+  });
+
+  await crearNotificacion(userId, '♻️ Solicitud Recibida', 'Tu solicitud para ' + nombre + ' está en revisión.', 'success');
+  
+  reproducirSonido();
+  if (window.toast) toast.success('¡Solicitud Exitosa!', 'Pronto un asesor te contactará para coordinar la entrega.');
+  
+  navegarA('dashboard');
+}
+
+// ============ POLÍTICA DE CRÉDITO - PERSONAS NATURALES ============
+// Lógica tipo banco para crédito de consumo / libre inversión (Colombia):
+//  1. Reglas de exclusión: identidad verificada (KYC), ingreso mínimo, antigüedad, mora vigente.
+//  2. Score de riesgo del cliente (0-1000) -> categoría A/B/C -> tasa E.A. (siempre por debajo de la usura).
+//  3. Capacidad de pago: cuotas totales (nueva + obligaciones) <= 40% de los ingresos.
+//  4. Cuota fija con sistema francés (amortización) + seguro de vida deudores.
+//  5. Si pide más de lo que puede pagar -> contraoferta por el monto máximo aprobable.
+// Los emprendedores NO usan este motor: conservan su lógica propia (Familia NEXAR).
+const POLITICA_NATURAL = {
+  SMMLV: 1750905,              // Salario mínimo 2026 (Decreto 1469 de 2025)
+  TASA_USURA_EA: 28.59,        // Usura consumo y ordinario, octubre 2026 (Superfinanciera). CAMBIA CADA MES: actualizar
+  MARGEN_USURA: 0.5,           // Puntos porcentuales por debajo de la usura (nunca se cobra el tope)
+  INGRESO_MINIMO_SMMLV: 1,     // Ingreso mínimo para aplicar
+  MONTO_MIN: 500000,
+  MONTO_MAX: 30000000,
+  LIMITE_ENDEUDAMIENTO: 0.40,  // (cuotas actuales + cuota nueva) / ingresos
+  SEGURO_VIDA_MENSUAL: 0.0005, // 0,05% mensual sobre el monto desembolsado (seguro de vida deudores)
+  SCORE_MINIMO: 500,
+  CATEGORIAS: [                // Tasa E.A. por categoría de riesgo
+    { nombre: 'A', scoreMin: 800, tasaEA: 21.5 },
+    { nombre: 'B', scoreMin: 650, tasaEA: 24.5 },
+    { nombre: 'C', scoreMin: 500, tasaEA: 27.5 }
+  ]
+};
+
+// Contexto interno del cliente (se carga en renderCreditos)
+let creditoNaturalCtx = { verificado: false, obligacionesInternas: 0, creditosPagados: 0 };
+
+function formatearPesos(valor) {
+  return '$' + Math.round(Number(valor) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function tasaMensualDesdeEA(tasaEA) {
+  return Math.pow(1 + tasaEA / 100, 1 / 12) - 1;
+}
+
+// Cuota fija mensual del sistema francés (sin seguro)
+function cuotaFrancesa(monto, tasaMensual, n) {
+  if (!n) return 0;
+  if (tasaMensual === 0) return monto / n;
+  return monto * tasaMensual / (1 - Math.pow(1 + tasaMensual, -n));
+}
+
+function tasaAplicablePorCategoria(cat) {
+  const P = POLITICA_NATURAL;
+  return Math.min(cat.tasaEA, P.TASA_USURA_EA - P.MARGEN_USURA);
+}
+
+function formatoFechaISO(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+// Tabla de amortización (sistema francés + seguro fijo mensual)
+function generarPlanAmortizacion(monto, tasaMensual, n, seguroMensual) {
+  const plan = [];
+  let saldo = monto;
+  const cuotaBase = Math.round(cuotaFrancesa(monto, tasaMensual, n));
+  const hoy = new Date();
+  const dia = Math.min(hoy.getDate(), 28);
+  for (let k = 1; k <= n; k++) {
+    const intereses = Math.round(saldo * tasaMensual);
+    let capital = cuotaBase - intereses;
+    if (k === n) capital = saldo; // la última cuota cierra el saldo exacto
+    saldo -= capital;
+    plan.push({
+      numero: k,
+      fecha_vencimiento: formatoFechaISO(new Date(hoy.getFullYear(), hoy.getMonth() + k, dia)),
+      capital: capital,
+      intereses: intereses,
+      seguro: seguroMensual,
+      valor: capital + intereses + seguroMensual
+    });
+  }
+  return plan;
+}
+
+// Score de riesgo del cliente (0-1000). No depende del monto pedido: el monto se evalúa en la capacidad de pago.
+function calcularScoreNatural(p) {
+  const P = POLITICA_NATURAL;
+
+  // 1. Historial crediticio (máx. 400)
+  let historial = { 'Al dia': 400, 'Sin historial': 250, 'Mora ocasional resuelta': 120, 'Mora vigente': 0 }[p.historial];
+  if (historial === undefined) historial = 250;
+  if (p.historial === 'Sin historial') historial = Math.min(400, historial + Math.min(3, p.creditosPagados || 0) * 50);
+
+  // 2. Estabilidad laboral (máx. 250), ajustada por antigüedad
+  const baseEstab = { 'Indefinido': 250, 'Pensionado': 240, 'Fijo': 170, 'Independiente': 150 }[p.vinculacion];
+  let factor = 1;
+  if (p.vinculacion !== 'Pensionado') factor = p.antiguedadMeses >= 24 ? 1 : (p.antiguedadMeses >= 12 ? 0.8 : 0.6);
+  const estabilidad = Math.round((baseEstab === undefined ? 150 : baseEstab) * factor);
+
+  // 3. Nivel de ingresos en SMMLV (máx. 150)
+  const smmlvs = p.ingresos / P.SMMLV;
+  const ingresos = smmlvs >= 6 ? 150 : smmlvs >= 4 ? 120 : smmlvs >= 2 ? 80 : smmlvs >= 1 ? 40 : 0;
+
+  // 4. Endeudamiento actual, antes del nuevo crédito (máx. 200)
+  const endeudamientoActual = p.ingresos > 0 ? p.obligaciones / p.ingresos : 1;
+  const endeudamiento = endeudamientoActual <= 0.10 ? 200 : endeudamientoActual <= 0.20 ? 160 : endeudamientoActual <= 0.30 ? 100 : endeudamientoActual <= 0.40 ? 40 : 0;
+
+  return {
+    score: historial + estabilidad + ingresos + endeudamiento,
+    detalle: { historial, estabilidad, ingresos, endeudamiento },
+    endeudamientoActual
+  };
+}
+
+// Evaluación completa de la solicitud (función pura: no toca la base de datos ni el DOM)
+function evaluarCreditoNatural(p) {
+  const P = POLITICA_NATURAL;
+  const motivos = [];
+  const obligaciones = (p.obligacionesDeclaradas || 0) + (p.obligacionesInternas || 0);
+  const n = p.plazoMeses;
+
+  const r = {
+    decision: 'RECHAZADO', contraoferta: false, motivos: motivos,
+    score: 0, categoria: null, tasaEA: null, tasaMensual: null, plazoMeses: n,
+    monto_aprobado: 0, montoMaximo: 0, cuotaMaxima: 0,
+    cuotaPedida: 0, cuotaBase: 0, seguro: 0, cuotaTotal: 0, totalPagar: 0, totalIntereses: 0,
+    endeudamientoPost: null, obligaciones: obligaciones
+  };
+
+  // --- Reglas de exclusión ---
+  if (!p.verificado) motivos.push('Debes verificar tu identidad (KYC) en el menú Verificación antes de solicitar un crédito.');
+  if (p.ingresos < P.INGRESO_MINIMO_SMMLV * P.SMMLV) {
+    motivos.push('Tus ingresos mensuales deben ser de al menos ' + P.INGRESO_MINIMO_SMMLV + ' SMMLV (' + formatearPesos(P.INGRESO_MINIMO_SMMLV * P.SMMLV) + ').');
+  }
+  const antiguedadMinima = p.vinculacion === 'Independiente' ? 12 : (p.vinculacion === 'Pensionado' ? 0 : 6);
+  if (p.antiguedadMeses < antiguedadMinima) {
+    motivos.push('Necesitas al menos ' + antiguedadMinima + ' meses de antigüedad en tu actividad actual.');
+  }
+  if (p.historial === 'Mora vigente') motivos.push('Tienes obligaciones en mora. Ponte al día para poder aplicar.');
+  if (p.monto < P.MONTO_MIN) motivos.push('El monto mínimo es ' + formatearPesos(P.MONTO_MIN) + '.');
+  if (p.monto > P.MONTO_MAX) motivos.push('El monto máximo por solicitud es ' + formatearPesos(P.MONTO_MAX) + '.');
+
+  // --- Score y categoría ---
+  const sc = calcularScoreNatural({ ingresos: p.ingresos, obligaciones: obligaciones, historial: p.historial, vinculacion: p.vinculacion, antiguedadMeses: p.antiguedadMeses, creditosPagados: p.creditosPagados });
+  r.score = sc.score;
+  const cat = P.CATEGORIAS.find(c => sc.score >= c.scoreMin) || null;
+  if (!cat) motivos.push('Tu perfil de riesgo (score ' + sc.score + ') no alcanza el mínimo de ' + P.SCORE_MINIMO + ' puntos.');
+  const catRef = cat || P.CATEGORIAS[P.CATEGORIAS.length - 1];
+  r.categoria = cat ? cat.nombre : null;
+  r.tasaEA = tasaAplicablePorCategoria(catRef);
+  r.tasaMensual = tasaMensualDesdeEA(r.tasaEA);
+
+  // --- Capacidad de pago ---
+  const factorCuota = cuotaFrancesa(1, r.tasaMensual, n) + P.SEGURO_VIDA_MENSUAL; // cuota total por cada peso prestado
+  r.cuotaPedida = Math.round(p.monto * factorCuota);
+  const cuotaMaxima = Math.max(0, p.ingresos * P.LIMITE_ENDEUDAMIENTO - obligaciones);
+  r.cuotaMaxima = Math.round(cuotaMaxima);
+  r.montoMaximo = Math.max(0, Math.min(P.MONTO_MAX, Math.floor(cuotaMaxima / factorCuota / 10000) * 10000));
+  r.endeudamientoPost = p.ingresos > 0 ? (obligaciones + r.cuotaPedida) / p.ingresos : null;
+
+  if (motivos.length === 0) {
+    if (p.monto <= r.montoMaximo) {
+      r.monto_aprobado = p.monto;
+    } else if (r.montoMaximo >= P.MONTO_MIN) {
+      r.monto_aprobado = r.montoMaximo;
+      r.contraoferta = true;
+    } else {
+      motivos.push('Tus ingresos no alcanzan para asumir una nueva cuota: tus obligaciones ya usan ' + Math.round((obligaciones / p.ingresos) * 100) + '% de tus ingresos y el límite de endeudamiento es ' + Math.round(P.LIMITE_ENDEUDAMIENTO * 100) + '%.');
+    }
+  }
+  if (motivos.length > 0) return r;
+
+  // --- Condiciones finales del crédito aprobado ---
+  const monto = r.monto_aprobado;
+  r.cuotaBase = Math.round(monto * cuotaFrancesa(1, r.tasaMensual, n));
+  r.seguro = Math.round(monto * P.SEGURO_VIDA_MENSUAL);
+  r.cuotaTotal = r.cuotaBase + r.seguro;
+  r.totalPagar = r.cuotaTotal * n;
+  r.totalIntereses = Math.max(0, r.cuotaBase * n - monto);
+  r.endeudamientoPost = (obligaciones + r.cuotaTotal) / p.ingresos;
+  r.decision = 'APROBADO';
+  return r;
+}
+
+function leerFormularioNatural() {
+  const el = id => document.getElementById(id);
+  if (!el('credMonto') || !el('credVinculacion')) return null;
+  const num = id => parseFloat(el(id).value) || 0;
+  return {
+    ingresos: num('credIngresos'),
+    obligacionesDeclaradas: num('credObligaciones'),
+    obligacionesInternas: creditoNaturalCtx.obligacionesInternas,
+    creditosPagados: creditoNaturalCtx.creditosPagados,
+    verificado: creditoNaturalCtx.verificado,
+    vinculacion: el('credVinculacion').value,
+    antiguedadMeses: num('credAntiguedad'),
+    historial: el('credHistorialNat').value,
+    monto: num('credMonto'),
+    plazoMeses: parseInt(el('credPlazo').value) || 12
+  };
+}
+
+// Panel de preaprobación en vivo (transparencia de costos antes de solicitar)
+function previsualizarCreditoNatural() {
+  const box = document.getElementById('preapNatural');
+  const p = leerFormularioNatural();
+  if (!box || !p) return;
+  const ev = evaluarCreditoNatural(p);
+  const P = POLITICA_NATURAL;
+
+  let clase, titulo;
+  if (ev.decision === 'APROBADO' && !ev.contraoferta) {
+    clase = 'alert-success'; titulo = '🟢 Preaprobado: la cuota cabe en tu presupuesto';
+  } else if (ev.decision === 'APROBADO') {
+    clase = 'alert-warning'; titulo = '🟡 Podemos aprobarte hasta ' + formatearPesos(ev.montoMaximo) + ' con tu capacidad de pago';
+  } else {
+    clase = 'alert-error'; titulo = '🔴 Con estos datos no podríamos aprobar el crédito';
+  }
+
+  const cuotaMostrada = ev.decision === 'APROBADO' ? ev.cuotaTotal : ev.cuotaPedida;
+  const celda = (label, valor) => '<div><div style="font-size:12px;color:var(--text-light);">' + label + '</div><div style="font-weight:700;color:var(--text);">' + valor + '</div></div>';
+
+  let html = '<div class="alert ' + clase + '" style="display:block;"><div style="font-weight:700;margin-bottom:8px;">' + titulo + '</div>';
+  if (ev.motivos.length > 0) {
+    html += '<ul style="margin:0 0 8px 18px;font-size:13px;">' + ev.motivos.map(m => '<li>' + m + '</li>').join('') + '</ul>';
+  }
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">' +
+    celda('Cuota mensual (incluye seguro)', formatearPesos(cuotaMostrada)) +
+    celda('Tasa', ev.tasaEA.toFixed(2).replace('.', ',') + '% E.A. (' + (ev.tasaMensual * 100).toFixed(2).replace('.', ',') + '% mensual)') +
+    celda('Plazo', ev.plazoMeses + ' cuotas mensuales') +
+    celda('Total a pagar', ev.decision === 'APROBADO' ? formatearPesos(ev.totalPagar) : formatearPesos(ev.cuotaPedida * ev.plazoMeses)) +
+    celda('Endeudamiento con este crédito', ev.endeudamientoPost === null ? '-' : Math.round(ev.endeudamientoPost * 100) + '% (límite ' + Math.round(P.LIMITE_ENDEUDAMIENTO * 100) + '%)') +
+    celda('Categoría de riesgo / Score', (ev.categoria || 'No aplica') + ' / ' + ev.score) +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--text-light);margin-top:10px;">Tasa máxima legal (usura) vigente: ' + P.TASA_USURA_EA.toFixed(2).replace('.', ',') + '% E.A. (Superfinanciera, octubre 2026). La tasa que te ofrecemos siempre está por debajo. El seguro de vida deudores (' + (P.SEGURO_VIDA_MENSUAL * 100).toFixed(2).replace('.', ',') + '% mensual) está incluido en la cuota.</div></div>';
+  box.innerHTML = html;
+}
+
+async function solicitarCreditoNatural() {
+  const p = leerFormularioNatural();
+  if (!p) return;
+  const userId = localStorage.getItem('user_id');
+  const tipo = document.getElementById('credTipo').value;
+
+  if (!document.getElementById('credAutorizacion').checked) {
+    if (window.toast) toast.error('Falta autorización', 'Debes autorizar la consulta en centrales de riesgo y el tratamiento de datos');
+    return;
+  }
+
+  if (window.toast) toast.info('Analizando...', 'Evaluando tu perfil y tu capacidad de pago');
+  await new Promise(r => setTimeout(r, 1200));
+
+  const ev = evaluarCreditoNatural(p);
+  const plazoDias = p.plazoMeses * 30;
+
+  // --- Rechazo: se registra la solicitud y se explica el motivo ---
+  if (ev.decision === 'RECHAZADO') {
+    const { error: errRech } = await supabaseClient.from('solicitudes').insert({
+      user_id: userId, monto_solicitado: p.monto, plazo_dias: plazoDias, tipo_negocio: tipo,
+      ingresos_mensuales: p.ingresos, score: ev.score, decision: 'RECHAZADO',
+      monto_aprobado: 0, tasa_sugerida: ev.tasaEA
+    });
+    if (errRech) console.error('No se pudo registrar la solicitud rechazada:', errRech.message);
+    await crearNotificacion(userId, '❌ Solicitud de crédito no aprobada', ev.motivos[0] || 'No cumples la política de crédito.', 'warning');
+    previsualizarCreditoNatural();
+    const box = document.getElementById('preapNatural');
+    if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (window.toast) toast.error('Solicitud no aprobada', ev.motivos[0] || 'No cumples la política de crédito');
+    return;
+  }
+
+  // --- Contraoferta: el cliente debe aceptar el monto ajustado ---
+  if (ev.contraoferta) {
+    const acepta = confirm(
+      'Con tus ingresos y obligaciones, el monto máximo que podemos aprobarte es ' + formatearPesos(ev.monto_aprobado) + ' (pediste ' + formatearPesos(p.monto) + ').\n\n' +
+      'Cuota mensual: ' + formatearPesos(ev.cuotaTotal) + ' x ' + ev.plazoMeses + ' meses\n' +
+      'Tasa: ' + ev.tasaEA.toFixed(2).replace('.', ',') + '% E.A.\n\n¿Deseas continuar con este monto?'
+    );
+    if (!acepta) {
+      if (window.toast) toast.info('Solicitud cancelada', 'Puedes ajustar el monto o el plazo y volver a intentarlo');
+      return;
+    }
+  }
+
+  // --- Aprobado: plan de pagos real (sistema francés) ---
+  const plan = generarPlanAmortizacion(ev.monto_aprobado, ev.tasaMensual, ev.plazoMeses, ev.seguro);
+  const totalPagar = plan.reduce((a, c) => a + c.valor, 0);
+  const totalIntereses = plan.reduce((a, c) => a + c.intereses, 0);
+  const valorCuota = plan[0].valor;
+
+  // 1. Solicitud
+  const { data: solicitud, error: errSol } = await supabaseClient.from('solicitudes').insert({
+    user_id: userId, monto_solicitado: p.monto, plazo_dias: plazoDias, tipo_negocio: tipo,
+    ingresos_mensuales: p.ingresos, score: ev.score, decision: 'APROBADO',
+    monto_aprobado: ev.monto_aprobado, tasa_sugerida: ev.tasaEA
+  }).select().single();
+  if (errSol) { if (window.toast) toast.error('Error en solicitud', errSol.message); return; }
+
+  // 2. Crédito
+  const { data: credito, error: errCred } = await supabaseClient.from('creditos').insert({
+    user_id: userId, solicitud_id: solicitud.id, monto_aprobado: ev.monto_aprobado,
+    tasa_anual: ev.tasaEA, plazo_dias: plazoDias, num_cuotas: ev.plazoMeses,
+    valor_cuota: valorCuota, total_intereses: totalIntereses, total_pagar: totalPagar,
+    saldo_pendiente: totalPagar, estado: 'activo', cuotas_pagadas: 0
+  }).select().single();
+  if (errCred) { if (window.toast) toast.error('Error en crédito', errCred.message); return; }
+
+  // 3. Plan de pagos (tabla 'cuotas'; si la tabla no existe el contrato calcula el plan al generarse)
+  const filasCuotas = plan.map(c => ({
+    credito_id: credito.id, numero: c.numero, fecha_vencimiento: c.fecha_vencimiento,
+    valor: c.valor, capital: c.capital, intereses: c.intereses
+  }));
+  const { error: errPlan } = await supabaseClient.from('cuotas').insert(filasCuotas);
+  if (errPlan) console.warn('No se pudo guardar el plan de pagos en la tabla cuotas:', errPlan.message);
+
+  // 4. Desembolso (si falla se revierte el crédito)
+  const { data: desembolso, error: errDes } = await supabaseClient.rpc('recargar_saldo', { p_monto: ev.monto_aprobado });
+  if (errDes || (desembolso && desembolso.success === false)) {
+    await supabaseClient.from('creditos').delete().eq('id', credito.id);
+    if (window.toast) toast.error('Error en el desembolso', (errDes && errDes.message) || (desembolso && desembolso.message) || 'No se pudo desembolsar el crédito');
+    return;
+  }
+
+  // 5. Movimiento y notificación
+  await supabaseClient.from('movimientos').insert({
+    user_id: userId, tipo: 'ingreso', monto: ev.monto_aprobado, descripcion: 'Desembolso: ' + tipo
+  });
+  await crearNotificacion(userId, '💸 Crédito Desembolsado',
+    'Se consignaron ' + formatearPesos(ev.monto_aprobado) + '. Pagarás ' + ev.plazoMeses + ' cuotas de ' + formatearPesos(valorCuota) + ' a ' + ev.tasaEA.toFixed(2).replace('.', ',') + '% E.A.', 'success');
+
+  reproducirSonido();
+  if (window.toast) toast.success('¡Crédito Aprobado!', 'El dinero ya está en tu cuenta');
+  navegarA('dashboard');
+}
+
+// ---- Simulador para personas naturales (usa el mismo motor: cuota y tasa coherentes con el crédito real) ----
+async function renderSimuladorNatural() {
+  const P = POLITICA_NATURAL;
+  const html = `
+    <div class="app-section">
+      <div class="app-section-title">Simulador de Crédito de Libre Inversión</div>
+      <div class="slider-container">
+        <label class="app-form-label">Monto a solicitar: <span id="lblMonto" style="color:var(--primary); font-size:18px;">${formatearPesos(5000000)}</span></label>
+        <input type="range" class="slider" id="simMonto" min="${P.MONTO_MIN}" max="${P.MONTO_MAX}" step="500000" value="5000000" oninput="calcularSimulacion()">
+      </div>
+      <div class="app-form-group">
+        <label class="app-form-label">Plazo (meses)</label>
+        <select class="app-form-select" id="simPlazo" onchange="calcularSimulacion()">
+          <option value="6">6 meses</option>
+          <option value="12">12 meses</option>
+          <option value="24" selected>24 meses</option>
+          <option value="36">36 meses</option>
+          <option value="48">48 meses</option>
+          <option value="60">60 meses</option>
+        </select>
+      </div>
+      <div class="app-form-group">
+        <label class="app-form-label">Tus ingresos mensuales (COP)</label>
+        <input class="app-form-input" type="number" id="simIngresos" value="3000000" oninput="calcularSimulacion()">
+      </div>
+    </div>
+    <div class="dash-grid-2col">
+      <div class="widget-metric">
+        <div class="widget-icon blue">💵</div>
+        <div class="widget-info"><div class="label">Cuota mensual estimada</div><div class="value" id="lblCuota">$0</div></div>
+      </div>
+      <div class="widget-metric">
+        <div class="widget-icon green">📈</div>
+        <div class="widget-info"><div class="label">Tasa de referencia</div><div class="value" id="lblTasa">-</div></div>
+      </div>
+    </div>
+    <div class="app-section" id="semaforoBox">
+      <div class="app-section-title">Capacidad de pago</div>
+      <div id="semaforoMsg" class="alert alert-success">🟢 Cuota saludable</div>
+      <div style="font-size:12px;color:var(--text-light);margin-top:10px;">Valores de referencia (categoría B). La tasa final depende de tu perfil y siempre es menor a la usura (${P.TASA_USURA_EA.toFixed(2).replace('.', ',')}% E.A.). La cuota incluye seguro de vida deudores.</div>
+    </div>
+    <button class="btn-primary btn-large" onclick="navegarA('creditos')">Ir a solicitar crédito</button>
+  `;
+  document.getElementById('pageContent').innerHTML = html;
+  calcularSimulacion();
+}
+
+function calcularSimulacionNatural() {
+  const P = POLITICA_NATURAL;
+  const montoEl = document.getElementById('simMonto');
+  const plazoEl = document.getElementById('simPlazo');
+  const ingresosEl = document.getElementById('simIngresos');
+  if (!montoEl || !plazoEl || !ingresosEl) return;
+  const monto = parseFloat(montoEl.value);
+  const meses = parseInt(plazoEl.value);
+  const ingresos = parseFloat(ingresosEl.value) || 0;
+  document.getElementById('lblMonto').textContent = formatearPesos(monto);
+
+  const tasaEA = tasaAplicablePorCategoria(P.CATEGORIAS[1]);
+  const im = tasaMensualDesdeEA(tasaEA);
+  const cuota = Math.round(monto * (cuotaFrancesa(1, im, meses) + P.SEGURO_VIDA_MENSUAL));
+  document.getElementById('lblCuota').textContent = formatearPesos(cuota);
+  document.getElementById('lblTasa').textContent = tasaEA.toFixed(2).replace('.', ',') + '% E.A.';
+
+  const semaforoMsg = document.getElementById('semaforoMsg');
+  const ratio = ingresos > 0 ? cuota / ingresos : 1;
+  if (ratio > P.LIMITE_ENDEUDAMIENTO) {
+    semaforoMsg.className = 'alert alert-error';
+    semaforoMsg.textContent = '🔴 La cuota (' + Math.round(ratio * 100) + '% de tus ingresos) supera el límite de ' + Math.round(P.LIMITE_ENDEUDAMIENTO * 100) + '%.';
+  } else if (ratio > 0.25) {
+    semaforoMsg.className = 'alert alert-warning';
+    semaforoMsg.textContent = '🟡 Cuota moderada (' + Math.round(ratio * 100) + '% de tus ingresos).';
+  } else {
+    semaforoMsg.className = 'alert alert-success';
+    semaforoMsg.textContent = '🟢 Cuota saludable (' + Math.round(ratio * 100) + '% de tus ingresos).';
+  }
 }
 
 // ============ NEXUSCREDIT ============
@@ -1274,19 +1879,110 @@ async function renderCreditos() {
   const { data: solicitudes } = await supabaseClient.from('solicitudes').select('*').eq('user_id', userId).order('created_at', { ascending: false });
   const { data: creditos } = await supabaseClient.from('creditos').select('*').eq('user_id', userId).order('created_at', { ascending: false });
 
+  // =========================================================
+  // LÓGICA DUAL: FORMULARIO DIFERENTE PARA NATURAL Y EMPRENDEDOR
+  // =========================================================
+  // Contexto interno del cliente natural (KYC + obligaciones y pagos con NexusPay) para el motor de evaluación
+  if (tipoUsuario === 'natural') {
+    const { data: perfilKyc } = await supabaseClient.from('profiles').select('verificado').eq('id', userId).single();
+    creditoNaturalCtx = {
+      verificado: !!(perfilKyc && perfilKyc.verificado),
+      obligacionesInternas: (creditos || []).filter(c => c.estado === 'activo').reduce((a, c) => a + Number(c.valor_cuota || 0), 0),
+      creditosPagados: (creditos || []).filter(c => c.estado === 'pagado').length
+    };
+  }
+
+  let formularioHTML = '';
+
+  if (tipoUsuario === 'natural') {
+    formularioHTML = `
+      <div class="app-section">
+        <div class="app-section-title">Crédito de Libre Inversión</div>
+        <p style="color:var(--text-light); font-size:14px; margin-bottom:16px;">Financia tus metas personales, viajes o emergencias. Evaluamos tu perfil y tu capacidad de pago: la tasa depende de tu categoría de riesgo y siempre está por debajo de la tasa de usura.</p>
+        <div class="app-form-group">
+          <label class="app-form-label">Destino del Crédito</label>
+          <select class="app-form-select" id="credTipo">
+            <option value="Libre Inversión">Libre Inversión</option>
+            <option value="Consumo">Consumo (Compras)</option>
+            <option value="Educación">Educación</option>
+            <option value="Emergencia">Emergencia</option>
+          </select>
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Tipo de vinculación</label>
+          <select class="app-form-select" id="credVinculacion" onchange="previsualizarCreditoNatural()">
+            <option value="Indefinido">Empleado - contrato a término indefinido</option>
+            <option value="Fijo">Empleado - contrato a término fijo</option>
+            <option value="Independiente">Independiente</option>
+            <option value="Pensionado">Pensionado</option>
+          </select>
+        </div>
+        <div class="app-form-group"><label class="app-form-label">Antigüedad en tu empleo o actividad (meses)</label><input class="app-form-input" type="number" id="credAntiguedad" value="12" min="0" oninput="previsualizarCreditoNatural()"></div>
+        <div class="app-form-group"><label class="app-form-label">Ingresos mensuales (COP)</label><input class="app-form-input" type="number" id="credIngresos" value="2500000" oninput="previsualizarCreditoNatural()"></div>
+        <div class="app-form-group">
+          <label class="app-form-label">Otras obligaciones mensuales (cuotas de créditos, tarjetas, arriendo financiero)</label>
+          <input class="app-form-input" type="number" id="credObligaciones" value="0" min="0" oninput="previsualizarCreditoNatural()">
+          <div style="font-size:12px;color:var(--text-light);margin-top:4px;">Las cuotas de tus créditos activos en NexusPay se suman automáticamente.</div>
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Historial en centrales de riesgo (declarado)</label>
+          <select class="app-form-select" id="credHistorialNat" onchange="previsualizarCreditoNatural()">
+            <option value="Al dia">Al día en mis obligaciones</option>
+            <option value="Sin historial">Sin historial crediticio</option>
+            <option value="Mora ocasional resuelta">Mora ocasional ya resuelta</option>
+            <option value="Mora vigente">Tengo obligaciones en mora</option>
+          </select>
+        </div>
+        <div class="app-form-group"><label class="app-form-label">Monto (COP)</label><input class="app-form-input" type="number" id="credMonto" value="1000000" oninput="previsualizarCreditoNatural()"></div>
+        <div class="app-form-group">
+          <label class="app-form-label">Plazo (meses)</label>
+          <select class="app-form-select" id="credPlazo" onchange="previsualizarCreditoNatural()">
+            <option value="6">6 meses</option><option value="12">12 meses</option><option value="24" selected>24 meses</option><option value="36">36 meses</option><option value="48">48 meses</option><option value="60">60 meses</option>
+          </select>
+        </div>
+        <div id="preapNatural" style="margin: 16px 0;"></div>
+        <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:var(--text-light); margin-bottom:16px; cursor:pointer;">
+          <input type="checkbox" id="credAutorizacion" style="margin-top:3px;">
+          <span>Autorizo a NexusPay a consultar y reportar mi información en centrales de riesgo y a tratar mis datos personales conforme a la Ley 1266 de 2008 y la Ley 1581 de 2012.</span>
+        </label>
+        <button class="btn-primary btn-large" onclick="solicitarCredito()">Solicitar Crédito</button>
+      </div>
+    `;
+  } else {
+    // Formulario para Emprendedores (Documento SENA)
+    formularioHTML = `
+      <div class="app-section">
+        <div class="app-section-title">Familia NEXAR (Financiación Productiva)</div>
+        <div class="app-form-group">
+          <label class="app-form-label">Producto</label>
+          <select class="app-form-select" id="credTipo">
+            <option value="Microcrédito Productivo">Microcrédito Productivo</option>
+            <option value="Crédito Pequeños Negocios">Crédito Pequeños Negocios</option>
+            <option value="Leasing Productivo">Leasing Productivo (Equipos)</option>
+            <option value="Factoring Digital">Factoring Digital</option>
+          </select>
+        </div>
+        <div class="app-form-group"><label class="app-form-label">Ingresos del negocio (COP)</label><input class="app-form-input" type="number" id="credIngresos" value="4000000"></div>
+        <div class="app-form-group"><label class="app-form-label">Meses con el negocio</label><input class="app-form-input" type="number" id="credMeses" value="12"></div>
+        <div class="app-form-group"><label class="app-form-label">Monto (COP)</label><input class="app-form-input" type="number" id="credMonto" value="2000000"></div>
+        <div class="app-form-group">
+          <label class="app-form-label">Plazo (días)</label>
+          <select class="app-form-select" id="credPlazo">
+            <option value="30">30 dias</option><option value="60">60 dias</option><option value="90" selected>90 dias</option><option value="120">120 dias</option><option value="180">180 dias</option>
+          </select>
+        </div>
+        <div class="app-form-group"><label class="app-form-label">Historial</label><select class="app-form-select" id="credHistorial"><option>Sin historial</option><option>1 credito pagado</option><option>2-3 creditos pagados</option><option>Mas de 3 creditos</option></select></div>
+        <button class="btn-primary btn-large" onclick="solicitarCredito()">Analizar con IA</button>
+      </div>
+    `;
+  }
+
   let html = '<div class="app-tabs"><button class="app-tab active" data-tab="solicitar">Solicitar</button><button class="app-tab" data-tab="mis-creditos">Mis creditos</button><button class="app-tab" data-tab="historial-cred">Historial</button></div>';
 
-  html += '<div class="app-tab-content active" id="tab-solicitar"><div class="app-section"><div class="app-section-title">Nueva solicitud</div>' +
-    '<div class="app-form-group"><label class="app-form-label">Tipo de negocio</label><select class="app-form-select" id="credTipo"><option>E-commerce</option><option>Creador de contenido</option><option>Servicios digitales</option><option>SaaS / App</option><option>Marketing digital</option><option>Otro</option></select></div>' +
-    '<div class="app-form-group"><label class="app-form-label">Ingresos mensuales (COP)</label><input class="app-form-input" type="number" id="credIngresos" value="3000000"></div>' +
-    '<div class="app-form-group"><label class="app-form-label">Meses con el negocio</label><input class="app-form-input" type="number" id="credMeses" value="12"></div>' +
-    '<div class="app-form-group"><label class="app-form-label">Monto (COP)</label><input class="app-form-input" type="number" id="credMonto" value="1000000"></div>' +
-    '<div class="app-form-group"><label class="app-form-label">Plazo</label><select class="app-form-select" id="credPlazo"><option value="30">30 dias</option><option value="60">60 dias</option><option value="90" selected>90 dias</option><option value="120">120 dias</option><option value="180">180 dias</option></select></div>' +
-    '<div class="app-form-group"><label class="app-form-label">Historial</label><select class="app-form-select" id="credHistorial"><option>Sin historial</option><option>1 credito pagado</option><option>2-3 creditos pagados</option><option>Mas de 3 creditos</option></select></div>' +
-    '<button class="btn-primary btn-large" onclick="solicitarCredito()">Analizar con IA</button></div></div>';
+  html += '<div class="app-tab-content active" id="tab-solicitar">' + formularioHTML + '</div>';
 
+  // --- MIS CRÉDITOS ---
   html += '<div class="app-tab-content" id="tab-mis-creditos">';
-
   if (creditos && creditos.length > 0) {
     creditos.forEach(c => {
       const progreso = c.num_cuotas > 0 ? (c.cuotas_pagadas / c.num_cuotas) * 100 : 0;
@@ -1294,32 +1990,30 @@ async function renderCreditos() {
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px; color:var(--text);">' +
         '<div><div style="font-size:12px;color:var(--text-light);">Monto</div><div style="font-weight:700;">' + formatearDinero(c.monto_aprobado) + '</div></div>' +
         '<div><div style="font-size:12px;color:var(--text-light);">Tasa</div><div style="font-weight:700;">' + c.tasa_anual + '%</div></div>' +
-        '<div><div style="font-size:12px;color:var(--text-light);">Saldo</div><div style="font-weight:700;">' + formatearDinero(c.saldo_pendiente) + '</div></div>' +
+        '<div><div style="font-size:12px;color:var(--text-light);">Saldo Pendiente</div><div style="font-weight:700;">' + formatearDinero(c.saldo_pendiente) + '</div></div>' +
         '<div><div style="font-size:12px;color:var(--text-light);">Cuotas</div><div style="font-weight:700;">' + c.cuotas_pagadas + '/' + c.num_cuotas + '</div></div>' +
         '<div><div style="font-size:12px;color:var(--text-light);">Valor Cuota</div><div style="font-weight:700;">' + formatearDinero(c.valor_cuota) + '</div></div>' +
         '</div><div style="width:100%; height:8px; background:var(--bg-soft); border-radius:100px; margin:16px 0;"><div style="height:100%; width:' + progreso + '%; background:var(--primary); border-radius:100px;"></div></div>' +
         (c.estado === 'activo' ? '<button class="btn-primary btn-large" onclick="pagarCuota(' + c.id + ', ' + c.valor_cuota + ')">💳 Pagar Cuota</button>' : '<p style="text-align:center; color:var(--green); font-weight:700;">🎉 Crédito Pagado</p>') +
         '<button class="btn-secondary-sm" onclick="generarContratoPDF(' + c.id + ')" style="margin-top:8px;">📄 Descargar contrato</button></div>';
     });
-  } else {
-    html += '<div class="app-section"><p style="color:var(--text-light);">No tienes creditos activos.</p></div>';
-  }
+  } else { html += '<div class="app-section"><p style="color:var(--text-light);">No tienes creditos activos.</p></div>'; }
+  html += '</div>';
 
-  html += '</div><div class="app-tab-content" id="tab-historial-cred"><div class="app-section"><div class="app-section-title">Historial</div>';
-
+  // --- HISTORIAL ---
+  html += '<div class="app-tab-content" id="tab-historial-cred"><div class="app-section"><div class="app-section-title">Historial</div>';
   if (solicitudes && solicitudes.length > 0) {
-    html += '<table class="app-table"><thead><tr><th>Fecha</th><th>Monto</th><th>Score</th><th>Decision</th></tr></thead><tbody>';
+    html += '<div class="table-wrap"><table class="app-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Score</th><th>Decision</th></tr></thead><tbody>';
     solicitudes.forEach(s => {
-      html += '<tr><td>' + formatearFechaCorta(s.created_at) + '</td><td>' + formatearDinero(s.monto_solicitado) + '</td><td>' + (s.score || '-') + '</td><td><span class="badge ' + (s.decision === 'APROBADO' ? 'badge-green' : s.decision === 'RECHAZADO' ? 'badge-red' : 'badge-yellow') + '">' + (s.decision || '-') + '</span></td></tr>';
+      html += '<tr><td>' + formatearFechaCorta(s.created_at) + '</td><td>' + (s.tipo_negocio || 'N/A') + '</td><td>' + formatearDinero(s.monto_solicitado) + '</td><td>' + (s.score || '-') + '</td><td><span class="badge ' + (s.decision === 'APROBADO' ? 'badge-green' : s.decision === 'RECHAZADO' ? 'badge-red' : 'badge-yellow') + '">' + (s.decision || '-') + '</span></td></tr>';
     });
-    html += '</tbody></table>';
-  } else {
-    html += '<p style="color:var(--text-light);">No hay solicitudes.</p>';
-  }
-
+    html += '</tbody></table></div>';
+  } else { html += '<p style="color:var(--text-light);">No hay solicitudes.</p>'; }
   html += '</div></div>';
+
   document.getElementById('pageContent').innerHTML = html;
   activarTabs();
+  if (tipoUsuario === 'natural') previsualizarCreditoNatural();
 }
 
 async function pagarCuota(creditoId, valorCuota) {
@@ -1334,6 +2028,7 @@ async function pagarCuota(creditoId, valorCuota) {
   await supabaseClient.from('creditos').update({
     cuotas_pagadas: nuevasPagadas, saldo_pendiente: nuevoSaldo, estado: nuevoEstado
   }).eq('id', creditoId);
+  reproducirSonido();
   if (window.toast) toast.success('Pago exitoso', 'Cuota pagada');
   if (nuevoEstado === 'pagado' && typeof confetti === 'function') {
     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
@@ -1343,6 +2038,9 @@ async function pagarCuota(creditoId, valorCuota) {
 }
 
 async function solicitarCredito() {
+  // Personas naturales: motor de evaluación bancario. Emprendedores: lógica Familia NEXAR (abajo).
+  if (tipoUsuario === 'natural') return solicitarCreditoNatural();
+
   if (window.toast) toast.info('Analizando...', 'La IA esta revisando tu solicitud');
 
   const monto = parseFloat(document.getElementById('credMonto').value) || 1000000;
@@ -1401,104 +2099,134 @@ async function solicitarCredito() {
     user_id: userId,
     tipo: 'ingreso',
     monto: monto,
-    descripcion: 'Desembolso de crédito NexusCredit'
+    descripcion: 'Desembolso: ' + tipo // Guardará "Desembolso: Leasing Productivo"
   });
 
   // 5. Notificamos
   await crearNotificacion(userId, '💸 Crédito Desembolsado', 'Se han consignado ' + formatearDinero(monto) + ' en tu cuenta.', 'success');
 
+  reproducirSonido();
   if (window.toast) toast.success('¡Crédito Aprobado!', 'El dinero ya está en tu cuenta');
 
   navegarA('dashboard');
 }
 async function generarContratoPDF(creditoId) {
+  if (window.toast) toast.info('Generando...', 'Preparando tu contrato PDF');
   const userId = localStorage.getItem('user_id');
   const { data: credito } = await supabaseClient.from('creditos').select('*').eq('id', creditoId).single();
   const { data: cuotas } = await supabaseClient.from('cuotas').select('*').eq('credito_id', creditoId).order('numero');
   const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
   if (!credito) { if (window.toast) toast.error('No encontrado', 'Credito no encontrado'); return; }
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(37, 99, 235);
-  doc.text('NEXUSPAY', 105, 20, { align: 'center' });
-  doc.setFontSize(10);
-  doc.setTextColor(100, 116, 139);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Contrato de Microcredito Digital', 105, 27, { align: 'center' });
-  doc.setDrawColor(37, 99, 235);
-  doc.setLineWidth(0.8);
-  doc.line(20, 32, 190, 32);
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text('NEXUSPAY', 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Contrato de Microcredito Digital', 105, 27, { align: 'center' });
+    doc.setDrawColor(37, 99, 235);
+    doc.setLineWidth(0.8);
+    doc.line(20, 32, 190, 32);
 
-  doc.setFontSize(13);
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'bold');
-  doc.text('INFORMACION DEL CLIENTE', 20, 45);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(51, 65, 85);
-  const nombres = ((profile?.nombres || '') + ' ' + (profile?.apellidos || '')).trim() || 'No registrado';
-  doc.text('Nombre: ' + nombres, 20, 54);
-  doc.text('Cedula: ' + (profile?.cedula || 'N/A'), 20, 60);
-  doc.text('Telefono: ' + (profile?.telefono || 'N/A'), 20, 66);
-  doc.text('Email: ' + (localStorage.getItem('user_email') || ''), 20, 72);
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INFORMACION DEL CLIENTE', 20, 45);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    const nombres = ((profile?.nombres || '') + ' ' + (profile?.apellidos || '')).trim() || 'No registrado';
+    doc.text('Nombre: ' + nombres, 20, 54);
+    doc.text('Cedula: ' + (profile?.cedula || 'N/A'), 20, 60);
+    doc.text('Telefono: ' + (profile?.telefono || 'N/A'), 20, 66);
+    doc.text('Email: ' + (localStorage.getItem('user_email') || ''), 20, 72);
 
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text('CONDICIONES DEL CREDITO', 20, 86);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(51, 65, 85);
-  doc.text('Monto aprobado: ' + formatearDinero(credito.monto_aprobado), 20, 95);
-  doc.text('Tasa anual: ' + credito.tasa_anual + '%', 20, 101);
-  doc.text('Plazo: ' + credito.plazo_dias + ' dias', 20, 107);
-  doc.text('Numero de cuotas: ' + credito.num_cuotas, 20, 113);
-  doc.text('Valor por cuota: ' + formatearDinero(credito.valor_cuota), 20, 119);
-  doc.text('Total intereses: ' + formatearDinero(credito.total_intereses || 0), 20, 125);
-  doc.text('Total a pagar: ' + formatearDinero(credito.total_pagar || credito.monto_aprobado), 20, 131);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text('CONDICIONES DEL CREDITO', 20, 86);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    doc.text('Monto aprobado: ' + formatearDinero(credito.monto_aprobado), 20, 95);
+    doc.text('Tasa anual: ' + credito.tasa_anual + '%', 20, 101);
+    doc.text('Plazo: ' + credito.plazo_dias + ' dias', 20, 107);
+    doc.text('Numero de cuotas: ' + credito.num_cuotas, 20, 113);
+    doc.text('Valor por cuota: ' + formatearDinero(credito.valor_cuota), 20, 119);
+    doc.text('Total intereses: ' + formatearDinero(credito.total_intereses || 0), 20, 125);
+    doc.text('Total a pagar: ' + formatearDinero(credito.total_pagar || credito.monto_aprobado), 20, 131);
 
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PLAN DE PAGOS', 20, 145);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PLAN DE PAGOS', 20, 145);
 
-  doc.setFontSize(9);
-  doc.setFillColor(30, 41, 59);
-  doc.setTextColor(255, 255, 255);
-  doc.rect(20, 150, 15, 7, 'F');
-  doc.rect(35, 150, 35, 7, 'F');
-  doc.rect(70, 150, 35, 7, 'F');
-  doc.rect(105, 150, 35, 7, 'F');
-  doc.rect(140, 150, 35, 7, 'F');
-  doc.text('No.', 27, 155, { align: 'center' });
-  doc.text('Vencimiento', 52, 155, { align: 'center' });
-  doc.text('Valor', 87, 155, { align: 'center' });
-  doc.text('Capital', 122, 155, { align: 'center' });
-  doc.text('Intereses', 157, 155, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setFillColor(30, 41, 59);
+    doc.setTextColor(255, 255, 255);
+    doc.rect(20, 150, 15, 7, 'F');
+    doc.rect(35, 150, 35, 7, 'F');
+    doc.rect(70, 150, 35, 7, 'F');
+    doc.rect(105, 150, 35, 7, 'F');
+    doc.rect(140, 150, 35, 7, 'F');
+    doc.text('No.', 27, 155, { align: 'center' });
+    doc.text('Vencimiento', 52, 155, { align: 'center' });
+    doc.text('Valor', 87, 155, { align: 'center' });
+    doc.text('Capital', 122, 155, { align: 'center' });
+    doc.text('Intereses', 157, 155, { align: 'center' });
 
-  let y = 162;
-  doc.setTextColor(51, 65, 85);
-  if (cuotas && cuotas.length > 0) {
-    cuotas.forEach(c => {
-      doc.rect(20, y, 15, 6);
-      doc.rect(35, y, 35, 6);
-      doc.rect(70, y, 35, 6);
-      doc.rect(105, y, 35, 6);
-      doc.rect(140, y, 35, 6);
-      doc.text(String(c.numero), 27, y + 4, { align: 'center' });
-      doc.text(c.fecha_vencimiento || '', 52, y + 4, { align: 'center' });
-      doc.text(formatearDinero(c.valor), 87, y + 4, { align: 'center' });
-      doc.text(formatearDinero(c.capital), 122, y + 4, { align: 'center' });
-      doc.text(formatearDinero(c.intereses), 157, y + 4, { align: 'center' });
-      y += 6;
-      if (y > 260) { doc.addPage(); y = 20; }
-    });
+    let y = 162;
+    doc.setTextColor(51, 65, 85);
+    if (cuotas && cuotas.length > 0) {
+      // Plan de pagos real guardado en la tabla 'cuotas'
+      cuotas.forEach(c => {
+        doc.rect(20, y, 15, 6);
+        doc.rect(35, y, 35, 6);
+        doc.rect(70, y, 35, 6);
+        doc.rect(105, y, 35, 6);
+        doc.rect(140, y, 35, 6);
+        doc.text(String(c.numero), 27, y + 4, { align: 'center' });
+        doc.text(c.fecha_vencimiento || '', 52, y + 4, { align: 'center' });
+        doc.text(formatearDinero(c.valor), 87, y + 4, { align: 'center' });
+        doc.text(formatearDinero(c.capital), 122, y + 4, { align: 'center' });
+        doc.text(formatearDinero(c.intereses), 157, y + 4, { align: 'center' });
+        y += 6;
+        if (y > 260) { doc.addPage(); y = 20; }
+      });
+    } else {
+      // Plan de pagos calculado cuando el crédito no tiene filas en 'cuotas'
+      const totalCuotas = credito.num_cuotas || 1;
+      const capitalPorCuota = credito.monto_aprobado / totalCuotas;
+      const interesPorCuota = (credito.total_intereses || 0) / totalCuotas;
+      const hoy = new Date();
+
+      for (let i = 1; i <= totalCuotas; i++) {
+        const fechaVenc = new Date(hoy.getTime() + (i * 30 * 24 * 60 * 60 * 1000));
+        doc.rect(20, y, 15, 6);
+        doc.rect(35, y, 35, 6);
+        doc.rect(70, y, 35, 6);
+        doc.rect(105, y, 35, 6);
+        doc.rect(140, y, 35, 6);
+        doc.text(String(i), 27, y + 4, { align: 'center' });
+        doc.text(fechaVenc.toLocaleDateString('es-CO'), 52, y + 4, { align: 'center' });
+        doc.text(formatearDinero(credito.valor_cuota), 87, y + 4, { align: 'center' });
+        doc.text(formatearDinero(capitalPorCuota), 122, y + 4, { align: 'center' });
+        doc.text(formatearDinero(interesPorCuota), 157, y + 4, { align: 'center' });
+        y += 6;
+        if (y > 260) { doc.addPage(); y = 20; }
+      }
+    }
+
+    doc.save('contrato_nexuspay_' + creditoId + '.pdf');
+    if (window.toast) toast.success('PDF descargado', 'Contrato #' + creditoId);
+  } catch (error) {
+    console.error(error);
+    if (window.toast) toast.error('Error', 'No se pudo generar el PDF');
   }
-
-  doc.save('contrato_nexuspay_' + creditoId + '.pdf');
-  if (window.toast) toast.success('PDF descargado', 'Contrato #' + creditoId);
 }
 
 // ============ NEXUSBOX ============
@@ -1615,6 +2343,7 @@ async function crearCajita() {
   if (error) { msg.innerHTML = mostrarAlerta('Error: ' + error.message, 'error'); return; }
 
   if (data && data.success) {
+    reproducirSonido();
     if (window.toast) toast.success('Cajita creada', nombre + ' con ' + formatearDinero(monto));
     await actualizarSaldoSidebar();
     cerrarModalCajita();
@@ -1656,7 +2385,7 @@ async function verCajita(cajitaId) {
     </div>
     <div class="app-tab-content" id="tab-historial-cajita">
       <div class="app-section"><div class="app-section-title">Movimientos</div>
-        ${movimientos && movimientos.length > 0 ? `<table class="app-table"><thead><tr><th>Fecha</th><th>Tipo</th><th style="text-align:right;">Monto</th></tr></thead><tbody>${movimientos.map(m => { const icono = m.tipo === 'ingreso' ? '📥' : m.tipo === 'retiro' ? '📤' : '💰'; const clase = m.tipo === 'retiro' ? 'text-red' : 'text-green'; const signo = m.tipo === 'retiro' ? '-' : '+'; return '<tr><td>' + formatearFechaCorta(m.created_at) + '</td><td>' + icono + ' ' + (m.descripcion || m.tipo) + '</td><td class="' + clase + '" style="text-align:right;">' + signo + formatearDinero(m.monto) + '</td></tr>'; }).join('')}</tbody></table>` : '<p style="color:var(--text-light);">No hay movimientos.</p>'}
+        ${movimientos && movimientos.length > 0 ? `<div class="table-wrap"><table class="app-table"><thead><tr><th>Fecha</th><th>Tipo</th><th style="text-align:right;">Monto</th></tr></thead><tbody>${movimientos.map(m => { const icono = m.tipo === 'ingreso' ? '📥' : m.tipo === 'retiro' ? '📤' : '💰'; const clase = m.tipo === 'retiro' ? 'text-red' : 'text-green'; const signo = m.tipo === 'retiro' ? '-' : '+'; return '<tr><td>' + formatearFechaCorta(m.created_at) + '</td><td>' + icono + ' ' + (m.descripcion || m.tipo) + '</td><td class="' + clase + '" style="text-align:right;">' + signo + formatearDinero(m.monto) + '</td></tr>'; }).join('')}</tbody></table></div>` : '<p style="color:var(--text-light);">No hay movimientos.</p>'}
       </div>
     </div>
     <div class="app-section"><button class="btn-secondary" style="width: 100%; justify-content: center; color: var(--red); border-color: var(--red);" onclick="confirmarEliminarCajita(${cajita.id}, '${escapeHtml(cajita.nombre)}', ${cajita.saldo})">🗑️ Eliminar cajita</button></div>
@@ -1673,6 +2402,7 @@ async function meterPlata(cajitaId) {
   const { data, error } = await supabaseClient.rpc('meter_a_cajita', { p_cajita_id: cajitaId, p_monto: monto });
   if (error) { if (window.toast) toast.error('Error', error.message); return; }
   if (data && data.success) {
+    reproducirSonido();
     if (window.toast) toast.success('Listo', 'Metiste ' + formatearDinero(monto));
     await actualizarSaldoSidebar();
     verCajita(cajitaId);
@@ -1688,6 +2418,7 @@ async function sacarPlata(cajitaId) {
   const { data, error } = await supabaseClient.rpc('sacar_de_cajita', { p_cajita_id: cajitaId, p_monto: monto });
   if (error) { if (window.toast) toast.error('Error', error.message); return; }
   if (data && data.success) {
+    reproducirSonido();
     if (window.toast) toast.success('Listo', 'Sacaste ' + formatearDinero(monto));
     await actualizarSaldoSidebar();
     verCajita(cajitaId);
@@ -1926,7 +2657,8 @@ async function renderAyuda() {
     { q: '¿Cómo recargo mi cuenta?', a: 'Ve a NexusPagos, haz clic en "Recargar" e ingresa el monto.' },
     { q: '¿Qué pasa si congelo mi tarjeta?', a: 'Tu tarjeta quedará bloqueada. Puedes descongelarla cuando quieras.' },
     { q: '¿Cómo funcionan las Cajitas?', a: 'Son espacios para ahorrar con rendimiento diario.' },
-    { q: '¿Cuánto demora un crédito?', a: 'La IA analiza tu perfil en segundos y se consigna de inmediato si es aprobado.' }
+    { q: '¿Cuánto demora un crédito?', a: 'La IA analiza tu perfil en segundos y se consigna de inmediato si es aprobado.' },
+    { q: '¿Qué es FINNEX?', a: 'Es nuestro módulo de economía circular para alquilar o comprar equipos reacondicionados.' }
   ];
   let html = '<div class="app-section"><div class="app-section-title">¿En qué podemos ayudarte?</div>';
   faqs.forEach(f => {
@@ -1966,7 +2698,7 @@ async function enviarChat() {
     const systemPrompt = `Eres ${CONFIG.ASISTENTE_NOMBRE}, la asistente virtual de NexusPay, un banco digital colombiano.
 PERSONALIDAD: Te llamas ${CONFIG.ASISTENTE_NOMBRE}. Eres cálida, cercana y eficiente. Hablas en español y tuteas. Máximo 3 líneas.
 CONTEXTO: Nombre: ${nombre}, Tipo: ${tipoUsuario}, Saldo: ${formatearDinero(saldo)}.
-PRODUCTOS: NexusCredit, NexusPagos, NexusCard, NexusSave, NexusInvest, NexusShield, NexusBusiness, NexusAnalytics, NexusBox, CDT.`;
+PRODUCTOS: NexusCredit (Microcrédito, Leasing, Factoring), NexusPagos (cuenta de ahorros NEXA), NexusCard, NexusSave (VELA: bolsillos y metas de ahorro; NEXT: ahorro programado), NexusInvest, NEXO (CDT), NexusShield, NexusBusiness, NexusAnalytics, NexusBox, FINNEX (activos circulares: alquiler/compra de equipos reacondicionados).`;
 
     const historialTexto = chatHistorial.slice(-6).map(m => (m.rol === 'user' ? 'Usuario: ' : 'Luci: ') + m.texto).join('\n');
     const promptCompleto = systemPrompt + '\n\n' + (historialTexto ? 'CONVERSACION:\n' + historialTexto + '\n\n' : '') + 'Usuario: ' + mensaje;

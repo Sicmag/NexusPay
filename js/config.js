@@ -17,5 +17,5 @@ const CONFIG = {
   ASISTENTE_NOMBRE: "Luci",
   ASISTENTE_ROL: "Asistente virtual de NexusPay",
   ASISTENTE_AVATAR: "💜",
-  ASISTENTE_SALUDO: "Hola! Soy Luci, tu asistente de NexusPay. ¿En qué te ayudo hoy?",
+  ASISTENTE_SALUDO: "Hola! Soy Luci, tu asistente de FINNEX. ¿En qué te ayudo hoy?",
 };
