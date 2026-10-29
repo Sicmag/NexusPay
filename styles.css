@@ -1,406 +1,262 @@
 /* ============================================================
-   FINNEX - HOJA DE ESTILOS UNIFICADA (v6 - Paleta azul/navy/verde)
+   FINNEX - HOJA DE ESTILOS UNIFICADA (v5 Definitiva)
    ============================================================ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
- /* ============================================================
- VARIABLES - MODO CLARO
-   ============================================================ */
 :root {
-  /* Marca */
-  --primary: #0257D6;
-  --primary-light: #2B7BF0;                 /* hover */
-  --primary-dark: #336fcf;                  /* pressed */
-  --primary-soft: rgb(216, 218, 221);   /* fondos suaves */
-  --primary-ring: rgba(209, 216, 226, 0.25);   /* focus */
- 
-  /* Compatibilidad con nombres anteriores */
-  --lila: #2B7BF0;
-  --lila-dark: #0257D6;
- 
-  /* Navy y acento verde */
-  --navy: #010811;
-  --gold: #05ec4a;                          /* chip de tarjeta */
-  --gold-dark: #05ec4a;                     /* span del logo */
- 
-  /* Semánticos */
-  --green: #1bc037;                         /* dinero positivo */
+  /* Paleta FINNEX */
+  --wine: #6A0D2E;          /* Rojo Vino Principal */
+  --wine-dark: #3E0721;     /* Vino Oscuro (Bordes/Sombras) */
+  --gold: #9b9b34;          /* Dorado metálico */
+  --bone: #F4F1EE;          /* Hueso (Fondo claro) */
+  --text: #2D2D2D;          /* Texto oscuro sin negro puro */
+  --text-light: #7A7A7A;
+  --white: #FFFFFF;
+  
+  /* Estados */
+  --green: #10B981;
   --red: #EF4444;
-  --yellow: #F59E0B;
- 
-  /* Neutros */
-  --dark: #010811;
-  --text: #0B1B33;
-  --text-light: #0d6affea;
-  --bg-page: #F4F7FB;
-  --bg-soft: #EAF0F9;
-  --bg-card: #FFFFFF;
-  --border: #0047b3;
-}
- 
-
-/* ============================================================
-   VARIABLES - MODO OSCURO
-   ============================================================ */
-body.dark-mode {
-  --primary: #3B82F6;                       /* más claro para contraste */
-  --primary-light: #60A5FA;
-  --primary-dark: #0257D6;
-  --primary-soft: rgba(59, 130, 246, 0.15);
-  --primary-ring: rgba(59, 130, 246, 0.35);
-  --lila: #60A5FA;
-  --lila-dark: #3B82F6;
-  --dark: #3B82F6;
-  --text: #f0f3f8;
-  --text-light: #8FA1BC;
-  --bg-page: #010811;
-  --bg-soft: #0C1626;
-  --bg-card: #09111F;
-  --border: #1A2A42;
+  --border: rgba(106, 13, 46, 0.1);
 }
 
-/* ============================================================
-   BASE
-   ============================================================ */
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--bg-page); line-height: 1.6; overflow-x: hidden; }
+body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--bone); line-height: 1.6; overflow-x: hidden; }
 body.app-body { display: flex; min-height: 100vh; }
 
-/* ============================================================
-   BOTONES
-   ============================================================ */
-.btn-primary {
-  background: var(--primary); color: #FFFFFF !important; padding: 12px 24px;
-  border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 15px;
-  border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  box-shadow: 0 4px 14px var(--primary-ring);
-  transition: all 0.2s;
-}
-.btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
-.btn-primary:active { background: var(--primary-dark); transform: translateY(0); }
-
-.btn-secondary {
-  background: var(--bg-card); color: var(--primary); padding: 12px 24px;
-  border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 15px;
-  border: 2px solid var(--border); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;
-}
-.btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
-body.dark-mode .btn-secondary { background: transparent; color: #F1F5F9; }
-body.dark-mode .btn-secondary:hover { border-color: var(--primary); color: var(--primary-light); }
-
-.btn-large { padding: 16px 32px; font-size: 16px; width: 100%; justify-content: center; }
-.btn-secondary-sm { background: var(--bg-soft); color: var(--text); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; font-weight: 600; font-size: 13px; }
-.btn-secondary-sm:hover { border-color: var(--primary); color: var(--primary); }
-
-/* Botón del ojito en las tarjetas */
-.eye-btn {
-  background: transparent !important;
-  border: none !important;
-  font-size: 16px;
-  cursor: pointer;
-  color: inherit;
-  padding: 0;
-  margin-left: 8px;
-  display: inline-flex;
-  align-items: center;
-}
-
-/* ============================================================
-   LAYOUT APP
-   ============================================================ */
-.app-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); position: fixed; height: 100vh; z-index: 100; display: flex; flex-direction: column; transition: background 0.3s, transform 0.3s; }
+/* --- LAYOUT --- */
+.app-sidebar { width: 260px; background: var(--white); border-right: 1px solid var(--border); position: fixed; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
 .sidebar-header { padding: 24px; display: flex; align-items: center; gap: 12px; }
-.logo-text { font-size: 22px; font-weight: 800; color: var(--primary); text-decoration: none; }
-.logo-text span { color: var(--gold-dark); }
-
+.logo-text { font-size: 22px; font-weight: 900; color: var(--wine); text-decoration: none; }
 .sidebar-menu { padding: 12px; flex: 1; overflow-y: auto; }
-.sidebar-link { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; border: none; background: transparent; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text-light); cursor: pointer; transition: all 0.2s; margin-bottom: 4px; text-align: left; }
-.sidebar-link:hover { background: var(--primary-soft); color: var(--primary); }
-.sidebar-link.active {
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-weight: 700;
-  box-shadow: inset 3px 0 0 var(--gold-dark);   /* marca verde a la izquierda */
-}
+.sidebar-link { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; border: none; background: transparent; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-light); cursor: pointer; transition: all 0.2s; margin-bottom: 4px; text-align: left; }
+.sidebar-link:hover { background: var(--bone); color: var(--wine); }
+.sidebar-link.active { background: rgba(106, 13, 46, 0.05); color: var(--wine); font-weight: 800; border-left: 3px solid var(--gold); }
 .sidebar-link.logout-btn { color: var(--red); margin-top: 8px; }
 .sidebar-link.logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
-
 .app-main { flex: 1; margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; }
 
-/* TOPBAR */
-.app-topbar-new { height: 80px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
-.topbar-title { font-size: 22px; font-weight: 700; color: var(--primary); }
+/* --- TOPBAR --- */
+.app-topbar-new { height: 80px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 32px; position: sticky; top: 0; z-index: 50; }
+.topbar-title { font-size: 24px; font-weight: 900; color: var(--wine); }
 .topbar-right { display: flex; align-items: center; gap: 16px; }
-
-/* Botones del topbar (sol, campana, hamburguesa) */
-button.theme-toggle-btn,
-button.notification-btn,
-button.mobile-menu-btn {
-  background: transparent;
-  border: none;
-  outline: none;
-  box-shadow: none;
-  cursor: pointer;
-  padding: 8px;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  color: var(--text-light);
-  border-radius: 50%;
-  transition: background 0.2s, color 0.2s;
-}
-button.theme-toggle-btn:hover,
-button.notification-btn:hover,
-button.mobile-menu-btn:hover { background: var(--bg-soft); color: var(--primary); }
-
-/* La hamburguesa está oculta en escritorio */
-button.mobile-menu-btn { display: none; }
-
-/* Buscador (píldora) */
-.search-bar {
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 250px;
-  max-width: 100%;
-}
-.search-bar input {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 14px;
-  color: var(--text);
-  width: 100%;
-}
-.search-bar input::placeholder { color: var(--text-light); }
-
-/* Avatar */
-.avatar-small { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; overflow: hidden; }
+.search-bar { background: var(--bone); border: 1px solid var(--border); border-radius: 100px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; width: 250px; }
+.search-bar input { border: none; background: transparent; outline: none; font-family: inherit; font-size: 14px; width: 100%; color: var(--text); }
+.theme-toggle-btn, .notification-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.avatar-small { width: 44px; height: 44px; border-radius: 50%; background: var(--wine); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; overflow: hidden; }
 .avatar-small img { width: 100%; height: 100%; object-fit: cover; }
 
 .page-content { padding: 32px; max-width: 1400px; margin: 0 auto; width: 100%; }
 
-/* ============================================================
-   DASHBOARD (Tarjetas y Widgets)
-   ============================================================ */
+/* --- TARJETAS Y WIDGETS --- */
 .dash-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
 .dash-grid-3col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
 
-.section-heading { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-.section-heading a { font-size: 14px; color: var(--primary); text-decoration: none; font-weight: 600; }
+.section-heading { font-size: 18px; font-weight: 800; color: var(--wine); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.section-heading a { font-size: 14px; color: var(--gold); text-decoration: none; font-weight: 700; }
 
-/* Tarjeta de crédito */
-.credit-card-horizontal {
-  border-radius: 20px; padding: 24px; color: white; position: relative;
-  display: flex; flex-direction: column; justify-content: space-between; height: 200px;
-}
-.credit-card-horizontal.blue {
-  background: linear-gradient(135deg, #0257D6 0%, #012A6B 55%, #010811 100%);
-  box-shadow: 0 12px 32px rgba(2, 87, 214, 0.35);
-}
-.credit-card-horizontal.white { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(1, 8, 17, 0.06); }
+/* Tarjeta Azul -> Ahora Vino */
+.credit-card-horizontal { border-radius: 20px; padding: 24px; color: white; position: relative; display: flex; flex-direction: column; justify-content: space-between; height: 200px; }
+.credit-card-horizontal.blue { background: linear-gradient(135deg, var(--wine) 0%, var(--wine-dark) 100%); box-shadow: 0 10px 30px rgba(106, 13, 46, 0.2); }
+.credit-card-horizontal.white { background: var(--white); color: var(--wine); border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); }
 
 .cc-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .cc-balance-label { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
-.cc-balance { font-size: 24px; font-weight: 800; }
-.cc-chip { font-size: 24px; color: var(--gold); }
+.cc-balance { font-size: 24px; font-weight: 900; }
+.cc-chip { font-size: 24px; color: var(--gold); } /* Chip dorado */
 .cc-middle { display: flex; justify-content: space-between; margin-top: 20px; }
 .cc-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
 .cc-value { font-size: 14px; font-weight: 600; }
 .cc-bottom { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
 .cc-number { font-size: 20px; font-weight: 600; letter-spacing: 2px; font-family: monospace; }
-.cc-logo { font-size: 20px; font-weight: 800; color: var(--primary); }
+.cc-logo { font-size: 20px; font-weight: 800; color: var(--gold); }
 
-/* Widgets */
-.widget-metric { background: var(--bg-card); border-radius: 20px; padding: 24px; display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); }
+.widget-metric { background: var(--white); border-radius: 20px; padding: 24px; display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); }
 .widget-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-.widget-icon.blue   { background: var(--primary-soft); color: var(--primary); }
-.widget-icon.green  { background: rgba(27, 192, 55, 0.12); color: var(--green); }
-.widget-icon.red    { background: rgba(239, 68, 68, 0.1); color: var(--red); }
-.widget-icon.yellow { background: rgba(245, 158, 11, 0.1); color: var(--yellow); }
-.widget-info .label { font-size: 14px; color: var(--text-light); font-weight: 500; margin-bottom: 4px; }
-.widget-info .value { font-size: 24px; font-weight: 800; color: var(--text); }
+.widget-icon.blue { background: rgba(106, 13, 46, 0.05); color: var(--wine); }
+.widget-icon.green { background: rgba(16, 185, 129, 0.1); color: var(--green); }
+.widget-icon.red { background: rgba(239, 68, 68, 0.1); color: var(--red); }
+.widget-icon.yellow { background: rgba(212, 175, 55, 0.1); color: var(--gold); }
+.widget-info .label { font-size: 14px; color: var(--text-light); font-weight: 600; margin-bottom: 4px; }
+.widget-info .value { font-size: 24px; font-weight: 900; color: var(--wine); }
 
 /* Transacciones */
-.transaction-list { background: var(--bg-card); border-radius: 20px; padding: 8px; border: 1px solid var(--border); }
-.transaction-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border); }
+.transaction-list { background: var(--white); border-radius: 20px; padding: 8px; border: 1px solid var(--border); }
+.transaction-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--bone); }
 .transaction-item:last-child { border-bottom: none; }
 .t-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 16px; flex-shrink: 0; }
-.t-icon.in  { background: rgba(27, 192, 55, 0.12); color: var(--green); }
+.t-icon.in { background: rgba(16, 185, 129, 0.1); color: var(--green); }
 .t-icon.out { background: rgba(239, 68, 68, 0.1); color: var(--red); }
-.t-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.t-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
 .t-date { font-size: 13px; color: var(--text-light); }
-.t-amount { font-size: 15px; font-weight: 700; }
-.t-amount.in  { color: var(--green); }
+.t-amount { font-size: 15px; font-weight: 800; }
+.t-amount.in { color: var(--green); }
 .t-amount.out { color: var(--red); }
 
-/* Tabs */
-.app-tabs {
-  display: flex;
-  gap: 20px;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 24px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.app-tabs::-webkit-scrollbar { display: none; }
-.app-tab {
-  padding: 12px 4px;
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text-light);
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-  white-space: nowrap;
-}
-.app-tab:hover { color: var(--primary); }
-.app-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-.app-tab-content { display: none; }
-.app-tab-content.active { display: block; }
+/* Secciones y Formularios */
+.app-section { background: var(--white); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 24px; }
+.app-section-title { font-size: 18px; font-weight: 800; color: var(--wine); margin-bottom: 16px; }
+.app-form-label { display: block; font-size: 13px; font-weight: 700; color: var(--wine); margin-bottom: 6px; }
+.app-form-input, .app-form-select { width: 100%; padding: 12px 16px; border: 2px solid var(--bone); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--bone); color: var(--text); }
+.app-form-input:focus, .app-form-select:focus { outline: none; border-color: var(--gold); background: var(--white); }
 
-/* Secciones y formularios */
-.app-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 24px; }
-.app-section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
-.app-form-group { margin-bottom: 16px; }
-.app-form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-.app-form-input, .app-form-select { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--bg-card); color: var(--text); }
-.app-form-input:focus, .app-form-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-ring); }
+/* Botones */
+.btn-primary { background: var(--wine); color: #FFFFFF; padding: 12px 28px; border-radius: 100px; font-weight: 700; font-size: 15px; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+.btn-primary:hover { background: var(--wine-dark); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(106, 13, 46, 0.2); }
+.btn-secondary { background: var(--white); color: var(--wine); padding: 12px 28px; border-radius: 100px; font-weight: 700; font-size: 15px; border: 2px solid var(--wine); cursor: pointer; }
+.btn-secondary:hover { background: var(--bone); }
 
-/* Contactos frecuentes */
-.contactos-grid {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
-  scrollbar-width: none;
-}
-.contactos-grid::-webkit-scrollbar { display: none; }
-.contacto-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; min-width: 70px; }
-.contacto-avatar {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--bg-soft); color: var(--primary);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 20px;
-  border: 2px solid var(--border);
-  transition: all 0.2s;
-}
-.contacto-item:hover .contacto-avatar,
-.contacto-item:focus .contacto-avatar { border-color: var(--primary); transform: scale(1.05); }
-.contacto-nombre { font-size: 12px; font-weight: 600; color: var(--text); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70px; }
-
-/* ============================================================
-   AJUSTES MODO OSCURO
-   ============================================================ */
-body.dark-mode .logo-text,
-body.dark-mode .topbar-title,
-body.dark-mode .section-heading,
-body.dark-mode .app-section-title { color: #F1F5F9; }
-body.dark-mode .section-heading a { color: var(--primary-light); }
-body.dark-mode .sidebar-link:hover { background: var(--primary-soft); color: #F1F5F9; }
-body.dark-mode .sidebar-link.active { background: var(--primary-soft); color: #BFDBFE; }
-body.dark-mode .btn-primary { color: #FFFFFF !important; }
-body.dark-mode .credit-card-horizontal.white,
-body.dark-mode .credit-card-horizontal.white .cc-number { color: #F1F5F9; }
-body.dark-mode .t-title,
-body.dark-mode .widget-info .value,
-body.dark-mode .app-form-label { color: #F1F5F9; }
-
-/* ============================================================
-   CHAT FLOTANTE (Luci)
-   ============================================================ */
-.chat-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 65px;
-  height: 65px;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  cursor: pointer;
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease;
-}
-.chat-fab:hover { transform: translateY(-5px) scale(1.05); }
-.chat-fab img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
-}
-
-.chat-window { position: fixed; bottom: 100px; right: 24px; width: 380px; height: 520px; background: var(--bg-card); border-radius: 20px; display: none; flex-direction: column; overflow: hidden; z-index: 1002; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); }
+/* Chat */
+.chat-fab { position: fixed; bottom: 24px; right: 24px; width: 65px; height: 65px; border-radius: 50%; background: var(--white); border: 3px solid var(--wine); cursor: pointer; z-index: 1001; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(106, 13, 46, 0.2); }
+.chat-fab img { width: 90%; height: 90%; object-fit: contain; }
+.chat-window { position: fixed; bottom: 100px; right: 24px; width: 380px; height: 520px; background: var(--white); border-radius: 20px; display: none; flex-direction: column; overflow: hidden; z-index: 1002; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(106, 13, 46, 0.15); }
 .chat-window.open { display: flex; }
-.chat-header { background: linear-gradient(135deg, #0257D6, #012A6B); color: #FFFFFF; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-.chat-messages { flex: 1; padding: 16px; overflow-y: auto; background: var(--bg-page); display: flex; flex-direction: column; }
+.chat-header { background: var(--wine); color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+.chat-messages { flex: 1; padding: 16px; overflow-y: auto; background: var(--bone); display: flex; flex-direction: column; }
 .chat-message { padding: 10px 14px; border-radius: 16px; margin-bottom: 10px; max-width: 85%; font-size: 14px; }
-.chat-bot { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); align-self: flex-start; }
-.chat-user { background: var(--primary); color: #FFFFFF; margin-left: auto; align-self: flex-end; }
-.chat-input-wrapper { display: flex; border-top: 1px solid var(--border); padding: 12px; background: var(--bg-card); }
-.chat-input { flex: 1; border: none; outline: none; padding: 10px; background: transparent; color: var(--text); }
-.chat-send { background: var(--primary); color: #FFFFFF; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: background 0.2s; }
-.chat-send:hover { background: var(--primary-light); }
+.chat-bot { background: var(--white); border: 1px solid var(--border); color: var(--text); align-self: flex-start; }
+.chat-user { background: var(--wine); color: white; margin-left: auto; align-self: flex-end; }
+.chat-input-wrapper { display: flex; border-top: 1px solid var(--border); padding: 12px; background: var(--white); }
+.chat-input { flex: 1; border: none; outline: none; padding: 10px; background: transparent; }
+.chat-send { background: var(--wine); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+
+/* Botón del ojito */
+.eye-btn { background: transparent !important; border: none !important; font-size: 16px; cursor: pointer; color: inherit; padding: 0; margin-left: 8px; }
 
 /* ============================================================
-   RESPONSIVE - TABLETS (max 1024px)
+   MODO OSCURO PREMIUM FINNEX (Dark Wine & Gold)
    ============================================================ */
-@media (max-width: 1024px) {
-  .app-sidebar { transform: translateX(-100%); }
-  .app-sidebar.open { transform: translateX(0); box-shadow: 5px 0 30px rgba(0, 0, 0, 0.2); }
-  .app-main { margin-left: 0; }
-  button.mobile-menu-btn { display: flex; }
-  .dash-grid-2col, .dash-grid-3col { grid-template-columns: 1fr; }
+
+body.dark-mode {
+  --bone: #2c0818;          /* Fondo general: Vino casi negro */
+  --white: #2b0e1a;         /* Tarjetas: Un tono vino un poco más claro */
+  --text: #723d08;          /* Texto principal: Hueso (muy legible) */
+  --text-light: #A88C99;    /* Texto secundario: Un tono lila/grisáceo */
+  --border: rgba(212, 175, 55, 0.15); /* Bordes sutiles dorados */
+  --wine: #D4AF37;          /* El "primario" ahora es Dorado */
+  --wine-dark: #B38F20;
 }
 
+/* Textos que brillan en Dorado */
+body.dark-mode .logo-text, 
+body.dark-mode .topbar-title, 
+body.dark-mode .cc-balance, 
+body.dark-mode .widget-info .value, 
+body.dark-mode .section-heading, 
+body.dark-mode .app-section-title,
+body.dark-mode .t-title,
+body.dark-mode .product-item-info h4 { 
+  color: var(--gold); 
+}
+
+/* Enlaces y detalles */
+body.dark-mode .section-heading a { color: var(--gold); }
+
+/* Sidebar en modo oscuro */
+body.dark-mode .sidebar-link { color: var(--text-light); }
+body.dark-mode .sidebar-link:hover { background: rgba(212, 175, 55, 0.05); color: var(--gold); }
+body.dark-mode .sidebar-link.active { 
+  background: rgba(212, 175, 55, 0.1); 
+  color: var(--gold); 
+  border-left-color: var(--gold); 
+}
+
+/* Tarjetas de Crédito en Modo Oscuro */
+body.dark-mode .credit-card-horizontal.blue { 
+  background: linear-gradient(135deg, #1F0A13 0%, #14060C 100%); 
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+body.dark-mode .credit-card-horizontal.white { 
+  background: var(--white); 
+  color: var(--gold); 
+  border: 1px solid var(--border);
+}
+body.dark-mode .cc-number { color: #F4F1EE; }
+body.dark-mode .cc-logo { color: var(--gold); }
+
+/* Botones en Modo Oscuro */
+body.dark-mode .btn-primary { 
+  background: var(--gold); 
+  color: #14060C; 
+  font-weight: 800;
+}
+body.dark-mode .btn-primary:hover { 
+  background: #E5C55A; 
+  box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); 
+}
+body.dark-mode .btn-secondary { 
+  background: transparent; 
+  color: var(--gold); 
+  border-color: var(--gold); 
+}
+
+/* Gráficas y Tablas */
+body.dark-mode .transaction-item { border-bottom-color: rgba(212, 175, 55, 0.05); }
+body.dark-mode .t-icon.in { background: rgba(16, 185, 129, 0.15); }
+body.dark-mode .t-icon.out { background: rgba(239, 68, 68, 0.15); }
+
+/* Formularios */
+body.dark-mode .app-form-input, 
+body.dark-mode .app-form-select { 
+  background: #14060C; 
+  border-color: var(--border); 
+  color: var(--text); 
+}
+body.dark-mode .app-form-input:focus { 
+  border-color: var(--gold); 
+  background: var(--white); 
+}
+
+/* Chat (Luci) en Modo Oscuro */
+body.dark-mode .chat-fab { border-color: var(--gold); box-shadow: 0 10px 25px rgba(212, 175, 55, 0.2); }
+body.dark-mode .chat-window { background: var(--white); border-color: var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+body.dark-mode .chat-header { background: #14060C; border-bottom: 1px solid var(--border); color: var(--gold); }
+body.dark-mode .chat-messages { background: #14060C; }
+body.dark-mode .chat-bot { background: var(--white); border-color: var(--border); color: var(--text); }
+body.dark-mode .chat-user { background: var(--gold); color: #14060C; font-weight: 600; }
+body.dark-mode .chat-input-wrapper { background: var(--white); border-top-color: var(--border); }
+body.dark-mode .chat-input { color: var(--text); }
+body.dark-mode .chat-send { background: var(--gold); color: #14060C; }
 /* ============================================================
-   RESPONSIVE - CELULARES (max 768px)
+   BOTONES SECUNDARIOS PEQUEÑOS Y ARREGLOS DEL MODO OSCURO
    ============================================================ */
-@media (max-width: 768px) {
-  .app-topbar-new { padding: 0 16px; height: 70px; }
-  .topbar-title { font-size: 18px; }
-  .search-bar { display: none; }
-  .page-content { padding: 16px; }
 
-  .dash-grid-2col > div { grid-template-columns: 1fr !important; }
-  .credit-card-horizontal { height: 180px; }
-  .app-form-group { margin-bottom: 12px; }
+/* Botón pequeño (como el de Editar presupuesto) */
+.btn-secondary-sm {
+  background: transparent;
+  color: var(--wine);
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 
-  .app-table { display: block; overflow-x: auto; white-space: nowrap; }
+.btn-secondary-sm:hover {
+  background: rgba(106, 13, 46, 0.05);
+  border-color: var(--wine);
+}
 
-  /* Chat a pantalla completa */
-  .chat-window {
-    width: 100%;
-    height: 100vh;
-    bottom: 0;
-    right: 0;
-    border-radius: 0;
-    max-width: 100%;
-    max-height: 100vh;
-    z-index: 9999;
-  }
-  .chat-fab { bottom: 16px; right: 16px; width: 55px; height: 55px; }
+/* Modo Oscuro para el botón pequeño */
+body.dark-mode .btn-secondary-sm {
+  color: var(--gold);
+  border-color: var(--gold);
+}
 
-  .section-heading, .app-section-title { font-size: 16px; }
-  .widget-info .value { font-size: 20px; }
-  .cc-balance { font-size: 20px; }
-  .cc-number { font-size: 16px; letter-spacing: 1px; }
+body.dark-mode .btn-secondary-sm:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: var(--gold);
+}
+
+/* Arreglo para el contenedor del presupuesto en modo oscuro */
+body.dark-mode .app-section[style*="border-left: 4px solid"] {
+  background: #1F0A13; /* Fondo vino un poco más claro que el general */
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--gold) !important;
 }

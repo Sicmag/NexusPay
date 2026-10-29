@@ -3,123 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Productos - FlowBank</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <title>Productos - FINNEX</title>
+  <link rel="icon" type="image/png" href="logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --wine: #6A0D2E;      /* Rojo Vino Principal */
+      --wine-dark: #3E0721;
+      --gold: #D4AF37;      /* Dorado */
+      --bone: #F4F1EE;      /* Hueso (Fondo claro) */
+      --text: #2D2D2D;      /* Texto oscuro sin llegar al negro */
+      --text-light: #7A7A7A;
+      --white: #FFFFFF;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bone); color: var(--text); line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAVBAR */
+    .navbar { background: rgba(244, 241, 238, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; padding: 16px 0; border-bottom: 1px solid rgba(106, 13, 46, 0.1); }
+    .nav-inner { display: flex; justify-content: space-between; align-items: center; }
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 900; color: var(--wine); text-decoration: none; letter-spacing: -1px; }
+    .logo img { width: 40px; height: 40px; border-radius: 8px; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 15px; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--wine); }
+    .btn-nav { background: var(--wine); color: var(--white) !important; padding: 10px 24px; border-radius: 100px; font-weight: 600; transition: all 0.2s; }
+    .btn-nav:hover { background: var(--wine-dark); transform: translateY(-2px); }
+
+    /* HEADER */
+    .page-header { padding: 80px 0 60px; text-align: center; background: linear-gradient(180deg, var(--bone) 0%, #EBE5E0 100%); }
+    .page-header h1 { font-size: 48px; font-weight: 900; color: var(--wine); margin-bottom: 16px; letter-spacing: -1.5px; }
+    .page-header p { font-size: 18px; color: var(--text-light); max-width: 600px; margin: 0 auto; }
+
+    /* PRODUCTO ESTRELLA */
+    .product-featured { background: linear-gradient(135deg, var(--wine) 0%, var(--wine-dark) 100%); border-radius: 24px; padding: 60px; color: var(--white); display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; margin-bottom: 40px; box-shadow: 0 20px 40px rgba(106, 13, 46, 0.2); }
+    .featured-badge { display: inline-block; background: var(--gold); color: var(--wine-dark); padding: 6px 16px; border-radius: 100px; font-size: 12px; font-weight: 800; margin-bottom: 20px; }
+    .product-featured h3 { font-size: 36px; font-weight: 900; margin-bottom: 16px; }
+    .product-featured p { font-size: 16px; opacity: 0.9; margin-bottom: 32px; }
+    .btn-gold { background: var(--gold); color: var(--wine-dark); padding: 14px 32px; border-radius: 100px; text-decoration: none; font-weight: 800; display: inline-block; transition: transform 0.2s; }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); }
+    .featured-visual { text-align: center; }
+    .featured-icon { font-size: 100px; margin-bottom: 24px; }
+    .featured-stats { display: flex; gap: 16px; justify-content: center; }
+    .featured-stat { background: rgba(255,255,255,0.1); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3); }
+    .fs-label { font-size: 12px; color: var(--gold); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+    .fs-value { font-size: 20px; font-weight: 800; }
+
+    /* GRID DE PRODUCTOS */
+    .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding-bottom: 80px; }
+    .product-card { background: var(--white); border-radius: 20px; padding: 32px; border: 1px solid rgba(106, 13, 46, 0.05); transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(106, 13, 46, 0.08); border-color: rgba(212, 175, 55, 0.4); }
+    .product-icon { width: 56px; height: 56px; background: var(--bone); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
+    .product-card h3 { font-size: 20px; font-weight: 800; color: var(--wine); margin-bottom: 12px; }
+    .product-card p { font-size: 14px; color: var(--text-light); margin-bottom: 16px; }
+    .product-tag { display: inline-block; background: rgba(212, 175, 55, 0.15); color: #997A15; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; }
+
+    /* FOOTER */
+    .footer { background: var(--wine-dark); color: rgba(255,255,255,0.7); padding: 60px 0 30px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    .footer-brand { color: var(--white); font-size: 24px; font-weight: 900; margin-bottom: 16px; }
+    .footer h4 { color: var(--gold); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .footer a { display: block; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 10px; transition: color 0.2s; }
+    .footer a:hover { color: var(--gold); }
+    .footer-bottom { padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 13px; }
+
+    @media (max-width: 968px) {
+      .product-featured { grid-template-columns: 1fr; padding: 40px 24px; }
+      .products-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      .products-grid { grid-template-columns: 1fr; }
+      .page-header h1 { font-size: 32px; }
+    }
+  </style>
 </head>
 <body>
 
   <nav class="navbar">
     <div class="container nav-inner">
-      <a href="index.html" class="logo">Flow<span>Bank</span></a>
-      <div class="nav-links" id="navLinks">
+      <a href="index.html" class="logo">
+        <img src="logo.png" alt="FINNEX"> FINNEX
+      </a>
+      <div class="nav-links">
         <a href="productos.html" class="active">Productos</a>
         <a href="nosotros.html">Nosotros</a>
         <a href="contacto.html">Contacto</a>
-        <a href="ingresar.html" class="btn-primary">Ingresar</a>
+        <a href="login.html" class="btn-nav">Ingresar</a>
       </div>
-      <button class="menu-toggle" id="menuToggle" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
     </div>
   </nav>
 
   <header class="page-header">
     <div class="container">
-      <h1>Nuestros <span class="gradient-text">productos</span></h1>
-      <p>Ocho soluciones financieras diseñadas específicamente para emprendedores digitales</p>
+      <h1>Ecosistema Financiero <span style="color: var(--gold);">FINNEX</span></h1>
+      <p>Soluciones diseñadas para personas naturales, emprendedores y pequeños negocios.</p>
     </div>
   </header>
 
-  <section class="section">
-    <div class="container">
-
-      <div class="product-featured">
-        <div>
-          <span class="featured-badge">⭐ PRODUCTO ESTRELLA</span>
-          <h3>FlowCredit</h3>
-          <p>Microcreditos inteligentes con IA. Analizamos tu flujo de caja digital (Stripe, Nequi, PayPal), calculamos tu score crediticio en segundos y aprobamos en menos de 24 horas. Hasta $5.000.000 COP con tasas desde 8% anual.</p>
-          <a href="ingresar.html" class="btn-primary">Solicitar credito</a>
-        </div>
-        <div class="featured-visual">
-          <div class="featured-icon">💳</div>
-          <div class="featured-stats">
-            <div class="featured-stat"><div class="fs-label">Aprobacion</div><div class="fs-value">&lt; 24h</div></div>
-            <div class="featured-stat"><div class="fs-label">Tasa desde</div><div class="fs-value">8%</div></div>
-            <div class="featured-stat"><div class="fs-label">Monto maximo</div><div class="fs-value">$5M</div></div>
-          </div>
-        </div>
+  <section class="container">
+    <!-- PRODUCTO ESTRELLA -->
+    <div class="product-featured">
+      <div>
+        <span class="featured-badge">⭐ FAMILIA NEXAR</span>
+        <h3>Créditos Productivos</h3>
+        <p>Microcréditos inteligentes con IA. Analizamos tu flujo de caja digital, calculamos tu score en segundos y aprobamos en menos de 24 horas. Hasta $5.000.000 COP con tasas preferenciales.</p>
+        <a href="login.html" class="btn-gold">Solicitar Crédito</a>
       </div>
-
-      <div class="products-grid">
-
-        <div class="product-card">
-          <div class="product-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#820AD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></div>
-          <h3>FlowPay</h3>
-          <p>Transferencias digitales instantaneas entre usuarios, recargas desde banco externo, retiros y pagos de servicios (Claro, Netflix, EPM y mas).</p>
-          <span class="product-tag">Transferencias</span>
+      <div class="featured-visual">
+        <div class="featured-icon">💳</div>
+        <div class="featured-stats">
+          <div class="featured-stat"><div class="fs-label">Aprobación</div><div class="fs-value">&lt; 24h</div></div>
+          <div class="featured-stat"><div class="fs-label">Tasa desde</div><div class="fs-value">8%</div></div>
         </div>
-
-        <div class="product-card">
-          <div class="product-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#820AD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
-          <h3>FlowCard</h3>
-          <p>Tarjeta debito digital con numero, CVV y fecha de expiracion. Congela y descongela en un toque. Cupo de $3.000.000 COP.</p>
-          <span class="product-tag">Tarjeta</span>
-        </div>
-
-        <div class="product-card">
-          <div class="product-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#820AD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg></div>
-          <h3>FlowSave</h3>
-          <p>Ahorro programado con metas personalizadas. Define objetivo, fecha limite y aporta periodicamente. Seguimiento visual del progreso.</p>
-          <span class="product-tag">Ahorro</span>
-        </div>
-
-        <div class="product-card">
-          <div class="product-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#820AD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div>
-          <h3>FlowInvest</h3>
-          <p>Portafolios diversificados con rendimientos del 10% al 18% anual. Productos desde CDT Digital hasta Portafolio Emprendedor.</p>
-          <span class="product-tag">Inversiones</span>
-        </div>
-
-        <div class="product-card">
-          <div class="product-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#820AD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
-          <h3>FlowShield</h3>
-          <p>Seguros digitales: vida, negocio, fraude, incendio/hurto y salud. Coberturas hasta $50.000.000 desde $12.000/mes.</p>
-          <span class="product-tag">Seguros</span>
-        </div>
-
-        <div class="product-card">
-          <div class="product-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#820AD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg></div>
-          <h3>FlowBusiness</h3>
-          <p>Cuenta empresarial para separar las finanzas de tu negocio. Multiples NIT, categorias por sector y reportes dedicados.</p>
-          <span class="product-tag">Empresarial</span>
-        </div>
-
-        <div class="product-card">
-          <div class="product-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#820AD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
-          <h3>FlowAnalytics</h3>
-          <p>Analisis financiero avanzado: ingresos, egresos, balance, movimientos por categoria y visualizaciones en tiempo real.</p>
-          <span class="product-tag">Analitica</span>
-        </div>
-
-        <div class="product-card">
-          <div class="product-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#820AD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
-          <h3>FlowSimulator</h3>
-          <p>Simulador de credito interactivo. Juega con montos y plazos para ver cuotas y capacidad de pago al instante.</p>
-          <span class="product-tag">Herramienta</span>
-        </div>
-
       </div>
     </div>
-  </section>
 
-  <section class="cta">
-    <div class="container cta-content">
-      <h2>Todo en una sola app</h2>
-      <p>Accede a todos los productos desde tu celular. Sin papeleo, sin filas, sin esperas.</p>
-      <a href="ingresar.html" class="btn-white btn-large">Empezar ahora</a>
+    <!-- GRID DE PRODUCTOS -->
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-icon">💸</div>
+        <h3>NEXA (Cuenta de Ahorros)</h3>
+        <p>Administra tus recursos, consulta saldos y realiza transferencias digitales instantáneas.</p>
+        <span class="product-tag">Captación</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon">🎴</div>
+        <h3>Tarjeta FNX</h3>
+        <p>Tarjeta débito digital. Congela y descongela en un toque. Control total de tu cupo.</p>
+        <span class="product-tag">Tarjeta</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon">🏦</div>
+        <h3>VELA / NEXT</h3>
+        <p>Bolsillos y metas de ahorro. Ahorro programado para inversión productiva.</p>
+        <span class="product-tag">Ahorro</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon">📈</div>
+        <h3>NEXO (CDT)</h3>
+        <p>Certificado de Depósito a Término. Invierte desde $100.000 COP con tasas garantizadas.</p>
+        <span class="product-tag">Inversión</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon">🛡️</div>
+        <h3>FIN-SAFE</h3>
+        <p>Seguridad y alertas. Protección digital para tus operaciones y datos personales.</p>
+        <span class="product-tag">Seguridad</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon">💼</div>
+        <h3>FIN-BIZ</h3>
+        <p>Gestión para pequeños negocios. Herramientas de análisis y administración.</p>
+        <span class="product-tag">Empresarial</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon">📊</div>
+        <h3>FIN-360</h3>
+        <p>Bienestar y análisis financiero. Visualiza ingresos, gastos y presupuestos.</p>
+        <span class="product-tag">Analítica</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon">♻️</div>
+        <h3>FINNEX Activos</h3>
+        <p>Economía circular. Accede a equipos productivos mediante reutilización o alquiler.</p>
+        <span class="product-tag">Sostenibilidad</span>
+      </div>
+
+      <div class="product-card">
+        <div class="product-icon">🤖</div>
+        <h3>LUCI</h3>
+        <p>Asistente financiero digital. Resuelve tus dudas sobre productos y navegación.</p>
+        <span class="product-tag">Asistente IA</span>
+      </div>
     </div>
   </section>
 
@@ -127,37 +191,33 @@
     <div class="container">
       <div class="footer-grid">
         <div>
-          <div class="footer-brand">Flow<span>Bank</span></div>
-          <p class="footer-desc">Fintech colombiana enfocada en democratizar el acceso al credito para emprendedores digitales de Latinoamerica.</p>
+          <div class="footer-brand">FINNEX</div>
+          <p style="font-size: 14px;">Fintech colombiana enfocada en democratizar el acceso al crédito para emprendedores digitales.</p>
         </div>
         <div>
           <h4>Productos</h4>
-          <a href="productos.html">FlowCredit</a>
-          <a href="productos.html">FlowPay</a>
-          <a href="productos.html">FlowCard</a>
-          <a href="productos.html">FlowSave</a>
+          <a href="#">NEXAR</a>
+          <a href="#">NEXA</a>
+          <a href="#">NEXO</a>
+          <a href="#">FIN-SAFE</a>
         </div>
         <div>
-          <h4>Compania</h4>
+          <h4>Compañía</h4>
           <a href="nosotros.html">Sobre nosotros</a>
           <a href="contacto.html">Contacto</a>
-          <a href="ingresar.html">Ingresar</a>
+          <a href="login.html">Ingresar</a>
         </div>
         <div>
           <h4>Legal</h4>
-          <a href="#">Terminos</a>
-          <a href="#">Privacidad</a>
-          <a href="#">Ley 1581</a>
+          <a href="terminos.html">Términos</a>
+          <a href="privacidad.html">Privacidad</a>
         </div>
       </div>
       <div class="footer-bottom">
-        &copy; 2026 FlowBank - Proyecto SENA. Todos los derechos reservados.
+        &copy; 2026 FINNEX - Proyecto SENA. Todos los derechos reservados.
       </div>
     </div>
   </footer>
 
-  <script src="script.js"></script>
-  <script src="js/theme.js"></script>
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 </body>
 </html>

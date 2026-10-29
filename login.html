@@ -3,213 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Ingresar - NexusPay</title>
+  <title>Ingresar - FINNEX</title>
   <link rel="icon" type="image/png" href="logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- ESTILOS EXCLUSIVOS DEL LOGIN -->
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --primary: #2563EB; --primary-dark: #1D4ED8; --green: #10B981;
-      --dark: #0F0F1E; --text: #1E293B; --text-light: #64748B;
-      --bg-soft: #F8FAFC; --border: #E2E8F0;
+      --wine: #6A0D2E;
+      --wine-dark: #3E0721;
+      --gold: #D4AF37;
+      --bone: #F4F1EE;
+      --text: #2D2D2D;
+      --text-light: #7A7A7A;
+      --white: #FFFFFF;
     }
-    body {
-      font-family: 'Inter', sans-serif;
-      color: var(--text);
-      background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 24px;
-    }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--bone) 0%, #EBE5E0 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px; color: var(--text); }
+    
+    .auth-card { background: var(--white); border-radius: 24px; padding: 48px 40px; max-width: 440px; width: 100%; box-shadow: 0 30px 80px rgba(106, 13, 46, 0.15); border-top: 5px solid var(--wine); }
+    
+    .auth-logo-container { text-align: center; margin-bottom: 32px; }
+    .auth-logo-container img { width: 80px; height: 80px; border-radius: 20px; object-fit: cover; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(106, 13, 46, 0.2); }
+    .auth-logo-container h1 { font-size: 28px; font-weight: 900; color: var(--wine); }
 
-    .auth-card {
-      background: #FFFFFF;
-      border-radius: 24px;
-      padding: 40px;
-      max-width: 440px;
-      width: 100%;
-      box-shadow: 0 30px 80px rgba(15, 15, 30, 0.1);
-    }
-
-    .auth-logo-container {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .auth-logo-container img {
-      width: 80px;
-      height: 80px;
-      border-radius: 20px;
-      object-fit: cover;
-      margin-bottom: 16px;
-      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
-    }
-    .auth-logo-container h1 {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--dark);
-    }
-    .auth-logo-container h1 span { color: var(--primary); }
-
-    .auth-tabs {
-      display: flex;
-      background: var(--bg-soft);
-      border-radius: 12px;
-      padding: 4px;
-      margin-bottom: 28px;
-    }
-    .auth-tab {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      background: transparent;
-      font-family: inherit;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text-light);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .auth-tab.active {
-      background: #FFFFFF;
-      color: var(--primary);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
+    .auth-tabs { display: flex; background: var(--bone); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+    .auth-tab { flex: 1; padding: 12px; border: none; background: transparent; font-family: inherit; font-weight: 700; font-size: 14px; color: var(--text-light); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .auth-tab.active { background: var(--white); color: var(--wine); box-shadow: 0 2px 10px rgba(106, 13, 46, 0.1); }
 
     .auth-form { display: none; }
     .auth-form.active { display: block; }
 
     .form-group { margin-bottom: 20px; }
-    .form-label {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--dark);
-    }
-    .form-input {
-      width: 100%;
-      padding: 14px 18px;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      font-family: inherit;
-      font-size: 15px;
-      transition: all 0.2s;
-      background: #FFFFFF;
-    }
-    .form-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
+    .form-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--wine); }
+    .form-input { width: 100%; padding: 14px 16px; border: 2px solid var(--bone); border-radius: 12px; font-family: inherit; font-size: 15px; background: var(--bone); color: var(--text); transition: all 0.2s; }
+    .form-input:focus { outline: none; border-color: var(--gold); background: var(--white); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
 
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    @media (max-width: 480px) {
-      .form-row { grid-template-columns: 1fr; gap: 0; }
-    }
+    .btn-primary { background: var(--wine); color: var(--white); padding: 16px 24px; border-radius: 100px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; width: 100%; transition: all 0.2s; margin-top: 8px; }
+    .btn-primary:hover { background: var(--wine-dark); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(106, 13, 46, 0.2); }
 
-    .btn-primary {
-      background: var(--primary);
-      color: #FFFFFF;
-      padding: 14px 24px;
-      border-radius: 100px;
-      font-weight: 700;
-      font-size: 15px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-    }
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
-    }
+    .form-message { padding: 14px; border-radius: 10px; margin-bottom: 20px; font-weight: 600; display: none; font-size: 14px; text-align: center; }
+    .form-message.success { background: #ECFDF5; color: #065F46; display: block; border: 1px solid #10B981; }
+    .form-message.error { background: #FEF2F2; color: #991B1B; display: block; border: 1px solid #EF4444; }
 
-    .form-message {
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      font-weight: 500;
-      display: none;
-      font-size: 14px;
-    }
-    .form-message.success { background: #D1FAE5; color: #059669; display: block; }
-    .form-message.error { background: #FEE2E2; color: #DC2626; display: block; }
-
-    .auth-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 14px;
-    }
-    .auth-footer a {
-      color: var(--text-light);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .auth-footer a:hover { color: var(--primary); }
+    .auth-footer { text-align: center; margin-top: 24px; font-size: 14px; }
+    .auth-footer a { color: var(--text-light); text-decoration: none; font-weight: 600; }
+    .auth-footer a:hover { color: var(--gold); }
+    
+    /* Radio buttons custom */
+    .radio-group { display: flex; gap: 16px; margin-bottom: 20px; }
+    .radio-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: var(--text); }
+    .radio-label input[type="radio"] { accent-color: var(--wine); width: 18px; height: 18px; }
   </style>
 </head>
 <body>
 
   <div class="auth-card">
-    
-    <!-- LOGO Y TÍTULO -->
     <div class="auth-logo-container">
-      <img src="logo.png" alt="NexusPay">
-      <h1>Fin<span>Nex</span></h1>
+      <img src="logo.png" alt="FINNEX">
+      <h1>FINNEX</h1>
     </div>
 
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login">Iniciar sesion</button>
+      <button class="auth-tab active" data-tab="login">Iniciar sesión</button>
       <button class="auth-tab" data-tab="registro">Crear cuenta</button>
     </div>
 
-    <!-- FORMULARIO LOGIN -->
+    <!-- LOGIN -->
     <form id="formLogin" class="auth-form active">
       <div class="form-group">
-        <label class="form-label" for="loginEmail">Correo electronico</label>
+        <label class="form-label" for="loginEmail">Correo electrónico</label>
         <input class="form-input" type="email" id="loginEmail" required>
       </div>
       <div class="form-group">
         <label class="form-label" for="loginPassword">Contraseña</label>
         <input class="form-input" type="password" id="loginPassword" required>
       </div>
-      
       <div style="text-align: right; margin-bottom: 20px;">
-        <a href="#" onclick="recuperarPassword(event)" style="color: var(--primary); font-size: 13px; text-decoration: none; font-weight: 600;">¿Olvidaste tu contraseña?</a>
+        <a href="#" onclick="recuperarPassword(event)" style="color: var(--gold); font-size: 13px; text-decoration: none; font-weight: 700;">¿Olvidaste tu contraseña?</a>
       </div>
-      
       <div class="form-message" id="loginMessage"></div>
-      <button type="submit" class="btn-primary">Iniciar sesion</button>
+      <button type="submit" class="btn-primary">Ingresar a FINNEX</button>
     </form>
 
-    <!-- FORMULARIO REGISTRO -->
+    <!-- REGISTRO -->
     <form id="formRegistro" class="auth-form">
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="regNombres">Nombres</label>
-          <input class="form-input" type="text" id="regNombres" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="regApellidos">Apellidos</label>
-          <input class="form-input" type="text" id="regApellidos" required>
+      <div class="form-group">
+        <label class="form-label">Tipo de cuenta</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="tipoUsuario" value="natural" checked> Persona Natural</label>
+          <label class="radio-label"><input type="radio" name="tipoUsuario" value="emprendedor"> Emprendedor</label>
         </div>
       </div>
       
+      <div class="form-group">
+        <label class="form-label" for="regNombres">Nombres</label>
+        <input class="form-input" type="text" id="regNombres" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="regApellidos">Apellidos</label>
+        <input class="form-input" type="text" id="regApellidos" required>
+      </div>
       <div class="form-group">
         <label class="form-label" for="regEmail">Correo electrónico</label>
         <input class="form-input" type="email" id="regEmail" required>
@@ -218,7 +111,18 @@
         <label class="form-label" for="regPassword">Contraseña (mínimo 8 caracteres)</label>
         <input class="form-input" type="password" id="regPassword" required minlength="8">
       </div>
-      
+
+      <div id="camposEmprendedor" style="display:none; background: var(--bone); padding: 16px; border-radius: 10px; margin-bottom: 16px;">
+        <div class="form-group">
+          <label class="form-label" for="regNombreNegocio">Nombre del negocio</label>
+          <input class="form-input" type="text" id="regNombreNegocio">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" for="regNit">NIT</label>
+          <input class="form-input" type="text" id="regNit">
+        </div>
+      </div>
+
       <div class="form-message" id="registroMessage"></div>
       <button type="submit" class="btn-primary">Crear cuenta</button>
     </form>
@@ -228,13 +132,11 @@
     </p>
   </div>
 
-  <!-- SCRIPTS -->
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/auth.js"></script>
 
   <script>
-    // Lógica de pestañas (Tabs)
     document.querySelectorAll('.auth-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
         document.querySelectorAll('.auth-tab').forEach(function (t) { t.classList.remove('active'); });
@@ -245,26 +147,26 @@
       });
     });
 
-    // Función para recuperar contraseña
+    // Mostrar/ocultar campos emprendedor
+    document.querySelectorAll('input[name="tipoUsuario"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const campos = document.getElementById('camposEmprendedor');
+        campos.style.display = this.value === 'emprendedor' ? 'block' : 'none';
+      });
+    });
+
     async function recuperarPassword(e) {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
-      if (!email) {
-        alert('Por favor, escribe tu correo arriba primero para enviarte el enlace.');
-        return;
-      }
+      if (!email) { alert('Escribe tu correo arriba primero.'); return; }
       
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/login.html',
       });
 
-      if (error) {
-        alert('Error: ' + error.message);
-      } else {
-        alert('✅ Enlace enviado. Revisa tu bandeja de entrada o spam en ' + email);
-      }
+      if (error) alert('Error: ' + error.message);
+      else alert('✅ Enlace enviado. Revisa tu bandeja o spam en ' + email);
     }
   </script>
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 </body>
 </html>
