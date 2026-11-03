@@ -260,3 +260,132 @@ body.dark-mode .app-section[style*="border-left: 4px solid"] {
   border: 1px solid var(--border);
   border-left: 4px solid var(--gold) !important;
 }
+/* ============================================================
+   FINNEX - DISEÑO RESPONSIVE (Tablets y Celulares)
+   ============================================================ */
+
+/* --- TABLETS Y PANTALLAS MEDIANAS (Max 1024px) --- */
+@media (max-width: 1024px) {
+  /* El menú lateral se oculta por defecto y se desliza */
+  .app-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 5px 0 30px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Cuando se abre el menú */
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* El contenido ocupa todo el ancho */
+  .app-main {
+    margin-left: 0;
+  }
+
+  /* Se muestra el botón hamburguesa en el Topbar */
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Las gráficas pasan a estar una debajo de otra */
+  .dash-grid-2col, .dash-grid-3col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- CELULARES (Max 768px) --- */
+@media (max-width: 768px) {
+  /* Ajustes del Topbar */
+  .app-topbar-new {
+    padding: 0 16px;
+    height: 70px;
+  }
+
+  .topbar-title {
+    font-size: 20px;
+  }
+
+  /* Ocultamos el buscador para que quepan los botones */
+  .search-bar {
+    display: none;
+  }
+
+  /* Ajustes del contenido principal */
+  .page-content {
+    padding: 16px;
+  }
+
+  /* Las tarjetas de crédito se apilan */
+  .credit-card-horizontal {
+    height: 180px;
+  }
+
+  /* Hacemos que las tarjetas de transacciones sean más compactas */
+  .transaction-item {
+    padding: 12px;
+  }
+  
+  .t-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    margin-right: 12px;
+  }
+
+  /* Las tablas permiten scroll horizontal si son muy anchas */
+  .app-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* El chat de Luci se hace pantalla completa */
+  .chat-window {
+    width: 100%;
+    height: 100vh;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+    max-width: 100%;
+    max-height: 100vh;
+    z-index: 9999;
+    border: none;
+  }
+
+  .chat-fab {
+    bottom: 16px;
+    right: 16px;
+    width: 55px;
+    height: 55px;
+  }
+
+  /* Ajustes de tamaños de fuente */
+  .section-heading { font-size: 16px; }
+  .app-section-title { font-size: 16px; }
+  .widget-info .value { font-size: 20px; }
+  .cc-balance { font-size: 20px; }
+  .cc-number { font-size: 16px; letter-spacing: 1px; }
+  .app-section { padding: 16px; border-radius: 16px; }
+
+  /* Grid de servicios más pequeño */
+  .servicios-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --- CELULARES PEQUEÑOS (Max 480px) --- */
+@media (max-width: 480px) {
+  /* Hacer que el grid de tarjetas sea de 1 sola columna */
+  .dash-grid-2col > div {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Títulos de página más pequeños */
+  .page-title { font-size: 22px; }
+  
+  /* Botones a ancho completo */
+  .btn-primary, .btn-secondary {
+    width: 100%;
+  }
+     }
