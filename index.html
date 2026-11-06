@@ -16,99 +16,228 @@
       --text: #2D2D2D;
       --text-light: #7A7A7A;
       --white: #FFFFFF;
+      --success: #0F9D6E;
+      --success-soft: #E7F7F1;
+      --line: rgba(106, 13, 46, 0.1);
     }
-    body { font-family: 'Inter', sans-serif; background: var(--bone); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+    a { color: inherit; }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    h2.title { font-size: 34px; font-weight: 800; color: var(--text); text-align: center; letter-spacing: -.5px; margin-bottom: 48px; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    /* BOTONES */
+    .btn-primary { background: var(--wine); color: var(--white) !important; padding: 12px 28px; border-radius: 100px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: all .2s; border: none; cursor: pointer; }
+    .btn-primary:hover { background: var(--wine-dark); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(106, 13, 46, .2); }
+    .btn-secondary { background: var(--white); color: var(--wine); padding: 12px 28px; border-radius: 100px; font-weight: 600; text-decoration: none; border: 2px solid var(--wine); transition: all .2s; }
+    .btn-secondary:hover { background: var(--bone); transform: translateY(-2px); }
+    .btn-gold { background: var(--gold); color: var(--wine-dark); padding: 12px 28px; border-radius: 100px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; transition: all .2s; }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, .3); }
+    .btn-dark { background: var(--text); color: var(--white); padding: 12px 24px; border-radius: 100px; font-weight: 700; font-size: 15px; text-decoration: none; transition: background .2s; }
+    .btn-dark:hover { background: var(--wine-dark); }
+
 
     /* NAVBAR */
-    .navbar { background: rgba(244, 241, 238, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; padding: 16px 0; border-bottom: 1px solid rgba(106, 13, 46, 0.1); }
-    .nav-inner { display: flex; justify-content: space-between; align-items: center; }
+    .navbar { background: var(--white); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--line); }
+    .nav-inner { display: flex; align-items: center; gap: 32px; min-height: 76px; }
     .logo { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 900; color: var(--wine); text-decoration: none; letter-spacing: -1px; }
     .logo img { width: 40px; height: 40px; border-radius: 8px; }
-    .nav-links { display: flex; gap: 32px; align-items: center; }
-    .nav-links a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 15px; transition: color 0.2s; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { text-decoration: none; font-size: 15px; font-weight: 500; transition: color .2s; }
     .nav-links a:hover { color: var(--wine); }
-    .btn-primary { background: var(--wine); color: var(--white) !important; padding: 12px 28px; border-radius: 100px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; border: none; cursor: pointer; }
-    .btn-primary:hover { background: var(--wine-dark); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(106, 13, 46, 0.2); }
-    .btn-secondary { background: var(--white); color: var(--wine); padding: 12px 28px; border-radius: 100px; font-weight: 600; text-decoration: none; border: 2px solid var(--wine); transition: all 0.2s; }
-    .btn-secondary:hover { background: var(--bone); transform: translateY(-2px); }
-    .btn-gold { background: var(--gold); color: var(--wine-dark); padding: 14px 32px; border-radius: 100px; font-weight: 800; text-decoration: none; display: inline-block; transition: all 0.2s; }
-    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); }
+    .nav-actions { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .nav-access { display: flex; align-items: center; gap: 24px; padding: 8px 8px 8px 20px; border-radius: 14px; box-shadow: 0 2px 14px rgba(62, 7, 33, .08); font-size: 15px; }
+    .menu-btn { display: none; background: none; border: none; font: 700 16px 'Inter', sans-serif; color: var(--text); cursor: pointer; }
+
+    /* MENÚ DESPLEGABLE */
+    .has-drop { position: relative; padding: 26px 0; }
+    .drop-trigger small { font-size: 11px; margin-left: 2px; }
+    .dropdown { position: absolute; top: 100%; left: -16px; width: 280px; background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 8px; box-shadow: 0 20px 40px rgba(62, 7, 33, .15); opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .2s, transform .2s, visibility .2s; z-index: 200; }
+    .has-drop:hover .dropdown, .has-drop:focus-within .dropdown { opacity: 1; visibility: visible; transform: none; }
+    .nav-links .dropdown a { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; }
+    .nav-links .dropdown a span { width: 22px; text-align: center; font-size: 16px; }
+    .nav-links .dropdown a:hover { background: var(--bone); color: var(--wine); font-weight: 500; }
+
+    /* MIGAS DE PAN */
+    .crumbs { background: var(--bone); font-size: 15px; }
+    .crumbs .container { padding-top: 10px; padding-bottom: 10px; display: flex; gap: 10px; align-items: center; }
+    .crumbs a { text-decoration: none; }
+    .crumbs a:hover { color: var(--wine); }
+    .crumbs b { font-weight: 600; }
+    .crumbs i { font-style: normal; color: var(--text-light); }
 
     /* HERO */
-    .hero { padding: 80px 0 100px; background: linear-gradient(180deg, var(--bone) 0%, #EBE5E0 100%); position: relative; }
+    .hero { padding: 64px 0 80px; }
     .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-    .hero h1 { font-size: 56px; font-weight: 900; line-height: 1.1; letter-spacing: -2px; margin-bottom: 24px; color: var(--wine); }
-    .gradient-text { color: var(--gold); }
-    .hero p { font-size: 18px; color: var(--text-light); margin-bottom: 32px; max-width: 500px; }
-    .hero-badge { display: inline-flex; align-items: center; gap: 10px; background: rgba(106, 13, 46, 0.05); color: var(--wine); padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
+    .hero h1 { font-size: 46px; font-weight: 800; line-height: 1.15; letter-spacing: -1.2px; margin-bottom: 24px; color: var(--text); }
+    .gradient-text { color: var(--wine); }
+    .hero p { font-size: 18px; color: var(--text); margin-bottom: 32px; max-width: 520px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 10px; background: rgba(106, 13, 46, .05); color: var(--wine); padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
     .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-visual { position: relative; border-radius: 12px; overflow: hidden; min-height: 400px; padding: 48px 40px; display: flex; align-items: center; background: linear-gradient(135deg, var(--wine) 0%, var(--wine-dark) 100%); }
+    .hero-visual::before { content: ""; position: absolute; width: 150%; height: 120px; right: -30%; top: 28%; transform: rotate(-35deg); background: var(--gold); opacity: .9; box-shadow: 0 130px 0 -30px rgba(244, 241, 238, .25), 0 -130px 0 -40px rgba(212, 175, 55, .35); }
+    .hero-visual::after { content: ""; position: absolute; width: 90px; height: 90px; border-radius: 50%; left: -30px; top: -30px; background: var(--bone); opacity: .5; }
 
     /* MOCKUP */
-    .card-mockup { background: var(--white); border-radius: 24px; padding: 32px; box-shadow: 0 30px 80px rgba(106, 13, 46, 0.15); transform: rotate(-2deg); transition: transform 0.3s; border-top: 4px solid var(--gold); }
-    .card-mockup:hover { transform: rotate(0deg) scale(1.02); }
-    .card-header { display: flex; justify-content: space-between; margin-bottom: 24px; }
+    .card-mockup { position: relative; z-index: 1; width: 100%; background: var(--white); border-radius: 24px; padding: 28px; box-shadow: 0 30px 80px rgba(0, 0, 0, .3); transform: rotate(-2deg); transition: transform .3s; border-top: 4px solid var(--gold); }
+    .card-mockup:hover { transform: rotate(0) scale(1.02); }
+    .card-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
     .card-brand { font-weight: 900; color: var(--wine); font-size: 14px; letter-spacing: 1px; }
-    .card-status { background: rgba(212, 175, 55, 0.2); color: #997A15; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; }
-    .card-amount { font-size: 42px; font-weight: 900; color: var(--wine); margin-bottom: 8px; }
-    .card-details { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 24px; border-top: 1px solid rgba(106, 13, 46, 0.1); }
+    .card-status { background: rgba(212, 175, 55, .2); color: #997A15; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; }
+    .card-amount { font-size: 38px; font-weight: 900; color: var(--wine); margin-bottom: 4px; }
+    .card-details { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding-top: 20px; border-top: 1px solid var(--line); }
     .detail-label { font-size: 12px; color: var(--text-light); }
     .detail-value { font-size: 18px; font-weight: 700; color: var(--wine); }
 
-    /* SECCIONES */
-    .section-header { text-align: center; margin-bottom: 60px; }
-    .section-header h2 { font-size: 44px; font-weight: 900; color: var(--wine); margin-bottom: 16px; }
-    .section-header p { color: var(--text-light); font-size: 18px; }
-    .stats { padding: 60px 0; background: var(--white); border-bottom: 1px solid rgba(106, 13, 46, 0.05); }
+    /* CARACTERÍSTICAS */
+    .features { padding: 40px 0 90px; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px 48px; max-width: 1100px; margin: 0 auto; }
+    .feature { display: grid; grid-template-columns: 32px 1fr; column-gap: 12px; }
+    .feature .ico { font-size: 22px; line-height: 1.3; }
+    .feature h3 { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+    .feature p { grid-column: 2; font-size: 17px; color: var(--text); max-width: 300px; }
+
+    /* ESTADÍSTICAS */
+    .stats { padding: 56px 0; background: var(--bone); }
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; text-align: center; }
-    .stat-value { font-size: 42px; font-weight: 900; color: var(--wine); margin-bottom: 8px; }
+    .stat-value { font-size: 42px; font-weight: 900; color: var(--wine); margin-bottom: 4px; }
     .stat-label { color: var(--text-light); font-size: 14px; }
 
-    /* PRODUCTOS */
-    .products { padding: 100px 0; }
-    .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .product-card { background: var(--white); border-radius: 20px; padding: 32px; border: 1px solid rgba(106, 13, 46, 0.05); transition: all 0.3s; }
-    .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(106, 13, 46, 0.08); border-color: var(--gold); }
-    .product-icon { width: 56px; height: 56px; background: var(--bone); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
-    .product-card h3 { font-size: 20px; font-weight: 800; color: var(--wine); margin-bottom: 12px; }
-    .product-card p { font-size: 14px; color: var(--text-light); }
+    /* PRODUCTOS: PANEL OSCURO + TARJETAS */
+    .products { padding: 80px 0; background: var(--bone); }
+    .products .container { display: grid; grid-template-columns: 1fr; }
+    .products-wrap { position: relative; display: grid; grid-template-columns: 330px 1fr; gap: 24px; }
+    .products-wrap::before { content: ""; position: absolute; left: 0; top: -36px; width: 536px; height: 300px; background: var(--wine-dark); border-radius: 6px 6px 0 0; }
+    .products-intro { position: relative; z-index: 1; padding: 0 0 0 64px; margin-top: 0; color: var(--white); }
+    .products-intro h2 { font-size: 30px; font-weight: 800; line-height: 1.2; margin-top: 8px; }
+    .products-intro .badge { display: inline-flex; width: 64px; height: 64px; border-radius: 50%; background: var(--gold); align-items: center; justify-content: center; font-size: 30px; margin-top: 28px; }
+    .products-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .product-card { background: var(--white); border-radius: 6px; padding: 28px 24px; min-height: 180px; box-shadow: 0 2px 12px rgba(62, 7, 33, .08); transition: transform .25s, box-shadow .25s; }
+    .product-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(106, 13, 46, .12); }
+    .product-icon { font-size: 28px; margin-bottom: 12px; }
+    .product-card h3 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .product-card p { font-size: 16px; color: var(--text); }
+
+    /* APRENDE MÁS: TABS + CARRUSEL */
+    .learn { padding: 90px 0; }
+    .tabs { display: flex; justify-content: center; gap: 28px; margin: -16px auto 40px; border-bottom: 1px solid #e3e3e3; width: fit-content; max-width: 100%; overflow-x: auto; }
+    .tab { background: none; border: none; border-bottom: 3px solid transparent; padding: 14px 8px; font: 500 16px 'Inter', sans-serif; color: var(--text); cursor: pointer; white-space: nowrap; }
+    .tab.active { border-bottom-color: var(--text); font-weight: 700; }
+    .carousel { display: flex; gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px 4px 16px; }
+    .carousel::-webkit-scrollbar { display: none; }
+    .video-card { flex: 0 0 calc(25% - 18px); min-width: 250px; scroll-snap-align: start; background: #FAF8F6; border-radius: 6px; box-shadow: 0 2px 10px rgba(0, 0, 0, .1); display: flex; flex-direction: column; overflow: hidden; }
+    .video-card.hide { display: none; }
+    .thumb { position: relative; height: 180px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--wine), var(--wine-dark)); }
+    .thumb.alt { background: linear-gradient(135deg, var(--gold), #997A15); }
+    .thumb .tag { position: absolute; left: 12px; top: 12px; background: var(--bone); color: var(--wine); font-size: 14px; font-weight: 600; padding: 2px 14px; border-radius: 100px; }
+    .play { width: 64px; height: 64px; border: 3px solid var(--white); border-radius: 50%; color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 26px; padding-left: 5px; }
+    .video-card p { padding: 28px 16px 0; font-size: 17px; flex: 1; }
+    .video-card a { padding: 28px 16px 24px; font-weight: 700; font-size: 17px; }
+
+
+
+    /* SEGURIDAD */
+    .security { padding: 60px 0 90px; }
+    .security .shield { display: block; text-align: center; font-size: 48px; margin-bottom: 8px; }
+    .tips { display: grid; grid-template-columns: 1fr 1fr; gap: 48px 60px; max-width: 860px; margin: 0 auto 48px; }
+    .tip { display: flex; gap: 16px; align-items: flex-start; font-size: 17px; }
+    .check { flex: 0 0 48px; height: 48px; border-radius: 50%; background: var(--success-soft); border: 1.5px solid var(--success); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; }
+    .more { display: block; text-align: center; font-weight: 700; margin-bottom: 40px; }
+    .notice { max-width: 860px; margin: 0 auto; background: rgba(212, 175, 55, .18); border-radius: 8px; padding: 24px; display: flex; gap: 16px; font-size: 17px; }
+    .notice .check { background: var(--white); border-color: var(--gold); color: var(--wine); font-size: 20px; }
+
+    /* OTROS CANALES */
+    .channels { padding: 0 0 90px; }
+    .channels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .channel { display: grid; grid-template-columns: 1fr 1fr; background: #FAF8F6; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, .1); min-height: 220px; }
+    .channel .pic { display: flex; align-items: center; justify-content: center; font-size: 64px; background: linear-gradient(135deg, var(--wine), var(--wine-dark)); }
+    .channel .pic.alt { background: linear-gradient(135deg, var(--gold), #997A15); }
+    .channel div.body { padding: 24px 16px; display: flex; flex-direction: column; }
+    .channel h3 { font-size: 26px; font-weight: 700; margin-bottom: 16px; line-height: 1.2; }
+    .channel p { font-size: 17px; flex: 1; }
+    .channel a { font-weight: 700; font-size: 17px; }
 
     /* FOOTER */
-    .footer { background: var(--wine-dark); color: rgba(255,255,255,0.7); padding: 60px 0 30px; }
+    .footer { background: var(--wine-dark); color: rgba(255, 255, 255, .8); padding: 56px 0 28px; }
     .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
     .footer-brand { color: var(--white); font-size: 24px; font-weight: 900; margin-bottom: 16px; }
-    .footer h4 { color: var(--gold); font-size: 14px; text-transform: uppercase; margin-bottom: 16px; }
-    .footer a { display: block; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 10px; transition: color 0.2s; }
+    .footer h4 { color: var(--white); font-size: 15px; margin-bottom: 20px; }
+    .footer a { display: block; color: rgba(255, 255, 255, .8); text-decoration: none; margin-bottom: 14px; transition: color .2s; }
     .footer a:hover { color: var(--gold); }
-    .footer-bottom { padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 13px; }
 
-    @media (max-width: 968px) {
-      .hero-inner { grid-template-columns: 1fr; text-align: center; }
-      .hero-cta { justify-content: center; }
-      .products-grid { grid-template-columns: repeat(2, 1fr); }
-      .nav-links { display: none; }
+    .footer-bottom { padding-top: 28px; border-top: 1px solid rgba(255, 255, 255, .1); text-align: center; font-size: 13px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .nav-access { padding: 0; box-shadow: none; }
+      .menu-btn { display: block; }
+      .has-drop { width: 100%; padding: 0; }
+      .dropdown { position: static; width: 100%; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: none; padding: 4px 0 0 8px; }
+      .nav-links.open { display: flex; flex-direction: column; align-items: flex-start; position: absolute; top: 76px; left: 0; right: 0; background: var(--white); padding: 20px 24px; border-bottom: 1px solid var(--line); box-shadow: 0 12px 24px rgba(0, 0, 0, .08); }
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .products-wrap { grid-template-columns: 1fr; }
+      .products-wrap::before { width: 100%; height: 220px; top: -36px; }
+      .products-intro { padding: 0 24px 24px; }
+      .tips, .channels-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 640px) {
-      .hero h1 { font-size: 36px; }
-      .products-grid, .stats-grid, .footer-grid { grid-template-columns: 1fr; }
+      h2.title { font-size: 26px; margin-bottom: 32px; }
+      .hero { padding: 32px 0 56px; }
+      .hero h1 { font-size: 32px; }
+      .hero-visual { min-height: 0; padding: 32px 20px; }
+      .features-grid, .products-grid, .stats-grid, .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+      .features-grid { gap: 40px; }
+      .feature p { max-width: none; }
+      .products-grid { gap: 16px; }
+      .channel { grid-template-columns: 1fr; }
+      .channel .pic { min-height: 140px; }
+      .nav-actions .btn-dark { display: none; }
+      .tabs { gap: 14px; }
     }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
   </style>
 </head>
 <body>
 
-  <nav class="navbar">
+  <header class="navbar">
     <div class="container nav-inner">
-      <a href="index.html" class="logo">
-        <img src="logo.png" alt="FINNEX"> FINNEX
-      </a>
-      <div class="nav-links">
-        <a href="productos.html">Productos</a>
+      <a href="index.html" class="logo"><img src="logo.png" alt="FINNEX"> FINNEX</a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Inicio</a>
+        <div class="has-drop">
+          <a href="productos.html" class="drop-trigger">Productos y servicios <small>▾</small></a>
+          <div class="dropdown">
+          <a href="login.html"><span>🏠</span>Dashboard</a>
+          <a href="productos.html"><span>💸</span>NEXA (Pagos)</a>
+          <a href="productos.html"><span>💳</span>Tarjeta FNX</a>
+          <a href="productos.html"><span>📈</span>NEXO (Inversiones)</a>
+          <a href="productos.html"><span>🎁</span>Cajitas FNX</a>
+          <a href="productos.html"><span>🏢</span>VELA / NEXT</a>
+          <a href="productos.html"><span>🛡️</span>FIN-SAFE</a>
+          <a href="productos.html"><span>💼</span>FIN-BIZ</a>
+          <a href="productos.html"><span>📊</span>FIN-360</a>
+          <a href="productos.html"><span>♻️</span>FINNEX Activos</a>
+          <a href="productos.html"><span>💳</span>FAMILIA NEXAR</a>
+          <a href="productos.html"><span>🧮</span>Simulador</a>
+          </div>
+        </div>
         <a href="nosotros.html">Nosotros</a>
         <a href="contacto.html">Contacto</a>
-        <a href="login.html" class="btn-primary">Ingresar</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="tramites.html" class="btn-dark">Trámites digitales</a>
+        <div class="nav-access"><span>Banca Virtual Personas</span><a href="login.html" class="btn-gold">Entrar</a></div>
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">Menú ⋮</button>
       </div>
     </div>
-  </nav>
+  </header>
+
+  <div class="crumbs">
+    <div class="container"><a href="index.html">Inicio</a><i>›</i><a href="productos.html">Canales</a><i>›</i><b>Banca Virtual Personas</b></div>
+  </div>
 
   <section class="hero">
     <div class="container hero-inner">
@@ -117,18 +246,15 @@
         <h1>El banco digital para <span class="gradient-text">emprendedores</span> latinoamericanos</h1>
         <p>Transferencias, tarjeta digital, ahorro, inversiones, seguros y créditos con inteligencia artificial. Todo en una sola app diseñada para emprendedores.</p>
         <div class="hero-cta">
-          <a href="login.html" class="btn-primary">Empezar gratis</a>
+          <a href="login.html" class="btn-gold">Empezar gratis</a>
           <a href="productos.html" class="btn-secondary">Ver productos</a>
         </div>
       </div>
-      <div>
+      <div class="hero-visual">
         <div class="card-mockup">
-          <div class="card-header">
-            <span class="card-brand">FAMILIA NEXAR</span>
-            <span class="card-status">APROBADO</span>
-          </div>
+          <div class="card-header"><span class="card-brand">FAMILIA NEXAR</span><span class="card-status">APROBADO</span></div>
           <div class="card-amount">$2.500.000</div>
-          <div style="color: var(--text-light); font-size: 14px; margin-bottom: 24px;">Línea de crédito disponible</div>
+          <div style="color: var(--text-light); font-size: 14px; margin-bottom: 20px;">Línea de crédito disponible</div>
           <div class="card-details">
             <div><div class="detail-label">Score crediticio</div><div class="detail-value">742/1000</div></div>
             <div><div class="detail-label">Tasa anual</div><div class="detail-value">12.0%</div></div>
@@ -136,6 +262,19 @@
             <div><div class="detail-label">Cuotas</div><div class="detail-value">3 meses</div></div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="container">
+      <h2 class="title">Características</h2>
+      <div class="features-grid">
+        <div class="feature"><span class="ico">💻</span><h3>Desde varios dispositivos</h3><p>Úsala desde tu computador, tableta o celular.</p></div>
+        <div class="feature"><span class="ico">📞</span><h3>Con contacto directo</h3><p>Agenda una llamada con uno de nuestros asesores o escríbenos por el chat.</p></div>
+        <div class="feature"><span class="ico">♿</span><h3>Con más accesibilidad</h3><p>Elige el tamaño de letra y modo de luz de la pantalla: oscuro o claro.</p></div>
+        <div class="feature"><span class="ico">🛡️</span><h3>Mayor control de datos</h3><p>Tu sesión cierra después de siete minutos de inactividad.</p></div>
+        <div class="feature"><span class="ico">🔐</span><h3>Más protección</h3><p>Bloquea tu clave principal y personaliza topes de tus transacciones.</p></div>
       </div>
     </div>
   </section>
@@ -151,41 +290,64 @@
 
   <section class="products">
     <div class="container">
-      <div class="section-header">
-        <h2>Ecosistema Financiero FINNEX</h2>
-        <p>Soluciones para cada etapa de tu emprendimiento</p>
+      <div class="products-wrap">
+        <div class="products-intro">
+          <h2>Ecosistema Financiero FINNEX</h2>
+          <p style="margin-top:12px;font-size:16px;">Soluciones para cada etapa de tu emprendimiento</p>
+        </div>
+        <div class="products-grid">
+          <div class="product-card"><div class="product-icon">💸</div><h3>NEXA (Ahorros)</h3><p>Administra tus recursos y realiza transferencias digitales instantáneas.</p></div>
+          <div class="product-card"><div class="product-icon">🎴</div><h3>Tarjeta FNX</h3><p>Tarjeta débito digital con congelamiento en un toque.</p></div>
+          <div class="product-card"><div class="product-icon">🏦</div><h3>VELA / NEXT</h3><p>Ahorro programado con metas para inversión productiva.</p></div>
+          <div class="product-card"><div class="product-icon">📈</div><h3>NEXO (CDT)</h3><p>Invierte tu dinero con tasas garantizadas desde el 10.5%.</p></div>
+          <div class="product-card"><div class="product-icon">💳</div><h3>NEXAR (Créditos)</h3><p>Microcrédito, Leasing y Factoring con IA.</p></div>
+          <div class="product-card"><div class="product-icon">♻️</div><h3>FINNEX Activos</h3><p>Economía circular para acceder a equipos y maquinaria.</p></div>
+        </div>
       </div>
-      <div class="products-grid">
-        <div class="product-card">
-          <div class="product-icon">💸</div>
-          <h3>NEXA (Ahorros)</h3>
-          <p>Administra tus recursos y realiza transferencias digitales instantáneas.</p>
-        </div>
-        <div class="product-card">
-          <div class="product-icon">🎴</div>
-          <h3>Tarjeta FNX</h3>
-          <p>Tarjeta débito digital con congelamiento en un toque.</p>
-        </div>
-        <div class="product-card">
-          <div class="product-icon">🏦</div>
-          <h3>VELA / NEXT</h3>
-          <p>Ahorro programado con metas para inversión productiva.</p>
-        </div>
-        <div class="product-card">
-          <div class="product-icon">📈</div>
-          <h3>NEXO (CDT)</h3>
-          <p>Invierte tu dinero con tasas garantizadas desde el 10.5%.</p>
-        </div>
-        <div class="product-card">
-          <div class="product-icon">💳</div>
-          <h3>NEXAR (Créditos)</h3>
-          <p>Microcrédito, Leasing y Factoring con IA.</p>
-        </div>
-        <div class="product-card">
-          <div class="product-icon">♻️</div>
-          <h3>FINNEX Activos</h3>
-          <p>Economía circular para acceder a equipos y maquinaria.</p>
-        </div>
+    </div>
+  </section>
+
+  <section class="learn">
+    <div class="container">
+      <h2 class="title">Aprende más de tu Banca Virtual</h2>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-f="all">Todos</button>
+        <button class="tab" data-f="nov">⭐ Novedades</button>
+        <button class="tab" data-f="sol">📄 Soluciones</button>
+        <button class="tab" data-f="seg">🛡️ Seguridad</button>
+      </div>
+      <div class="carousel" id="carousel">
+        <article class="video-card" data-c="nov"><div class="thumb"><span class="tag">Novedades</span><span class="play">▶</span></div><p>Descubre cómo iniciar sesión en tu Banca Virtual con la seguridad de siempre.</p><a href="#">Ver video ›</a></article>
+        <article class="video-card" data-c="sol"><div class="thumb alt"><span class="tag">Soluciones</span><span class="play">▶</span></div><p>Descubre todo lo que puedes hacer desde tu Banca Virtual.</p><a href="#">Ver video ›</a></article>
+        <article class="video-card" data-c="nov"><div class="thumb"><span class="tag">Novedades</span><span class="play">▶</span></div><p>Descubre la evolución de tu Banca Virtual.</p><a href="#">Ver video ›</a></article>
+        <article class="video-card" data-c="seg"><div class="thumb alt"><span class="tag">Seguridad</span><span class="play">▶</span></div><p>Conoce cómo proteger tu cuenta y tus transacciones desde "Ajustes".</p><a href="#">Ver video ›</a></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="security">
+    <div class="container">
+      <span class="shield">🛡️</span>
+      <h2 class="title">Ten en cuenta estos consejos de seguridad</h2>
+      <div class="tips">
+        <div class="tip"><span class="check">✓</span><p>Ten en cuenta que la descarga de otros programas en tus dispositivos debe hacerse desde sitios seguros con ciertas condiciones.</p></div>
+        <div class="tip"><span class="check">✓</span><p>Al entrar, confirma que la última fecha de conexión haya sido la última vez que entraste al sitio.</p></div>
+        <div class="tip"><span class="check">✓</span><p>Asegúrate que el navegador muestre el icono de "candado cerrado".</p></div>
+        <div class="tip"><span class="check">✓</span><p>Cierra sesión cuando termines de hacer tus movimientos.</p></div>
+        <div class="tip"><span class="check">✓</span><p>Mantén tu computador, tableta o celular, actualizados con programas de antivirus.</p></div>
+        <div class="tip"><span class="check">✓</span><p>Evita ingresar desde redes públicas.</p></div>
+      </div>
+      <a href="privacidad.html" class="more">Conoce más recomendaciones</a>
+      <div class="notice"><span class="check">i</span><p>Nos comprometemos a entregar los estándares de seguridad y calidad que aplican en la regulación vigente. Por su naturaleza, nuestros canales pueden estar sujetos a fallas, errores, interrupciones, intermitencias, entre otras situaciones o eventos que pueden afectar el servicio.</p></div>
+    </div>
+  </section>
+
+  <section class="channels">
+    <div class="container">
+      <h2 class="title">Descubre otros canales que te van a interesar</h2>
+      <div class="channels-grid">
+        <div class="channel"><div class="pic">🏪</div><div class="body"><h3>Corresponsal digital</h3><p>Estamos más cerca de ti en los barrios de todo el país.</p><a href="contacto.html">Conocer más ›</a></div></div>
+        <div class="channel"><div class="pic alt">📱</div><div class="body"><h3>Estado de canales</h3><p>Confirma la disponibilidad de nuestras plataformas.</p><a href="contacto.html">Conocer más ›</a></div></div>
       </div>
     </div>
   </section>
@@ -195,7 +357,7 @@
       <div class="footer-grid">
         <div>
           <div class="footer-brand">FINNEX</div>
-          <p style="font-size: 14px;">Fintech colombiana enfocada en democratizar el acceso al crédito para emprendedores digitales.</p>
+          <p style="font-size: 14px; max-width: 340px;">Fintech colombiana enfocada en democratizar el acceso al crédito para emprendedores digitales.</p>
         </div>
         <div>
           <h4>Productos</h4>
@@ -214,11 +376,24 @@
           <a href="privacidad.html">Privacidad</a>
         </div>
       </div>
-      <div class="footer-bottom">
-        &copy; 2026 FINNEX - Proyecto SENA. Todos los derechos reservados.
-      </div>
+      <div class="footer-bottom">&copy; 2026 FINNEX - Proyecto SENA. Todos los derechos reservados.</div>
     </div>
   </footer>
 
+  <script>
+    var nav = document.getElementById('navLinks');
+    document.getElementById('menuBtn').onclick = function () { nav.classList.toggle('open'); };
+
+
+
+    var tabs = document.querySelectorAll('.tab'), cards = document.querySelectorAll('.video-card');
+    tabs.forEach(function (t) {
+      t.onclick = function () {
+        tabs.forEach(function (x) { x.classList.remove('active'); });
+        t.classList.add('active');
+        cards.forEach(function (c) { c.classList.toggle('hide', t.dataset.f !== 'all' && c.dataset.c !== t.dataset.f); });
+      };
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trámites digitales - FINNEX</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --wine: #6A0D2E;
+      --wine-dark: #3E0721;
+      --gold: #D4AF37;
+      --bone: #F4F1EE;
+      --text: #2D2D2D;
+      --text-light: #7A7A7A;
+      --white: #FFFFFF;
+      --line: rgba(106, 13, 46, 0.1);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    h2.title { font-size: 34px; font-weight: 800; color: var(--text); text-align: center; letter-spacing: -.5px; margin-bottom: 48px; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+    .btn-gold { background: var(--gold); color: var(--wine-dark); padding: 12px 28px; border-radius: 100px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; transition: all .2s; }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, .3); }
+    .btn-secondary { background: var(--white); color: var(--wine); padding: 12px 28px; border-radius: 100px; font-weight: 600; text-decoration: none; border: 2px solid var(--wine); transition: all .2s; }
+    .btn-secondary:hover { background: var(--bone); transform: translateY(-2px); }
+    .btn-dark { background: var(--text); color: var(--white); padding: 12px 24px; border-radius: 100px; font-weight: 700; font-size: 15px; text-decoration: none; transition: background .2s; }
+    .btn-dark:hover { background: var(--wine-dark); }
+
+
+    /* NAVBAR */
+    .navbar { background: var(--white); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--line); }
+    .nav-inner { display: flex; align-items: center; gap: 32px; min-height: 76px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 900; color: var(--wine); text-decoration: none; letter-spacing: -1px; }
+    .logo img { width: 40px; height: 40px; border-radius: 8px; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { text-decoration: none; font-size: 15px; font-weight: 500; color: var(--text); transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--wine); font-weight: 700; }
+    .nav-actions { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .nav-access { display: flex; align-items: center; gap: 24px; padding: 8px 8px 8px 20px; border-radius: 14px; box-shadow: 0 2px 14px rgba(62, 7, 33, .08); font-size: 15px; }
+    .menu-btn { display: none; background: none; border: none; font: 700 16px 'Inter', sans-serif; color: var(--text); cursor: pointer; }
+
+    /* MENÚ DESPLEGABLE */
+    .has-drop { position: relative; padding: 26px 0; }
+    .drop-trigger small { font-size: 11px; margin-left: 2px; }
+    .dropdown { position: absolute; top: 100%; left: -16px; width: 280px; background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 8px; box-shadow: 0 20px 40px rgba(62, 7, 33, .15); opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .2s, transform .2s, visibility .2s; z-index: 200; }
+    .has-drop:hover .dropdown, .has-drop:focus-within .dropdown { opacity: 1; visibility: visible; transform: none; }
+    .nav-links .dropdown a { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; }
+    .nav-links .dropdown a span { width: 22px; text-align: center; font-size: 16px; }
+    .nav-links .dropdown a:hover { background: var(--bone); color: var(--wine); font-weight: 500; }
+
+    /* MIGAS */
+    .crumbs { background: var(--bone); font-size: 15px; }
+    .crumbs .container { padding-top: 10px; padding-bottom: 10px; display: flex; gap: 10px; align-items: center; }
+    .crumbs a { text-decoration: none; }
+    .crumbs a:hover { color: var(--wine); }
+    .crumbs b { font-weight: 600; }
+    .crumbs i { font-style: normal; color: var(--text-light); }
+
+    /* HERO */
+    .hero { padding: 64px 0 80px; }
+    .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .hero h1 { font-size: 46px; font-weight: 800; line-height: 1.15; letter-spacing: -1.2px; margin-bottom: 24px; }
+    .hero h1 span { color: var(--wine); }
+    .hero p { font-size: 18px; margin-bottom: 32px; max-width: 520px; }
+    .hero-visual { position: relative; border-radius: 12px; overflow: hidden; min-height: 400px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--wine) 0%, var(--wine-dark) 100%); }
+    .hero-visual::before { content: ""; position: absolute; width: 150%; height: 120px; right: -30%; top: 28%; transform: rotate(-35deg); background: var(--gold); opacity: .9; box-shadow: 0 130px 0 -30px rgba(244, 241, 238, .25), 0 -130px 0 -40px rgba(212, 175, 55, .35); }
+    .hero-visual::after { content: ""; position: absolute; width: 90px; height: 90px; border-radius: 50%; left: -30px; top: -30px; background: var(--bone); opacity: .5; }
+    .hero-visual img { position: relative; z-index: 1; max-width: 70%; max-height: 320px; object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0, 0, 0, .35)); }
+
+    /* MISIÓN */
+    .mission { padding: 40px 0 90px; }
+    .mission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; max-width: 1100px; margin: 0 auto; }
+    .mission h2 { font-size: 34px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 20px; }
+    .mission p { font-size: 18px; margin-bottom: 16px; }
+    .pillars { display: grid; gap: 28px; }
+    .pillar { display: grid; grid-template-columns: 32px 1fr; column-gap: 12px; }
+    .pillar .ico { font-size: 22px; line-height: 1.3; }
+    .pillar h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .pillar p { grid-column: 2; font-size: 17px; margin: 0; }
+
+    /* ESTADÍSTICAS */
+    .stats { padding: 56px 0; background: var(--bone); }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; text-align: center; }
+    .stat-value { font-size: 42px; font-weight: 900; color: var(--wine); margin-bottom: 4px; }
+    .stat-label { color: var(--text-light); font-size: 14px; }
+
+    /* VALORES: PANEL OSCURO + TARJETAS */
+    .values { padding: 90px 0; background: var(--bone); }
+    .values-wrap { position: relative; display: grid; grid-template-columns: 330px 1fr; gap: 24px; }
+    .values-wrap::before { content: ""; position: absolute; left: 0; top: -36px; width: 536px; height: 300px; background: var(--wine-dark); border-radius: 6px 6px 0 0; }
+    .values-intro { position: relative; z-index: 1; padding: 0 0 0 64px; color: var(--white); }
+    .values-intro h2 { font-size: 30px; font-weight: 800; line-height: 1.2; }
+    .values-intro p { margin-top: 12px; font-size: 16px; }
+    .values-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .value-card { background: var(--white); border-radius: 6px; padding: 28px 24px; min-height: 220px; border-top: 4px solid var(--gold); box-shadow: 0 2px 12px rgba(62, 7, 33, .08); transition: transform .25s, box-shadow .25s; }
+    .value-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(106, 13, 46, .12); }
+    .value-icon { font-size: 32px; margin-bottom: 12px; }
+    .value-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+    .value-card p { font-size: 16px; }
+
+    /* CTA */
+    .cta { padding: 90px 0; }
+    .cta-box { background: var(--wine-dark); color: var(--white); border-radius: 12px; padding: 56px 48px; display: flex; justify-content: space-between; align-items: center; gap: 32px; }
+    .cta-box h2 { font-size: 30px; font-weight: 800; margin-bottom: 8px; line-height: 1.2; }
+    .cta-box p { opacity: .85; font-size: 17px; }
+    .cta-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    /* FOOTER */
+    .footer { background: var(--wine-dark); color: rgba(255, 255, 255, .8); padding: 56px 0 28px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    .footer-brand { color: var(--white); font-size: 24px; font-weight: 900; margin-bottom: 16px; }
+    .footer h4 { color: var(--white); font-size: 15px; margin-bottom: 20px; }
+    .footer a { display: block; color: rgba(255, 255, 255, .8); text-decoration: none; margin-bottom: 14px; transition: color .2s; }
+    .footer a:hover { color: var(--gold); }
+    .footer-bottom { padding-top: 28px; border-top: 1px solid rgba(255, 255, 255, .1); text-align: center; font-size: 13px; }
+
+    @media (max-width: 1024px) {
+      .nav-access { padding: 0; box-shadow: none; }
+      .menu-btn { display: block; }
+      .has-drop { width: 100%; padding: 0; }
+      .dropdown { position: static; width: 100%; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: none; padding: 4px 0 0 8px; }
+      .nav-links.open { display: flex; flex-direction: column; align-items: flex-start; position: absolute; top: 76px; left: 0; right: 0; background: var(--white); padding: 20px 24px; border-bottom: 1px solid var(--line); box-shadow: 0 12px 24px rgba(0, 0, 0, .08); }
+      .hero-inner, .mission-grid, .values-wrap { grid-template-columns: 1fr; gap: 40px; }
+      .values-wrap { gap: 24px; }
+      .values-wrap::before { width: 100%; height: 200px; top: -36px; }
+      .values-intro { padding: 0 24px; }
+      .values-grid { grid-template-columns: 1fr 1fr; }
+      .cta-box { flex-direction: column; align-items: flex-start; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px) {
+      h2.title { font-size: 26px; }
+      .hero { padding: 32px 0 56px; }
+      .hero h1 { font-size: 32px; }
+      .hero-visual { min-height: 260px; }
+      .stats-grid, .values-grid, .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+      .cta-box { padding: 36px 24px; }
+      .nav-actions .btn-dark { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+    /* TRÁMITES */
+    .tramites { padding: 20px 0 90px; }
+    .tabs { display: flex; justify-content: center; gap: 28px; margin: -16px auto 40px; border-bottom: 1px solid #e3e3e3; width: fit-content; max-width: 100%; overflow-x: auto; }
+    .tab { background: none; border: none; border-bottom: 3px solid transparent; padding: 14px 8px; font: 500 16px 'Inter', sans-serif; color: var(--text); cursor: pointer; white-space: nowrap; }
+    .tab.active { border-bottom-color: var(--text); font-weight: 700; }
+    .tr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .tr-card { display: flex; flex-direction: column; background: #FAF8F6; border-radius: 6px; border-top: 4px solid var(--gold); padding: 28px 24px 24px; box-shadow: 0 2px 10px rgba(0, 0, 0, .1); transition: transform .25s, box-shadow .25s; }
+    .tr-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(106, 13, 46, .12); }
+    .tr-card.hide { display: none; }
+    .tr-icon { font-size: 30px; margin-bottom: 12px; }
+    .tr-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .tr-card p { font-size: 16px; flex: 1; margin-bottom: 20px; }
+    .tr-card a { font-weight: 700; font-size: 16px; color: var(--wine); text-decoration: none; }
+    .tr-card a:hover { text-decoration: underline; }
+    .steps { padding: 80px 0; background: var(--bone); }
+    .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; max-width: 1000px; margin: 0 auto; }
+    .step .num { width: 48px; height: 48px; border-radius: 50%; background: var(--gold); color: var(--wine-dark); font-weight: 800; font-size: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .step h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 17px; }
+    @media (max-width: 1024px) { .tr-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 640px) { .tr-grid, .steps-grid { grid-template-columns: 1fr; } .tabs { gap: 14px; } }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo"><img src="logo.png" alt="FINNEX"> FINNEX</a>
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Inicio</a>
+        <div class="has-drop">
+          <a href="productos.html" class="drop-trigger">Productos y servicios <small>▾</small></a>
+          <div class="dropdown">
+          <a href="login.html"><span>🏠</span>Dashboard</a>
+          <a href="productos.html"><span>💸</span>NEXA (Pagos)</a>
+          <a href="productos.html"><span>💳</span>Tarjeta FNX</a>
+          <a href="productos.html"><span>📈</span>NEXO (Inversiones)</a>
+          <a href="productos.html"><span>🎁</span>Cajitas FNX</a>
+          <a href="productos.html"><span>🏢</span>VELA / NEXT</a>
+          <a href="productos.html"><span>🛡️</span>FIN-SAFE</a>
+          <a href="productos.html"><span>💼</span>FIN-BIZ</a>
+          <a href="productos.html"><span>📊</span>FIN-360</a>
+          <a href="productos.html"><span>♻️</span>FINNEX Activos</a>
+          <a href="productos.html"><span>💳</span>FAMILIA NEXAR</a>
+          <a href="productos.html"><span>🧮</span>Simulador</a>
+          </div>
+        </div>
+        <a href="nosotros.html">Nosotros</a>
+        <a href="contacto.html">Contacto</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="tramites.html" class="btn-dark">Trámites digitales</a>
+        <div class="nav-access"><span>Banca Virtual Personas</span><a href="login.html" class="btn-gold">Entrar</a></div>
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">Menú ⋮</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="crumbs">
+    <div class="container"><a href="index.html">Inicio</a><i>›</i><b>Trámites digitales</b></div>
+  </div>
+
+  <section class="hero">
+    <div class="container hero-inner">
+      <div>
+        <h1>Trámites <span>digitales</span></h1>
+        <p>Haz desde tu celular o computador lo que antes hacías en una oficina: certificados, tarjetas, créditos y más, sin filas ni papeleo.</p>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <a href="login.html" class="btn-gold">Entrar y empezar</a>
+          <a href="contacto.html" class="btn-secondary">Necesito ayuda</a>
+        </div>
+      </div>
+      <div class="hero-visual"><img src="robot.png" alt="Robot FINNEX"></div>
+    </div>
+  </section>
+
+  <section class="tramites">
+    <div class="container">
+      <h2 class="title">¿Qué trámite quieres hacer?</h2>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-f="all">Todos</button>
+        <button class="tab" data-f="cta">Cuentas y tarjetas</button>
+        <button class="tab" data-f="cre">Créditos</button>
+        <button class="tab" data-f="inv">Ahorro e inversión</button>
+        <button class="tab" data-f="seg">Datos y seguridad</button>
+      </div>
+      <div class="tr-grid" id="trGrid">
+        <article class="tr-card" data-c="cta"><div class="tr-icon">📄</div><h3>Certificación bancaria</h3><p>Descarga la certificación de tu cuenta NEXA al instante.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="cta"><div class="tr-icon">🧾</div><h3>Extractos de cuenta</h3><p>Consulta y descarga los extractos de tus productos.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="cta"><div class="tr-icon">🧊</div><h3>Congelar tarjeta FNX</h3><p>Congela o descongela tu tarjeta débito digital en un toque.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="cta"><div class="tr-icon">🔁</div><h3>Reposición de tarjeta</h3><p>Solicita una nueva tarjeta si la perdiste o se dañó.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="cre"><div class="tr-icon">💳</div><h3>Solicitar crédito NEXAR</h3><p>Pide tu microcrédito, leasing o factoring con respuesta en menos de 24 horas.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="cre"><div class="tr-icon">🧮</div><h3>Simular un crédito</h3><p>Calcula cuotas, plazo y tasa antes de decidir.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="cre"><div class="tr-icon">✅</div><h3>Paz y salvo</h3><p>Obtén el certificado cuando termines de pagar tu crédito.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="inv"><div class="tr-icon">📈</div><h3>Abrir un CDT en NEXO</h3><p>Invierte con tasas garantizadas desde el 10.5%.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="inv"><div class="tr-icon">🏦</div><h3>Crear una meta de ahorro</h3><p>Programa tu ahorro en VELA / NEXT para tu próxima inversión.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="inv"><div class="tr-icon">🎁</div><h3>Crear una Cajita FNX</h3><p>Separa tu dinero en cajitas para cada objetivo.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="seg"><div class="tr-icon">👤</div><h3>Actualizar datos personales</h3><p>Cambia tu celular, correo o dirección.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="seg"><div class="tr-icon">🛡️</div><h3>Verificación biométrica</h3><p>Valida tu identidad con FIN-SAFE (KYC) de forma segura.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="seg"><div class="tr-icon">🔐</div><h3>Cambiar tu clave</h3><p>Bloquea o actualiza tu clave principal cuando lo necesites.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="seg"><div class="tr-icon">📏</div><h3>Cambiar topes de transacciones</h3><p>Personaliza los límites de tus movimientos.</p><a href="login.html">Iniciar trámite ›</a></article>
+        <article class="tr-card" data-c="seg"><div class="tr-icon">📨</div><h3>Radicar una queja o reclamo</h3><p>Cuéntanos qué pasó y te ayudamos a resolverlo.</p><a href="login.html">Iniciar trámite ›</a></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps">
+    <div class="container">
+      <h2 class="title">Así de fácil es hacerlo</h2>
+      <div class="steps-grid">
+        <div class="step"><span class="num">1</span><h3>Ingresa</h3><p>Entra a tu Banca Virtual con tu usuario y contraseña.</p></div>
+        <div class="step"><span class="num">2</span><h3>Elige tu trámite</h3><p>Busca lo que necesitas y sigue las instrucciones en pantalla.</p></div>
+        <div class="step"><span class="num">3</span><h3>Listo</h3><p>Recibe tu documento o confirmación al instante.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" style="padding-top:20px;">
+    <div class="container">
+      <div class="cta-box">
+        <div>
+          <h2>¿No encuentras tu trámite?</h2>
+          <p>Escríbenos y un asesor te ayuda a resolverlo.</p>
+        </div>
+        <div class="cta-actions">
+          <a href="contacto.html" class="btn-gold">Contáctanos</a>
+          <a href="productos.html" class="btn-secondary">Ver productos</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">FINNEX</div>
+          <p style="font-size: 14px; max-width: 340px;">Fintech colombiana enfocada en democratizar el acceso al crédito.</p>
+        </div>
+        <div><h4>Productos</h4><a href="productos.html">NEXAR</a><a href="productos.html">NEXA</a><a href="productos.html">NEXO</a></div>
+        <div><h4>Compañía</h4><a href="nosotros.html">Sobre nosotros</a><a href="contacto.html">Contacto</a></div>
+        <div><h4>Legal</h4><a href="terminos.html">Términos</a><a href="privacidad.html">Privacidad</a></div>
+      </div>
+      <div class="footer-bottom">&copy; 2026 FINNEX - Proyecto SENA.</div>
+    </div>
+  </footer>
+
+  <script>
+    var nav = document.getElementById('navLinks');
+    document.getElementById('menuBtn').onclick = function () { nav.classList.toggle('open'); };
+    var tabs = document.querySelectorAll('.tab'), cards = document.querySelectorAll('.tr-card');
+    tabs.forEach(function (t) {
+      t.onclick = function () {
+        tabs.forEach(function (x) { x.classList.remove('active'); });
+        t.classList.add('active');
+        cards.forEach(function (c) { c.classList.toggle('hide', t.dataset.f !== 'all' && c.dataset.c !== t.dataset.f); });
+      };
+    });
+  </script>
+</body>
+</html>

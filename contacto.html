@@ -38,7 +38,7 @@
 
     /* LAYOUT */
     .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding: 60px 0 80px; align-items: start; }
-    
+
     /* INFO COLUMNA */
     .contact-info { background: var(--white); padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(106, 13, 46, 0.05); border-top: 4px solid var(--wine); }
     .contact-info h3 { font-size: 24px; font-weight: 900; color: var(--wine); margin-bottom: 12px; }
@@ -57,9 +57,15 @@
     .contact-form > p { color: var(--text-light); font-size: 14px; margin-bottom: 32px; }
     .form-group { margin-bottom: 20px; }
     .form-label { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
-    .form-input, .form-textarea { width: 100%; padding: 14px 16px; border: 1px solid rgba(106, 13, 46, 0.2); border-radius: 10px; font-family: inherit; font-size: 15px; transition: all 0.2s; background: var(--bone); }
-    .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--gold); background: var(--white); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
+    .form-input, .form-textarea, .form-select { width: 100%; padding: 14px 16px; border: 1px solid rgba(106, 13, 46, 0.2); border-radius: 10px; font-family: inherit; font-size: 15px; color: var(--text); transition: all 0.2s; background: var(--bone); }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { outline: none; border-color: var(--gold); background: var(--white); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
     .form-textarea { resize: vertical; min-height: 120px; }
+
+    /* Lista desplegable del campo Asunto */
+    .form-select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 44px; background-image: linear-gradient(45deg, transparent 50%, var(--wine) 50%), linear-gradient(135deg, var(--wine) 50%, transparent 50%); background-position: calc(100% - 20px) 55%, calc(100% - 14px) 55%; background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; }
+    .form-select:invalid { color: var(--text-light); }
+    .form-select option { color: var(--text); }
+
     .btn-submit { width: 100%; background: var(--wine); color: var(--white); padding: 16px; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
     .btn-submit:hover { background: var(--wine-dark); transform: translateY(-2px); }
 
@@ -107,7 +113,7 @@
 
   <section class="container">
     <div class="contact-grid">
-      
+
       <!-- INFO -->
       <div class="contact-info">
         <h3>Información de contacto</h3>
@@ -155,7 +161,7 @@
       <form class="contact-form" id="contactForm">
         <h3>Envíanos un mensaje</h3>
         <p>Todos los campos son obligatorios.</p>
-        
+
         <div id="formMessage" style="display: none; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
 
         <div class="form-group">
@@ -170,7 +176,22 @@
 
         <div class="form-group">
           <label class="form-label" for="asunto">Asunto</label>
-          <input class="form-input" type="text" id="asunto" placeholder="Sobre qué quieres hablar">
+          <select class="form-select" id="asunto" required>
+            <option value="" disabled selected>Selecciona un tema</option>
+            <option>Cuenta de ahorros y cuenta rentable</option>
+            <option>Bolsillos de ahorro y rentabilidad</option>
+            <option>Certificados de Depósito a Término (CDT)</option>
+            <option>Créditos y microcréditos para emprendedores</option>
+            <option>Leasing productivo</option>
+            <option>Factoring digital</option>
+            <option>Herramientas Fintech y fidelización</option>
+            <option>Economía circular y sostenibilidad</option>
+            <option>Transacciones, transferencias y pagos</option>
+            <option>Banca digital y acceso a la plataforma</option>
+            <option>Seguridad y protección de datos</option>
+            <option>Atención al cliente y otros servicios</option>
+            <option>Otro</option>
+          </select>
         </div>
 
         <div class="form-group">

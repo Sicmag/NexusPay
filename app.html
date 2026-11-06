@@ -6,139 +6,496 @@
   <title>FINNEX - Tu banco digital</title>
   <link rel="icon" type="image/png" href="logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=31">
+  <link rel="stylesheet" href="styles.css?v=42">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  
+
   <style>
-    /* Colores base para el app */
-    :root {
-      --wine: #6A0D2E;
-      --wine-dark: #3E0721;
-      --gold: #D4AF37;
-      --bone: #F4F1EE;
-      --text: #2D2D2D;
-      --text-light: #7A7A7A;
-      --white: #FFFFFF;
+    /* ============ SHELL (estructura). Los colores vienen de styles.css ============ */
+    * { box-sizing: border-box; }
+    body.app-body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bone, #F5F0E8);
+      color: var(--dark, #1E293B);
     }
-    /* Estilos rápidos para el grid de servicios */
-    .servicios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-    .servicio-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; background: var(--white); border: 2px solid var(--bone); border-radius: 12px; cursor: pointer; transition: all 0.2s ease; }
-    .servicio-item:hover { border-color: var(--wine); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(106, 13, 46, 0.1); }
-    .servicio-item.selected { border-color: var(--wine); background: rgba(106, 13, 46, 0.05); }
-    .servicio-logo { width: 48px; height: 48px; border-radius: 50%; object-fit: contain; background: var(--white); padding: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-    .servicio-logo-fallback { width: 48px; height: 48px; border-radius: 50%; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-    .servicio-item span { font-size: 12px; font-weight: 700; color: var(--text); }
-    @media (max-width: 400px) { .servicios-grid { grid-template-columns: repeat(2, 1fr); } }
-    
-    .support-fab { position: fixed; bottom: 24px; left: 24px; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4); z-index: 1000; transition: transform 0.2s; }
-    .support-fab:hover { transform: scale(1.1); }
+    body.no-scroll { overflow: hidden; }
+
+    /* ---------- Sidebar ---------- */
+    .app-sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 260px;
+      background: var(--bg-card, #FFFFFF);
+      border-right: 1px solid var(--border, #E5E0D8);
+      display: flex;
+      flex-direction: column;
+      z-index: 1100;
+      transition: transform .25s ease;
+    }
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 26px 22px 18px;
+    }
+    .sidebar-header .logo-text {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--wine, #6A0D2E);
+      text-decoration: none;
+      letter-spacing: .3px;
+    }
+    .sidebar-menu {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 12px 16px;
+    }
+    .sidebar-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-light, #8A8A8A);
+      padding: 16px 12px 6px;
+    }
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border, #E5E0D8);
+      margin: 12px 8px;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 14px;
+      margin-bottom: 2px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--dark, #1E293B);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .sidebar-link .icon {
+      width: 24px;
+      display: inline-flex;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .sidebar-link:hover { background: rgba(106, 13, 46, .05); }
+    .sidebar-link.active {
+      background: rgba(106, 13, 46, .09);
+      color: var(--wine, #6A0D2E);
+      font-weight: 700;
+      box-shadow: inset 3px 0 0 var(--gold, #D1B474);
+    }
+    .sidebar-link.logout-btn { color: #B91C1C; }
+    .sidebar-link.logout-btn:hover { background: #FDECEC; }
+
+    /* ---------- Grupos desplegables ---------- */
+    .sidebar-group { margin-bottom: 4px; }
+    .sidebar-group-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--dark, #1E293B);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .sidebar-group-toggle:hover { background: rgba(106, 13, 46, .05); }
+    .sidebar-group-toggle .icon {
+      width: 24px;
+      display: inline-flex;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .sidebar-group-toggle .chev {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-light, #8A8A8A);
+      transition: transform .25s ease;
+    }
+    .sidebar-group.open > .sidebar-group-toggle .chev { transform: rotate(180deg); }
+    .sidebar-group.open > .sidebar-group-toggle { color: var(--wine, #6A0D2E); }
+
+    .sidebar-submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease;
+      padding-left: 14px;
+    }
+    .sidebar-group.open > .sidebar-submenu { max-height: 1200px; }
+    .sidebar-submenu .sidebar-link {
+      font-size: 13.5px;
+      padding: 9px 14px 9px 14px;
+    }
+
+    /* Pie del menú */
+    .sidebar-footer {
+      padding: 14px 16px 18px;
+      border-top: 1px solid var(--border, #E5E0D8);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .user-profile-top { cursor: pointer; }
+    .avatar-small {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--wine, #6A0D2E);
+      color: #FFFFFF;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .footer-actions { display: flex; gap: 8px; }
+    .theme-toggle-btn, .notification-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border, #E5E0D8);
+      background: var(--bg-card, #FFFFFF);
+      font-size: 16px;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .theme-toggle-btn:hover, .notification-btn:hover { background: var(--bone, #F5F0E8); }
+
+    /* ---------- Contenido principal ---------- */
+    .app-main {
+      margin-left: 260px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .page-header {
+      padding: 28px 32px 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .mobile-menu-btn {
+      display: none;
+      width: 40px; height: 40px;
+      border: 1px solid var(--border, #E5E0D8);
+      border-radius: 10px;
+      background: var(--bg-card, #FFFFFF);
+      font-size: 18px;
+      cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .topbar-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0;
+      color: var(--wine, #6A0D2E);
+    }
+    .page-content {
+      padding: 20px 32px 48px;
+      max-width: 1280px;
+      width: 100%;
+    }
+
+    .section-heading {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark, #1E293B);
+      margin: 0 0 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-heading a { font-size: 13px; color: var(--wine, #6A0D2E); }
+
+    /* ---------- Grids responsive del dashboard ---------- */
+    .dash-grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .dash-grid-3col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .dash-grid-3col > .app-section { min-width: 0; }
+
+    /* Contenedores de gráficas: alto controlado por CSS, Chart.js llena el espacio */
+    .chart-box {
+      position: relative;
+      width: 100%;
+      height: 260px;
+    }
+    .chart-box.chart-pie { height: 260px; }
+
+    /* ---------- Overlay móvil ---------- */
+    .sidebar-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, .4);
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+      z-index: 1050;
+    }
+    .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+
+    /* ---------- Chat y soporte ---------- */
+    .chat-fab {
+      position: fixed; bottom: 24px; right: 24px;
+      width: 68px; height: 68px;
+      border: none; padding: 0;
+      background: transparent;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    .support-fab {
+      position: fixed; bottom: 24px; left: 284px;
+      width: 52px; height: 52px;
+      background: #25D366;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 16px rgba(37, 211, 102, .35);
+      z-index: 1000;
+      transition: transform .2s;
+    }
+    .support-fab:hover { transform: scale(1.08); }
+
+    /* ---------- Responsive: tablet (≤1024px) ---------- */
+    @media (max-width: 1024px) {
+      .app-sidebar { transform: translateX(-100%); box-shadow: 0 12px 40px rgba(0,0,0,.2); }
+      .app-sidebar.open { transform: translateX(0); }
+      .app-main { margin-left: 0; }
+      .mobile-menu-btn { display: inline-flex; }
+      .support-fab { left: 20px; }
+      .page-header { padding: 22px 24px 0; }
+      .page-content { padding: 16px 24px 40px; }
+      .dash-grid-3col { grid-template-columns: 1fr; }
+    }
+
+    /* ---------- Responsive: celular (≤640px) ---------- */
+    @media (max-width: 640px) {
+      .dash-grid-2col,
+      .dash-grid-3col { grid-template-columns: 1fr; gap: 14px; }
+      /* Tarjetas en línea (inline style) pasan a una columna */
+      .dash-grid-2col [style*="grid-template-columns: 1fr 1fr"],
+      div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+      .chart-box { height: 220px; }
+      .chart-box.chart-pie { height: 240px; }
+      .page-header { padding: 18px 16px 0; }
+      .page-content { padding: 14px 16px 40px; }
+      .topbar-title { font-size: 20px; }
+      .support-fab { bottom: 16px; left: 16px; width: 48px; height: 48px; }
+      .chat-fab { width: 60px; height: 60px; right: 14px; bottom: 14px; }
+    }
   </style>
 </head>
-<body class="app-body dark-mode-off">
+<body class="app-body">
 
-  <!-- SONIDO DE APP -->
+  <!-- PANTALLA DE CARGA -->
+  <div id="pantallaCarga" class="loader-overlay">
+    <div class="loader-content">
+      <img src="robot.png" alt="Luci" class="loader-robot">
+      <h1 class="loader-logo">FINNEX</h1>
+      <div class="loader-spinner"></div>
+      <p class="loader-text">Preparando tu banco digital...</p>
+    </div>
+  </div>
+
+  <!-- SONIDO -->
   <audio id="sonidoApp" src="https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3" preload="auto"></audio>
 
   <!-- SIDEBAR -->
   <aside class="app-sidebar" id="appSidebar">
-    <div class="sidebar-header" style="display: flex; align-items: center; gap: 12px; padding: 24px;">
-      <img src="logo.png" alt="FINNEX Logo" style="width: 40px; height: 40px; border-radius: 10px; object-fit: cover;">
-      <a href="app.html" class="logo-text" style="font-size: 20px; text-decoration: none; margin: 0;">FINNEX</a>
+    <div class="sidebar-header">
+      <img src="logo.png" alt="FINNEX" style="width:38px;height:38px;border-radius:10px;object-fit:cover;">
+      <a href="app.html" class="logo-text">FINNEX</a>
     </div>
 
-    <div class="sidebar-menu">
+    <nav class="sidebar-menu">
+
+      <!-- Menú persona natural -->
       <div id="menuNaturalSidebar" style="display:none;">
-        <button class="sidebar-link active" data-page="dashboard" onclick="navegarA('dashboard')"><span class="icon">🏠</span> Dashboard</button>
-        <button class="sidebar-link" data-page="flowpay" onclick="navegarA('flowpay')"><span class="icon">💸</span> NEXA (Ahorros)</button>
-        <button class="sidebar-link" data-page="flowcard" onclick="navegarA('flowcard')"><span class="icon">💳</span> Tarjeta FNX</button>
-        <button class="sidebar-link" data-page="flowinvest" onclick="navegarA('flowinvest')"><span class="icon">📈</span> NEXO (CDT)</button>
-        <button class="sidebar-link" data-page="nexusbox" onclick="navegarA('nexusbox')"><span class="icon">🎁</span> Cajitas FNX</button>
-        <button class="sidebar-link" data-page="flowsave" onclick="navegarA('flowsave')"><span class="icon">🏦</span> VELA / NEXT</button>
-        <button class="sidebar-link" data-page="flowshield" onclick="navegarA('flowshield')"><span class="icon">🛡️</span> FIN-SAFE</button>
-        <button class="sidebar-link" data-page="creditos" onclick="navegarA('creditos')"><span class="icon">💳</span> Crédito Personal</button>
-        <button class="sidebar-link" data-page="simulador" onclick="navegarA('simulador')"><span class="icon">🧮</span> Simulador</button>
+        <button class="sidebar-link active" data-page="dashboard" onclick="navegarA('dashboard')"><span class="icon">🏠</span> Inicio</button>
+
+        <!-- Productos -->
+        <div class="sidebar-group">
+          <button class="sidebar-group-toggle" onclick="toggleGrupo(this)" aria-expanded="false">
+            <span class="icon">🧩</span> Productos <span class="chev">▼</span>
+          </button>
+          <div class="sidebar-submenu">
+            <button class="sidebar-link" data-page="flowpay" onclick="navegarA('flowpay')"><span class="icon">💸</span> NEXA (Ahorros)</button>
+            <button class="sidebar-link" data-page="flowcard" onclick="navegarA('flowcard')"><span class="icon">💳</span> Tarjeta FNX</button>
+            <button class="sidebar-link" data-page="flowinvest" onclick="navegarA('flowinvest')"><span class="icon">📈</span> NEXO (CDT)</button>
+            <button class="sidebar-link" data-page="nexusbox" onclick="navegarA('nexusbox')"><span class="icon">🎁</span> Cajitas FNX</button>
+            <button class="sidebar-link" data-page="flowsave" onclick="navegarA('flowsave')"><span class="icon">🏦</span> VELA / NEXT</button>
+            <button class="sidebar-link" data-page="flowshield" onclick="navegarA('flowshield')"><span class="icon">🛡️</span> FIN-SAFE</button>
+          </div>
+        </div>
+
+        <!-- Solicitudes -->
+        <div class="sidebar-group">
+          <button class="sidebar-group-toggle" onclick="toggleGrupo(this)" aria-expanded="false">
+            <span class="icon">📝</span> Solicitudes <span class="chev">▼</span>
+          </button>
+          <div class="sidebar-submenu">
+            <button class="sidebar-link" data-page="creditos" onclick="navegarA('creditos')"><span class="icon">💰</span> Crédito Personal</button>
+            <button class="sidebar-link" data-page="simulador" onclick="navegarA('simulador')"><span class="icon">🧮</span> Simulador</button>
+          </div>
+        </div>
       </div>
 
+      <!-- Menú emprendedor -->
       <div id="menuEmprendedorSidebar" style="display:none;">
-        <button class="sidebar-link active" data-page="dashboard" onclick="navegarA('dashboard')"><span class="icon">🏠</span> Dashboard</button>
-        <button class="sidebar-link" data-page="flowpay" onclick="navegarA('flowpay')"><span class="icon">💸</span> NEXA (Pagos)</button>
-        <button class="sidebar-link" data-page="flowcard" onclick="navegarA('flowcard')"><span class="icon">💳</span> Tarjeta FNX</button>
-        <button class="sidebar-link" data-page="flowinvest" onclick="navegarA('flowinvest')"><span class="icon">📈</span> NEXO (Inversiones)</button>
-        <button class="sidebar-link" data-page="nexusbox" onclick="navegarA('nexusbox')"><span class="icon">🎁</span> Cajitas FNX</button>
-        <button class="sidebar-link" data-page="flowsave" onclick="navegarA('flowsave')"><span class="icon">🏦</span> VELA / NEXT</button>
-        <button class="sidebar-link" data-page="flowshield" onclick="navegarA('flowshield')"><span class="icon">🛡️</span> FIN-SAFE</button>
-        <button class="sidebar-link" data-page="flowbusiness" onclick="navegarA('flowbusiness')"><span class="icon">💼</span> FIN-BIZ</button>
-        <button class="sidebar-link" data-page="flowanalytics" onclick="navegarA('flowanalytics')"><span class="icon">📊</span> FIN-360</button>
-        <button class="sidebar-link" data-page="activos" onclick="navegarA('activos')"><span class="icon">♻️</span> FINNEX Activos</button>
-        <button class="sidebar-link" data-page="creditos" onclick="navegarA('creditos')"><span class="icon">💳</span> FAMILIA NEXAR</button>
-        <button class="sidebar-link" data-page="simulador" onclick="navegarA('simulador')"><span class="icon">🧮</span> Simulador</button>
+        <button class="sidebar-link active" data-page="dashboard" onclick="navegarA('dashboard')"><span class="icon">🏠</span> Inicio</button>
+
+        <!-- Productos -->
+        <div class="sidebar-group">
+          <button class="sidebar-group-toggle" onclick="toggleGrupo(this)" aria-expanded="false">
+            <span class="icon">🧩</span> Productos <span class="chev">▼</span>
+          </button>
+          <div class="sidebar-submenu">
+            <button class="sidebar-link" data-page="flowpay" onclick="navegarA('flowpay')"><span class="icon">💸</span> NEXA (Pagos)</button>
+            <button class="sidebar-link" data-page="flowcard" onclick="navegarA('flowcard')"><span class="icon">💳</span> Tarjeta FNX</button>
+            <button class="sidebar-link" data-page="flowinvest" onclick="navegarA('flowinvest')"><span class="icon">📈</span> NEXO (Inversiones)</button>
+            <button class="sidebar-link" data-page="nexusbox" onclick="navegarA('nexusbox')"><span class="icon">🎁</span> Cajitas FNX</button>
+            <button class="sidebar-link" data-page="flowsave" onclick="navegarA('flowsave')"><span class="icon">🏦</span> VELA / NEXT</button>
+            <button class="sidebar-link" data-page="flowshield" onclick="navegarA('flowshield')"><span class="icon">🛡️</span> FIN-SAFE</button>
+            <button class="sidebar-link" data-page="flowbusiness" onclick="navegarA('flowbusiness')"><span class="icon">💼</span> FIN-BIZ</button>
+            <button class="sidebar-link" data-page="flowanalytics" onclick="navegarA('flowanalytics')"><span class="icon">📊</span> FIN-360</button>
+            <button class="sidebar-link" data-page="activos" onclick="navegarA('activos')"><span class="icon">♻️</span> FINNEX Activos</button>
+          </div>
+        </div>
+
+        <!-- Solicitudes -->
+        <div class="sidebar-group">
+          <button class="sidebar-group-toggle" onclick="toggleGrupo(this)" aria-expanded="false">
+            <span class="icon">📝</span> Solicitudes <span class="chev">▼</span>
+          </button>
+          <div class="sidebar-submenu">
+            <button class="sidebar-link" data-page="creditos" onclick="navegarA('creditos')"><span class="icon">💰</span> FAMILIA NEXAR</button>
+            <button class="sidebar-link" data-page="simulador" onclick="navegarA('simulador')"><span class="icon">🧮</span> Simulador</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trámites (común a ambos perfiles) -->
+      <div class="sidebar-group">
+        <button class="sidebar-group-toggle" onclick="toggleGrupo(this)" aria-expanded="false">
+          <span class="icon">📋</span> Trámites <span class="chev">▼</span>
+        </button>
+        <div class="sidebar-submenu">
+          <button class="sidebar-link" onclick="ejecutarTramite('certificacion')"><span class="icon">📄</span> Certificación bancaria</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('extracto')"><span class="icon">🧾</span> Extractos de cuenta</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('congelar')"><span class="icon">🧊</span> Congelar tarjeta</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('reposicion')"><span class="icon">🔄</span> Reposición de tarjeta</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('credito')"><span class="icon">💳</span> Solicitar crédito NEXAR</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('simulador')"><span class="icon">🧮</span> Simular un crédito</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('pazysalvo')"><span class="icon">✅</span> Paz y salvo</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('cdt')"><span class="icon">📈</span> Abrir un CDT</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('meta')"><span class="icon">🎯</span> Crear meta de ahorro</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('cajita')"><span class="icon">🎁</span> Crear Cajita FNX</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('datos')"><span class="icon">👤</span> Actualizar datos</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('verificacion')"><span class="icon">🛡️</span> Verificación biométrica</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('clave')"><span class="icon">🔐</span> Cambiar tu clave</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('topes')"><span class="icon">📏</span> Cambiar topes</button>
+          <button class="sidebar-link" onclick="ejecutarTramite('queja')"><span class="icon">📝</span> Radicar queja o reclamo</button>
+        </div>
       </div>
 
       <div class="sidebar-divider"></div>
-      
+
       <button class="sidebar-link" data-page="perfil" onclick="navegarA('perfil')"><span class="icon">⚙️</span> Configuración</button>
       <button class="sidebar-link" data-page="verificacion" onclick="navegarA('verificacion')"><span class="icon">✓</span> Verificación</button>
       <button class="sidebar-link" data-page="notificaciones" onclick="navegarA('notificaciones')"><span class="icon">🔔</span> Notificaciones</button>
       <button class="sidebar-link" data-page="ayuda" onclick="navegarA('ayuda')"><span class="icon">❓</span> Centro de Ayuda</button>
-      <button class="sidebar-link logout-btn" onclick="cerrarSesion()"><span class="icon">🚪</span> Cerrar Sesión</button>
+
+      <div class="sidebar-divider"></div>
+      <button class="sidebar-link logout-btn" onclick="cerrarSesion()"><span class="icon">🚪</span> Cerrar sesión</button>
+    </nav>
+
+    <!-- Pie: perfil, tema y notificaciones -->
+    <div class="sidebar-footer">
+      <div class="user-profile-top" onclick="navegarA('perfil')">
+        <div class="avatar-small" id="topAvatar">👤</div>
+      </div>
+      <div class="footer-actions">
+        <button class="theme-toggle-btn" onclick="toggleTema()" aria-label="Cambiar tema">🌙</button>
+        <button class="notification-btn" onclick="navegarA('notificaciones')" aria-label="Notificaciones">🔔</button>
+      </div>
     </div>
   </aside>
 
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
   <!-- CONTENIDO PRINCIPAL -->
   <main class="app-main">
-    <header class="app-topbar-new">
-      <div class="topbar-left">
-        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-        <h1 class="topbar-title" id="pageTitle">Overview</h1>
-      </div>
-      
-      <div class="topbar-right">
-        <div class="search-bar">
-          <span>🔍</span>
-          <input type="text" placeholder="Buscar en FINNEX...">
-        </div>
-        <button class="theme-toggle-btn" onclick="toggleTema()">🌙</button>
-        <button class="notification-btn" onclick="navegarA('notificaciones')">🔔</button>
-        <div class="user-profile-top" onclick="navegarA('perfil')">
-          <div class="avatar-small" id="topAvatar">👤</div>
-        </div>
-      </div>
-    </header>
+    <div class="page-header">
+      <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Abrir menú">☰</button>
+      <h1 class="topbar-title" id="pageTitle">Inicio</h1>
+    </div>
 
     <div class="page-content" id="pageContent">
       <div class="loading-spinner"></div>
     </div>
   </main>
 
-  <!-- FAB CHAT CON EL ROBOT -->
-  <button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Chat con Luci" style="background: none; border: none; padding: 0;">
-    <img src="robot.png" alt="Luci" style="width: 100%; height: 100%; object-fit: contain;">
+  <!-- CHAT CON LUCI -->
+  <button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Chat con Luci">
+    <img src="robot.png" alt="Luci" style="width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 5px 15px rgba(106,13,46,.25));">
   </button>
 
-    <!-- FAB CHAT CON EL ROBOT -->
-  <button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Chat con Luci" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0;">
-    <img src="robot.png" alt="Luci" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(212, 175, 55, 0.4));">
-  </button>
-  <!-- CHAT WINDOW -->
+  <!-- SOPORTE WHATSAPP -->
+  <a href="https://wa.me/573000000000?text=Hola,%20necesito%20ayuda%20con%20mi%20cuenta%20FINNEX" target="_blank" class="support-fab" title="Soporte por WhatsApp" aria-label="Soporte por WhatsApp">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="#FFFFFF">
+      <path d="M12.031 2c-5.523 0-10 4.477-10 10 0 1.752.455 3.428 1.303 4.908l-1.381 5.033 5.164-1.354c1.432.783 3.075 1.228 4.914 1.228 5.523 0 10-4.477 10-10s-4.477-10-10-10zm5.354 14.16c-.235.662-1.368 1.244-1.89 1.29-.475.042-1.023.118-1.874-.225-.514-.208-1.146-.475-1.87-.912-3.302-1.992-3.834-5.234-3.834-5.424 0-.19.143-.99.598-1.464.177-.184.384-.276.576-.276.192 0 .384.008.552.016.18.008.422-.07.661.504.247.593.851 2.077.925 2.226.074.149.123.322.025.514-.099.192-.148.31-.296.479-.149.169-.312.377-.446.506-.148.144-.304.3-.131.601.173.301.769 1.267 1.65 2.053 1.137 1.015 1.962 1.31 2.24 1.445.278.135.44.118.604-.07.164-.188.709-.826.898-1.108.189-.282.378-.235.64-.141.262.094 1.662.784 1.949.927.287.143.478.212.547.334.069.121.069.698-.166 1.36z"/>
+    </svg>
+  </a>
+
+  <!-- VENTANA DEL CHAT -->
   <div class="chat-window" id="chatWindow">
     <div class="chat-header">
       <div class="chat-header-info">
         <div class="chat-header-name">Luci</div>
         <div class="chat-header-status">En línea</div>
       </div>
-      <button class="chat-close" onclick="toggleChat()">×</button>
+      <button class="chat-close" onclick="toggleChat()" aria-label="Cerrar chat">×</button>
     </div>
     <div class="chat-messages" id="chatMessages">
       <div class="chat-message chat-bot">Hola! Soy Luci, tu asistente de FINNEX. ¿En qué te ayudo hoy? 💜</div>
     </div>
     <div class="chat-input-wrapper">
       <input class="chat-input" id="chatInput" placeholder="Escribe tu pregunta..." onkeypress="if(event.key==='Enter') enviarChat()">
-      <button class="chat-send" onclick="enviarChat()">➤</button>
+      <button class="chat-send" onclick="enviarChat()" aria-label="Enviar">➤</button>
     </div>
   </div>
+
+  <script>
+    // Abre o cierra un grupo del menú (Productos, Solicitudes, Trámites)
+    function toggleGrupo(btn) {
+      const grupo = btn.parentElement;
+      const abierto = grupo.classList.toggle('open');
+      btn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    }
+  </script>
 
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
@@ -147,4 +504,4 @@
   <script src="js/toast.js"></script>
   <script src="js/app.js"></script>
 </body>
-</html>   
+</html>

@@ -17,11 +17,14 @@
       --text: #2D2D2D;
       --text-light: #7A7A7A;
       --white: #FFFFFF;
+      --ok: #059669;
+      --warn: #D97706;
+      --bad: #DC2626;
     }
     body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--bone) 0%, #EBE5E0 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px; color: var(--text); }
-    
+
     .auth-card { background: var(--white); border-radius: 24px; padding: 48px 40px; max-width: 440px; width: 100%; box-shadow: 0 30px 80px rgba(106, 13, 46, 0.15); border-top: 5px solid var(--wine); }
-    
+
     .auth-logo-container { text-align: center; margin-bottom: 32px; }
     .auth-logo-container img { width: 80px; height: 80px; border-radius: 20px; object-fit: cover; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(106, 13, 46, 0.2); }
     .auth-logo-container h1 { font-size: 28px; font-weight: 900; color: var(--wine); }
@@ -37,9 +40,56 @@
     .form-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--wine); }
     .form-input { width: 100%; padding: 14px 16px; border: 2px solid var(--bone); border-radius: 12px; font-family: inherit; font-size: 15px; background: var(--bone); color: var(--text); transition: all 0.2s; }
     .form-input:focus { outline: none; border-color: var(--gold); background: var(--white); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
+    .form-input.invalid { border-color: var(--bad); }
+    .form-input.valid { border-color: var(--ok); }
+
+    .input-hint { font-size: 12px; color: var(--text-light); margin-top: 6px; }
+    .input-error { font-size: 12px; color: var(--bad); margin-top: 6px; display: none; }
+    .input-error.show { display: block; }
+
+    /* Medidor de contraseña */
+    .pwd-meter { margin-top: 10px; }
+    .pwd-bar { height: 8px; border-radius: 100px; background: var(--bone); overflow: hidden; }
+    .pwd-bar-fill { height: 100%; width: 0; border-radius: 100px; transition: width 0.3s, background-color 0.3s; }
+    .pwd-bar-fill.rojo { width: 33%; background: var(--bad); }
+    .pwd-bar-fill.amarillo { width: 66%; background: var(--warn); }
+    .pwd-bar-fill.verde { width: 100%; background: var(--ok); }
+    .pwd-label { font-size: 12px; font-weight: 600; margin-top: 6px; color: var(--text-light); }
+    .pwd-label.rojo { color: var(--bad); }
+    .pwd-label.amarillo { color: var(--warn); }
+    .pwd-label.verde { color: var(--ok); }
+    .pwd-reqs { font-size: 12px; color: var(--text-light); margin-top: 8px; line-height: 1.8; }
+    .pwd-reqs span.ok { color: var(--ok); font-weight: 600; }
+
+    .btn-suggest { background: none; border: none; color: var(--wine); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 8px; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+    .btn-suggest:hover { color: var(--gold); }
+    .suggest-box { display: none; background: var(--bone); border-radius: 10px; padding: 12px; margin-top: 10px; font-size: 13px; }
+    .suggest-box.show { display: block; }
+    .suggest-box code { font-family: monospace; font-size: 14px; color: var(--wine); font-weight: 700; word-break: break-all; }
+    .suggest-box button { margin-left: 8px; background: var(--wine); color: var(--white); border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* Captcha */
+    .captcha-box { display: flex; align-items: center; gap: 12px; background: var(--bone); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; border: 2px solid transparent; }
+    .captcha-box.ok { border-color: var(--ok); }
+    .captcha-box input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--wine); cursor: pointer; flex-shrink: 0; }
+    .captcha-box label { font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; flex: 1; }
+    .captcha-box .captcha-q { font-size: 12px; color: var(--text-light); display: block; font-weight: 500; }
+    .captcha-box .captcha-check { color: var(--ok); font-size: 18px; display: none; }
+    .captcha-box.ok .captcha-check { display: block; }
+
+    .captcha-quiz { display: none; margin-top: -8px; margin-bottom: 20px; }
+    .captcha-quiz.show { display: block; }
+    .captcha-quiz p { font-size: 13px; color: var(--text); margin-bottom: 8px; font-weight: 600; }
+    .captcha-quiz-row { display: flex; gap: 8px; }
+    .captcha-quiz input { flex: 1; padding: 10px 12px; border: 2px solid var(--bone); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--white); }
+    .captcha-quiz input:focus { outline: none; border-color: var(--gold); }
+    .captcha-quiz button { background: var(--wine); color: var(--white); border: none; border-radius: 10px; padding: 0 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .captcha-err { font-size: 12px; color: var(--bad); margin-top: 6px; display: none; }
+    .captcha-err.show { display: block; }
 
     .btn-primary { background: var(--wine); color: var(--white); padding: 16px 24px; border-radius: 100px; font-weight: 700; font-size: 16px; border: none; cursor: pointer; width: 100%; transition: all 0.2s; margin-top: 8px; }
-    .btn-primary:hover { background: var(--wine-dark); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(106, 13, 46, 0.2); }
+    .btn-primary:hover:not(:disabled) { background: var(--wine-dark); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(106, 13, 46, 0.2); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .form-message { padding: 14px; border-radius: 10px; margin-bottom: 20px; font-weight: 600; display: none; font-size: 14px; text-align: center; }
     .form-message.success { background: #ECFDF5; color: #065F46; display: block; border: 1px solid #10B981; }
@@ -48,8 +98,7 @@
     .auth-footer { text-align: center; margin-top: 24px; font-size: 14px; }
     .auth-footer a { color: var(--text-light); text-decoration: none; font-weight: 600; }
     .auth-footer a:hover { color: var(--gold); }
-    
-    /* Radio buttons custom */
+
     .radio-group { display: flex; gap: 16px; margin-bottom: 20px; }
     .radio-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: var(--text); }
     .radio-label input[type="radio"] { accent-color: var(--wine); width: 18px; height: 18px; }
@@ -81,8 +130,25 @@
       <div style="text-align: right; margin-bottom: 20px;">
         <a href="#" onclick="recuperarPassword(event)" style="color: var(--gold); font-size: 13px; text-decoration: none; font-weight: 700;">¿Olvidaste tu contraseña?</a>
       </div>
+
+      <div class="captcha-box" id="captchaLogin">
+        <input type="checkbox" id="robotLogin">
+        <label for="robotLogin">No soy un robot
+          <span class="captcha-q">Verificación de seguridad</span>
+        </label>
+        <span class="captcha-check">✔</span>
+      </div>
+      <div class="captcha-quiz" id="quizLogin">
+        <p id="quizLoginPregunta"></p>
+        <div class="captcha-quiz-row">
+          <input type="number" id="quizLoginRespuesta" placeholder="Tu respuesta">
+          <button type="button" id="btnVerificarLogin">Verificar</button>
+        </div>
+        <div class="captcha-err" id="quizLoginError">Respuesta incorrecta, intenta de nuevo.</div>
+      </div>
+
       <div class="form-message" id="loginMessage"></div>
-      <button type="submit" class="btn-primary">Ingresar a FINNEX</button>
+      <button type="submit" class="btn-primary" id="btnLogin" disabled>Ingresar a FINNEX</button>
     </form>
 
     <!-- REGISTRO -->
@@ -94,7 +160,7 @@
           <label class="radio-label"><input type="radio" name="tipoUsuario" value="emprendedor"> Emprendedor</label>
         </div>
       </div>
-      
+
       <div class="form-group">
         <label class="form-label" for="regNombres">Nombres</label>
         <input class="form-input" type="text" id="regNombres" required>
@@ -107,12 +173,8 @@
         <label class="form-label" for="regEmail">Correo electrónico</label>
         <input class="form-input" type="email" id="regEmail" required>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="regPassword">Contraseña (mínimo 8 caracteres)</label>
-        <input class="form-input" type="password" id="regPassword" required minlength="8">
-      </div>
 
-      <div id="camposEmprendedor" style="display:none; background: var(--bone); padding: 16px; border-radius: 10px; margin-bottom: 16px;">
+      <div id="camposEmprendedor" style="display:none; background: var(--bone); padding: 16px; border-radius: 10px; margin-bottom: 20px;">
         <div class="form-group">
           <label class="form-label" for="regNombreNegocio">Nombre del negocio</label>
           <input class="form-input" type="text" id="regNombreNegocio">
@@ -123,8 +185,52 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label class="form-label" for="regDocumento">Número de documento</label>
+        <input class="form-input" type="text" id="regDocumento" required>
+        <div class="input-hint">Se usa para validar que no esté incluido en la contraseña.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="regPassword">Contraseña</label>
+        <div class="input-hint" style="margin-bottom: 8px;">Mínimo 8 caracteres, con letras, números y un signo (ej. !@#$%).</div>
+        <input class="form-input" type="password" id="regPassword" required minlength="8">
+        <button type="button" class="btn-suggest" id="btnSugerir">Sugerir contraseña segura</button>
+        <div class="suggest-box" id="suggestBox">
+          Contraseña sugerida: <code id="suggestText"></code>
+          <button type="button" id="btnUsarSugerida">Usar</button>
+        </div>
+        <div class="pwd-meter" id="pwdMeter" style="display:none;">
+          <div class="pwd-bar"><div class="pwd-bar-fill" id="pwdFill"></div></div>
+          <div class="pwd-label" id="pwdLabel"></div>
+          <div class="pwd-reqs" id="pwdReqs"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="regPasswordRepetir">Repetir contraseña</label>
+        <input class="form-input" type="password" id="regPasswordRepetir" required>
+        <div class="input-error" id="errRepetir">Las contraseñas no coinciden.</div>
+      </div>
+
+      <div class="captcha-box" id="captchaRegistro">
+        <input type="checkbox" id="robotRegistro">
+        <label for="robotRegistro">No soy un robot
+          <span class="captcha-q">Verificación de seguridad</span>
+        </label>
+        <span class="captcha-check">✔</span>
+      </div>
+      <div class="captcha-quiz" id="quizRegistro">
+        <p id="quizRegistroPregunta"></p>
+        <div class="captcha-quiz-row">
+          <input type="number" id="quizRegistroRespuesta" placeholder="Tu respuesta">
+          <button type="button" id="btnVerificarRegistro">Verificar</button>
+        </div>
+        <div class="captcha-err" id="quizRegistroError">Respuesta incorrecta, intenta de nuevo.</div>
+      </div>
+
       <div class="form-message" id="registroMessage"></div>
-      <button type="submit" class="btn-primary">Crear cuenta</button>
+      <button type="submit" class="btn-primary" id="btnRegistro" disabled>Crear cuenta</button>
     </form>
 
     <p class="auth-footer">
@@ -137,6 +243,7 @@
   <script src="js/auth.js"></script>
 
   <script>
+    /* ---------- Pestañas ---------- */
     document.querySelectorAll('.auth-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
         document.querySelectorAll('.auth-tab').forEach(function (t) { t.classList.remove('active'); });
@@ -144,22 +251,240 @@
         tab.classList.add('active');
         const target = tab.getAttribute('data-tab');
         document.getElementById('form' + (target === 'login' ? 'Login' : 'Registro')).classList.add('active');
+        if (target === 'login') { reiniciarCaptcha('Login'); }
+        else { reiniciarCaptcha('Registro'); }
       });
     });
 
-    // Mostrar/ocultar campos emprendedor
-    document.querySelectorAll('input[name="tipoUsuario"]').forEach(radio => {
-      radio.addEventListener('change', function() {
-        const campos = document.getElementById('camposEmprendedor');
-        campos.style.display = this.value === 'emprendedor' ? 'block' : 'none';
+    /* ---------- Campos emprendedor ---------- */
+    document.querySelectorAll('input[name="tipoUsuario"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        document.getElementById('camposEmprendedor').style.display = this.value === 'emprendedor' ? 'block' : 'none';
       });
     });
 
+    /* ---------- Captcha "No soy un robot" (reto matemático aleatorio por formulario) ---------- */
+    const retos = { Login: null, Registro: null };
+
+    function nuevoReto(sufijo) {
+      const a = Math.floor(Math.random() * 9) + 1;
+      const b = Math.floor(Math.random() * 9) + 1;
+      retos[sufijo] = a + b;
+      document.getElementById('quiz' + sufijo + 'Pregunta').textContent = '¿Cuánto es ' + a + ' + ' + b + '?';
+      document.getElementById('quiz' + sufijo + 'Respuesta').value = '';
+    }
+
+    function reiniciarCaptcha(sufijo) {
+      const checkbox = document.getElementById('robot' + sufijo);
+      checkbox.checked = false;
+      document.getElementById('captcha' + sufijo).classList.remove('ok');
+      document.getElementById('quiz' + sufijo).classList.remove('show');
+      document.getElementById('quiz' + sufijo + 'Error').classList.remove('show');
+      nuevoReto(sufijo);
+      actualizarBotones();
+    }
+
+    function verificado(sufijo) {
+      return document.getElementById('captcha' + sufijo).classList.contains('ok');
+    }
+
+    function actualizarBotones() {
+      document.getElementById('btnLogin').disabled = !verificado('Login');
+      document.getElementById('btnRegistro').disabled = !(verificado('Registro') && validarRegistro(true));
+    }
+
+    ['Login', 'Registro'].forEach(function (sufijo) {
+      document.getElementById('robot' + sufijo).addEventListener('change', function () {
+        const quiz = document.getElementById('quiz' + sufijo);
+        if (this.checked) {
+          nuevoReto(sufijo);
+          quiz.classList.add('show');
+        } else {
+          quiz.classList.remove('show');
+          document.getElementById('captcha' + sufijo).classList.remove('ok');
+          actualizarBotones();
+        }
+      });
+
+      document.getElementById('btnVerificar' + sufijo).addEventListener('click', function () {
+        const val = parseInt(document.getElementById('quiz' + sufijo + 'Respuesta').value, 10);
+        if (val === retos[sufijo]) {
+          document.getElementById('quiz' + sufijo + 'Error').classList.remove('show');
+          document.getElementById('quiz' + sufijo).classList.remove('show');
+          document.getElementById('captcha' + sufijo).classList.add('ok');
+        } else {
+          document.getElementById('quiz' + sufijo + 'Error').classList.add('show');
+          nuevoReto(sufijo);
+          document.getElementById('captcha' + sufijo).classList.remove('ok');
+        }
+        actualizarBotones();
+      });
+    });
+
+    /* ---------- Medidor y reglas de contraseña ---------- */
+    function obtenerDatosPersonales() {
+      const datos = [
+        document.getElementById('regNombres').value,
+        document.getElementById('regApellidos').value
+      ];
+      const partes = [];
+      datos.forEach(function (d) {
+        d.split(/\s+/).forEach(function (p) {
+          const limpio = p.trim().toLowerCase();
+          if (limpio.length >= 3) partes.push(limpio);
+        });
+      });
+      return partes;
+    }
+
+    function evaluarPassword(pwd) {
+      const reglas = {
+        longitud: pwd.length >= 8,
+        letra: /[A-Za-z]/.test(pwd),
+        numero: /[0-9]/.test(pwd),
+        signo: /[^A-Za-z0-9]/.test(pwd),
+        sinDatos: true
+      };
+      const pwdLower = pwd.toLowerCase();
+      const docNum = document.getElementById('regDocumento').value.trim();
+      const nit = document.getElementById('regNit').value.trim();
+      if (docNum && pwd.includes(docNum)) reglas.sinDatos = false;
+      if (nit && pwd.includes(nit)) reglas.sinDatos = false;
+      obtenerDatosPersonales().forEach(function (p) { if (pwdLower.includes(p)) reglas.sinDatos = false; });
+
+      const cumplidas = Object.values(reglas).filter(Boolean).length;
+      return { reglas: reglas, cumplidas: cumplidas, valida: cumplidas === 5 };
+    }
+
+    function nivelPassword(pwd, info) {
+      if (!pwd) return null;
+      if (!info.valida) return 'rojo';
+      const esFuerte = pwd.length >= 12 && /[A-Z]/.test(pwd) && /[a-z]/.test(pwd);
+      return esFuerte ? 'verde' : 'amarillo';
+    }
+
+    const TEXTOS_NIVEL = {
+      rojo: 'Débil: faltan requisitos. Añade letras, números, signos y evita tus datos personales.',
+      amarillo: 'Aceptable: cumple lo básico. Para más seguridad usa 12 o más caracteres con mayúsculas y minúsculas.',
+      verde: 'Fuerte: excelente contraseña.'
+    };
+
+    function actualizarMedidor() {
+      const pwd = document.getElementById('regPassword').value;
+      const meter = document.getElementById('pwdMeter');
+      if (!pwd) { meter.style.display = 'none'; return; }
+      meter.style.display = 'block';
+
+      const info = evaluarPassword(pwd);
+      const nivel = nivelPassword(pwd, info);
+
+      const fill = document.getElementById('pwdFill');
+      const label = document.getElementById('pwdLabel');
+      fill.className = 'pwd-bar-fill ' + nivel;
+      label.className = 'pwd-label ' + nivel;
+      label.textContent = TEXTOS_NIVEL[nivel];
+
+      const r = info.reglas;
+      document.getElementById('pwdReqs').innerHTML =
+        marca(r.longitud, 'Mínimo 8 caracteres') +
+        marca(r.letra, 'Al menos una letra') +
+        marca(r.numero, 'Al menos un número') +
+        marca(r.signo, 'Al menos un signo (ej. !@#$%)') +
+        marca(r.sinDatos, 'No incluye tu documento, nombres ni apellidos');
+
+      const input = document.getElementById('regPassword');
+      input.classList.toggle('invalid', !info.valida);
+      input.classList.toggle('valid', info.valida);
+    }
+
+    function marca(ok, texto) {
+      return '<div><span class="' + (ok ? 'ok' : '') + '">' + (ok ? '✔ ' : '• ') + texto + '</span></div>';
+    }
+
+    function validarRepeticion() {
+      const pwd = document.getElementById('regPassword').value;
+      const rep = document.getElementById('regPasswordRepetir').value;
+      const err = document.getElementById('errRepetir');
+      const coincide = rep.length > 0 && pwd === rep;
+      err.classList.toggle('show', rep.length > 0 && !coincide);
+      return coincide;
+    }
+
+    /* ---------- Sugerir contraseña ---------- */
+    const SIMBOLOS = '!@#$%&*?';
+    function generarPassword() {
+      const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
+      const nums = '23456789';
+      const todo = letras + nums + SIMBOLOS;
+      const arr = new Uint32Array(14);
+      crypto.getRandomValues(arr);
+      let pwd = '';
+      pwd += letras[arr[0] % letras.length];
+      pwd += nums[arr[1] % nums.length];
+      pwd += SIMBOLOS[arr[2] % SIMBOLOS.length];
+      for (let i = 3; i < 14; i++) pwd += todo[arr[i] % todo.length];
+      return pwd.split('').sort(function () { return Math.random() - 0.5; }).join('');
+    }
+
+    document.getElementById('btnSugerir').addEventListener('click', function () {
+      document.getElementById('suggestText').textContent = generarPassword();
+      document.getElementById('suggestBox').classList.add('show');
+    });
+
+    document.getElementById('btnUsarSugerida').addEventListener('click', function () {
+      const sugerida = document.getElementById('suggestText').textContent;
+      document.getElementById('regPassword').value = sugerida;
+      document.getElementById('regPasswordRepetir').value = sugerida;
+      document.getElementById('suggestBox').classList.remove('show');
+      actualizarMedidor();
+      validarRepeticion();
+      actualizarBotones();
+    });
+
+    /* ---------- Validación del registro ---------- */
+    function validarRegistro(soloConsulta) {
+      const info = evaluarPassword(document.getElementById('regPassword').value);
+      const repOk = soloConsulta ? (document.getElementById('regPasswordRepetir').value === document.getElementById('regPassword').value && document.getElementById('regPassword').value.length > 0) : validarRepeticion();
+      return info.valida && repOk;
+    }
+
+    ['regPassword', 'regPasswordRepetir', 'regDocumento', 'regNombres', 'regApellidos', 'regNit'].forEach(function (id) {
+      document.getElementById(id).addEventListener('input', function () {
+        actualizarMedidor();
+        validarRepeticion();
+        actualizarBotones();
+      });
+    });
+
+    /* ---------- Envío de formularios ---------- */
+    document.getElementById('formLogin').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const msg = document.getElementById('loginMessage');
+      if (!verificado('Login')) {
+        msg.className = 'form-message error';
+        msg.textContent = 'Confirma que no eres un robot.';
+        return;
+      }
+      // Aquí va tu lógica de inicio de sesión con auth.js / Supabase
+    });
+
+    document.getElementById('formRegistro').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const msg = document.getElementById('registroMessage');
+      if (!verificado('Registro') || !validarRegistro(false)) {
+        msg.className = 'form-message error';
+        msg.textContent = 'Revisa la contraseña, su repetición y la verificación antes de continuar.';
+        return;
+      }
+      // Aquí va tu lógica de registro con Supabase (auth.js)
+    });
+
+    /* ---------- Recuperar contraseña ---------- */
     async function recuperarPassword(e) {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       if (!email) { alert('Escribe tu correo arriba primero.'); return; }
-      
+
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/login.html',
       });
@@ -167,6 +492,10 @@
       if (error) alert('Error: ' + error.message);
       else alert('✅ Enlace enviado. Revisa tu bandeja o spam en ' + email);
     }
+
+    /* ---------- Inicialización ---------- */
+    reiniciarCaptcha('Login');
+    reiniciarCaptcha('Registro');
   </script>
 </body>
 </html>
