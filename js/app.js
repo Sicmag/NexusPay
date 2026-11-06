@@ -1,5 +1,5 @@
 // ============================================================
-// NexusPay - App Principal (SPA) - v28 (Crédito bancario para personas naturales)
+// NexusPay - App Principal (SPA) - v31 (Crédito bancario + Trámites + Responsive)
 // Alineado al Proyecto SENA
 // ============================================================
 
@@ -92,7 +92,14 @@ document.addEventListener('DOMContentLoaded', async function () {
   actualizarIconoTema();
   ocultarProductosSegunTipo();
 
+  // Navegamos al dashboard (carga gráficas y datos)
   navegarA('dashboard');
+
+  // Ocultamos la pantalla de carga con una transición suave
+  setTimeout(() => {
+    const loader = document.getElementById('pantallaCarga');
+    if (loader) loader.classList.add('oculto');
+  }, 1500);
 });
 
 // ============ MENU Y NAVEGACION ============
@@ -194,6 +201,9 @@ function actualizarIconoTema() {
 async function navegarA(page) {
   cerrarMenu();
 
+  // Cierra cualquier modal abierto (por ejemplo, "Nueva cajita") al cambiar de sección
+  document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+
   document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
   const linkActivo = document.querySelector('.sidebar-link[data-page="' + page + '"]');
   if (linkActivo) linkActivo.classList.add('active');
@@ -211,6 +221,7 @@ async function navegarA(page) {
     activos: ['Activos Circulares', 'Economía circular para tu negocio'],
     creditos: tipoUsuario === 'natural' ? ['Crédito Personal', 'Libre inversión'] : ['FAMILIA NEXAR', 'Microcrédito, Leasing y Factoring'],
     simulador: ['Simulator', 'Calcula tu cuota'],
+    tramites: ['Trámites', 'Gestiona tus solicitudes'],
     perfil: ['Setting', 'Configuración de cuenta'],
     verificacion: ['Verification', 'Verifica tu identidad'],
     notificaciones: ['Notifications', 'Alertas de tu cuenta'],
@@ -240,6 +251,7 @@ async function navegarA(page) {
       case 'activos': await renderActivosCirculares(); break;
       case 'creditos': await renderCreditos(); break;
       case 'simulador': await renderSimulador(); break;
+      case 'tramites': await renderTramites(); break;
       case 'perfil': await renderPerfil(); break;
       case 'verificacion': await renderVerificacion(); break;
       case 'notificaciones': await renderNotificaciones(); break;
@@ -328,7 +340,7 @@ async function renderDashboard() {
       <div>
         <div class="section-heading">Mis Tarjetas <a href="#" onclick="navegarA('flowcard'); return false;">Ver todas</a></div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          
+
           <div class="credit-card-horizontal blue">
             <div class="cc-top">
               <div>
@@ -391,11 +403,11 @@ async function renderDashboard() {
     </div>
 
     <div class="app-section" style="background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%); border: 2px solid #2563EB; margin-bottom: 24px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
         <div style="font-size: 16px; font-weight: 800; color: var(--dark);">FIN-360: Presupuesto Mensual</div>
         <button class="btn-secondary-sm" onclick="editarPresupuesto()">⚙️ Editar</button>
       </div>
-      <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-light); margin-bottom: 8px;">
+      <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-light); margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
         <span>Gastado: <strong>${formatearDinero(totalEgresos)}</strong></span>
         <span>Límite: <strong>${formatearDinero(presupuestoGuardado)}</strong></span>
       </div>
@@ -425,12 +437,12 @@ async function renderDashboard() {
     <div class="dash-grid-3col">
       <div class="app-section" style="margin-bottom:0;">
         <div class="section-heading">Weekly Activity</div>
-        <canvas id="chartWeekly" height="120"></canvas>
+        <div class="chart-box"><canvas id="chartWeekly"></canvas></div>
       </div>
 
       <div class="app-section" style="margin-bottom:0;">
         <div class="section-heading">Expense Statistics</div>
-        <canvas id="chartPie" height="200"></canvas>
+        <div class="chart-box chart-pie"><canvas id="chartPie"></canvas></div>
       </div>
     </div>
   `;
@@ -451,6 +463,7 @@ async function renderDashboard() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { labels: { color: document.body.classList.contains('dark-mode') ? '#E2E8F0' : '#1E293B' } } },
           scales: {
             y: { beginAtZero: true, grid: { display: false }, ticks: { color: document.body.classList.contains('dark-mode') ? '#94A3B8' : '#64748B' } },
@@ -484,7 +497,12 @@ async function renderDashboard() {
             borderWidth: 0
           }]
         },
-        options: { responsive: true, cutout: '70%', plugins: { legend: { display: false } } }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: { legend: { display: false } }
+        }
       });
     }
   }, 100);
@@ -761,10 +779,10 @@ async function renderFlowPay() {
       </div>
     </div>
 
-        <div class="app-tab-content" id="tab-servicios">
+    <div class="app-tab-content" id="tab-servicios">
       <div class="app-section">
         <div class="app-section-title">Pagar servicios</div>
-        
+
         <label class="app-form-label">Selecciona el servicio</label>
         <div class="servicios-grid" id="serviciosGrid">
           <div class="servicio-item" onclick="seleccionarServicio(this, 'Claro')">
@@ -772,31 +790,31 @@ async function renderFlowPay() {
             <div class="servicio-logo-fallback" style="display:none; background:#DA291C; color:white;">📱</div>
             <span>Claro</span>
           </div>
-          
+
           <div class="servicio-item" onclick="seleccionarServicio(this, 'Movistar')">
             <img src="img/servicios/movistar.png" class="servicio-logo" alt="Movistar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="servicio-logo-fallback" style="display:none; background:#019DF4; color:white;">📶</div>
             <span>Movistar</span>
           </div>
-          
+
           <div class="servicio-item" onclick="seleccionarServicio(this, 'Tigo')">
             <img src="img/servicios/tigo.png" class="servicio-logo" alt="Tigo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="servicio-logo-fallback" style="display:none; background:#00377E; color:white;">📞</div>
             <span>Tigo</span>
           </div>
-          
+
           <div class="servicio-item" onclick="seleccionarServicio(this, 'EPM')">
             <img src="img/servicios/epm.png" class="servicio-logo" alt="EPM" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="servicio-logo-fallback" style="display:none; background:#007A33; color:white;">💡</div>
             <span>EPM</span>
           </div>
-          
+
           <div class="servicio-item" onclick="seleccionarServicio(this, 'Netflix')">
             <img src="img/servicios/netflix.png" class="servicio-logo" alt="Netflix" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="servicio-logo-fallback" style="display:none; background:#E50914; color:white;">🎬</div>
             <span>Netflix</span>
           </div>
-          
+
           <div class="servicio-item" onclick="seleccionarServicio(this, 'Spotify')">
             <img src="img/servicios/spotify.png" class="servicio-logo" alt="Spotify" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="servicio-logo-fallback" style="display:none; background:#1DB954; color:white;">🎵</div>
@@ -857,6 +875,14 @@ async function enviarDinero() {
   const concepto = document.getElementById('payConcepto').value || 'Sin concepto';
 
   if (!receptor || !monto || monto <= 0) { if (window.toast) toast.error('Campos incompletos', 'Completa todos los campos'); return; }
+
+  // Validación del tope por transacción (Trámites > Cambiar topes)
+  const topes = obtenerTopes();
+  if (monto > topes.porTransaccion) {
+    if (window.toast) toast.error('Supera tu tope', 'Tu límite por transacción es ' + formatearDinero(topes.porTransaccion));
+    return;
+  }
+
   if (window.toast) toast.info('Procesando...', 'Enviando transferencia');
 
   const { data, error } = await supabaseClient.rpc('transferir_dinero', {
@@ -912,9 +938,9 @@ async function pagarServicio() {
 
 async function generarCodigoRetiro() {
   const monto = parseFloat(document.getElementById('retiroMonto').value);
-  if (!monto || monto < 10000) { 
-    if (window.toast) toast.error('Monto minimo', 'Minimo $10.000 COP'); 
-    return; 
+  if (!monto || monto < 10000) {
+    if (window.toast) toast.error('Monto minimo', 'Minimo $10.000 COP');
+    return;
   }
 
   const userId = localStorage.getItem('user_id');
@@ -957,7 +983,7 @@ async function generarCodigoRetiro() {
     await crearNotificacion(userId, '🎫 Código generado', 'Tu código es: ' + codigo + ' por ' + formatearDinero(monto), 'info');
 
     if (window.toast) toast.success('Código generado', 'Código: ' + codigo + ' — guárdalo para retirar');
-    
+
     // Actualizamos los saldos y recargamos la vista
     await actualizarSaldoSidebar();
     setTimeout(() => navegarA('flowpay'), 3000);
@@ -967,6 +993,7 @@ async function generarCodigoRetiro() {
     if (window.toast) toast.error('Error', error.message);
   }
 }
+
 async function generarReciboPDF(transferenciaId) {
   const { data: t } = await supabaseClient.from('transferencias').select('*').eq('id', transferenciaId).single();
   if (!t) { if (window.toast) toast.error('No encontrada', 'Transferencia no encontrada'); return; }
@@ -1019,7 +1046,7 @@ async function renderFlowCard() {
   const html = `
     <div class="section-heading">My Cards</div>
     <div class="dash-grid-2col" style="grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); margin-bottom: 32px;">
-      
+
       <!-- Tarjeta Azul -->
       <div class="credit-card-horizontal blue">
         <div class="cc-top">
@@ -1413,7 +1440,7 @@ async function renderActivosCirculares() {
     </div>
 
     <div class="app-tab-content active" id="tab-catalogo">
-      <div class="cajitas-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+      <div class="cajitas-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 16px;">
   `;
 
   equipos.forEach(eq => {
@@ -1447,11 +1474,11 @@ async function renderActivosCirculares() {
 
 async function solicitarActivo(id, nombre, precio, tipo) {
   if (!confirm(`¿Deseas solicitar el activo: ${nombre} por ${formatearDinero(precio)} (${tipo})?`)) return;
-  
+
   if (window.toast) toast.info('Procesando...', 'Registrando tu solicitud de activo circular');
-  
+
   const userId = localStorage.getItem('user_id');
-  
+
   await supabaseClient.from('movimientos').insert({
     user_id: userId,
     tipo: 'egreso',
@@ -1460,10 +1487,10 @@ async function solicitarActivo(id, nombre, precio, tipo) {
   });
 
   await crearNotificacion(userId, '♻️ Solicitud Recibida', 'Tu solicitud para ' + nombre + ' está en revisión.', 'success');
-  
+
   reproducirSonido();
   if (window.toast) toast.success('¡Solicitud Exitosa!', 'Pronto un asesor te contactará para coordinar la entrega.');
-  
+
   navegarA('dashboard');
 }
 
@@ -1685,7 +1712,7 @@ function previsualizarCreditoNatural() {
   if (ev.motivos.length > 0) {
     html += '<ul style="margin:0 0 8px 18px;font-size:13px;">' + ev.motivos.map(m => '<li>' + m + '</li>').join('') + '</ul>';
   }
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">' +
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:10px;margin-top:8px;">' +
     celda('Cuota mensual (incluye seguro)', formatearPesos(cuotaMostrada)) +
     celda('Tasa', ev.tasaEA.toFixed(2).replace('.', ',') + '% E.A. (' + (ev.tasaMensual * 100).toFixed(2).replace('.', ',') + '% mensual)') +
     celda('Plazo', ev.plazoMeses + ' cuotas mensuales') +
@@ -1987,7 +2014,7 @@ async function renderCreditos() {
     creditos.forEach(c => {
       const progreso = c.num_cuotas > 0 ? (c.cuotas_pagadas / c.num_cuotas) * 100 : 0;
       html += '<div class="app-section" style="padding:20px;"><div style="display:flex; justify-content:space-between; margin-bottom:12px;"><div style="font-weight:700; color:var(--dark);">Credito #' + c.id + '</div><div class="badge ' + (c.estado === 'activo' ? 'badge-green' : 'badge-blue') + '">' + c.estado + '</div></div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px; color:var(--text);">' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px;margin-top:12px; color:var(--text);">' +
         '<div><div style="font-size:12px;color:var(--text-light);">Monto</div><div style="font-weight:700;">' + formatearDinero(c.monto_aprobado) + '</div></div>' +
         '<div><div style="font-size:12px;color:var(--text-light);">Tasa</div><div style="font-weight:700;">' + c.tasa_anual + '%</div></div>' +
         '<div><div style="font-size:12px;color:var(--text-light);">Saldo Pendiente</div><div style="font-weight:700;">' + formatearDinero(c.saldo_pendiente) + '</div></div>' +
@@ -2053,7 +2080,7 @@ async function solicitarCredito() {
   const tasaAnual = 15; // 15% E.A.
   const numCuotas = Math.max(1, Math.floor(plazo / 30));
   const tasaPeriodo = (tasaAnual / 100) * (plazo / 365); // Interés simple para el plazo
-  
+
   const totalIntereses = monto * tasaPeriodo;
   const totalPagar = monto + totalIntereses;
   const valorCuota = totalPagar / numCuotas;
@@ -2110,6 +2137,7 @@ async function solicitarCredito() {
 
   navegarA('dashboard');
 }
+
 async function generarContratoPDF(creditoId) {
   if (window.toast) toast.info('Generando...', 'Preparando tu contrato PDF');
   const userId = localStorage.getItem('user_id');
@@ -2260,7 +2288,7 @@ async function renderNexusBox() {
   `;
 
   if (cajitas && cajitas.length > 0) {
-    html += '<div class="cajitas-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">';
+    html += '<div class="cajitas-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 16px;">';
     cajitas.forEach(c => {
       const rendimientoHoyCajita = Number(c.saldo) * Number(c.tasa_diaria);
       const progreso = c.meta ? Math.min((Number(c.saldo) / Number(c.meta)) * 100, 100) : null;
@@ -2308,7 +2336,7 @@ function seleccionarIcono(icono) {
   cajitaIconoSeleccionado = icono;
   document.querySelectorAll('.cajita-icono-btn').forEach(btn => btn.classList.toggle('selected', btn.getAttribute('data-icono') === icono));
   document.querySelectorAll('.cajita-icono-btn').forEach(btn => {
-    if(btn.getAttribute('data-icono') === icono) btn.style.borderColor = '#2563EB';
+    if (btn.getAttribute('data-icono') === icono) btn.style.borderColor = '#2563EB';
     else btn.style.borderColor = 'var(--border)';
   });
 }
@@ -2316,7 +2344,7 @@ function seleccionarIcono(icono) {
 function seleccionarColor(color) {
   cajitaColorSeleccionado = color;
   document.querySelectorAll('.cajita-color-btn').forEach(btn => {
-    if(btn.getAttribute('data-color') === color) btn.style.borderColor = 'var(--dark)';
+    if (btn.getAttribute('data-color') === color) btn.style.borderColor = 'var(--dark)';
     else btn.style.borderColor = 'transparent';
   });
 }
@@ -2575,7 +2603,7 @@ async function renderVerificacion() {
   const userId = localStorage.getItem('user_id');
   const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
 
-  let html = '<div class="app-section"><div class="app-section-title">Datos personales</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">' +
+  let html = '<div class="app-section"><div class="app-section-title">Datos personales</div><div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:16px;">' +
     '<div><div style="font-size:12px;color:var(--text-light);">Nombres</div><div style="font-weight:700; color:var(--text);">' + (profile?.nombres || 'No registrado') + '</div></div>' +
     '<div><div style="font-size:12px;color:var(--text-light);">Apellidos</div><div style="font-weight:700; color:var(--text);">' + (profile?.apellidos || 'No registrado') + '</div></div>' +
     '<div><div style="font-size:12px;color:var(--text-light);">Cedula</div><div style="font-weight:700; color:var(--text);">' + (profile?.cedula || 'No registrada') + '</div></div>' +
@@ -2668,6 +2696,262 @@ async function renderAyuda() {
   document.getElementById('pageContent').innerHTML = html;
 }
 
+// ============ TRÁMITES ============
+
+const TRAMITES = [
+  { id: 'certificacion', titulo: 'Certificación bancaria', desc: 'Descarga la certificación de tu cuenta NEXA al instante.', icono: '📄' },
+  { id: 'extracto', titulo: 'Extractos de cuenta', desc: 'Consulta y descarga los extractos de tus productos.', icono: '🧾' },
+  { id: 'congelar', titulo: 'Congelar tarjeta FNX', desc: 'Congela o descongela tu tarjeta débito digital en un toque.', icono: '🧊' },
+  { id: 'reposicion', titulo: 'Reposición de tarjeta', desc: 'Solicita una nueva tarjeta si la perdiste o se dañó.', icono: '🔄' },
+  { id: 'credito', titulo: 'Solicitar crédito NEXAR', desc: 'Pide tu microcrédito, leasing o factoring con respuesta en menos de 24 horas.', icono: '💳' },
+  { id: 'simulador', titulo: 'Simular un crédito', desc: 'Calcula cuotas, plazo y tasa antes de decidir.', icono: '🧮' },
+  { id: 'pazysalvo', titulo: 'Paz y salvo', desc: 'Obtén el certificado cuando termines de pagar tu crédito.', icono: '✅' },
+  { id: 'cdt', titulo: 'Abrir un CDT en NEXO', desc: 'Invierte con tasas garantizadas desde el 10.5%.', icono: '📈' },
+  { id: 'meta', titulo: 'Crear una meta de ahorro', desc: 'Programa tu ahorro en VELA / NEXT para tu próxima inversión.', icono: '🎯' },
+  { id: 'cajita', titulo: 'Crear una Cajita FNX', desc: 'Separa tu dinero en cajitas para cada objetivo.', icono: '🎁' },
+  { id: 'datos', titulo: 'Actualizar datos personales', desc: 'Cambia tu celular, correo o dirección.', icono: '👤' },
+  { id: 'verificacion', titulo: 'Verificación biométrica', desc: 'Valida tu identidad con FIN-SAFE (KYC) de forma segura.', icono: '🛡️' },
+  { id: 'clave', titulo: 'Cambiar tu clave', desc: 'Bloquea o actualiza tu clave principal cuando lo necesites.', icono: '🔐' },
+  { id: 'topes', titulo: 'Cambiar topes de transacciones', desc: 'Personaliza los límites de tus movimientos.', icono: '📏' },
+  { id: 'queja', titulo: 'Radicar una queja o reclamo', desc: 'Cuéntanos qué pasó y te ayudamos a resolverlo.', icono: '📝' }
+];
+
+const ACCIONES_TRAMITE = {
+  certificacion: () => certificacionBancaria(),
+  extracto: () => extractoCuenta(),
+  congelar: () => navegarA('flowcard'),
+  reposicion: () => reponerTarjeta(),
+  credito: () => navegarA('creditos'),
+  simulador: () => navegarA('simulador'),
+  pazysalvo: () => pazYSalvo(),
+  cdt: () => navegarA('flowinvest'),
+  meta: () => navegarA('flowsave'),
+  cajita: () => crearCajitaTramite(),
+  datos: () => navegarA('perfil'),
+  verificacion: () => navegarA('verificacion'),
+  clave: () => cambiarClaveTramite(),
+  topes: () => cambiarTopes(),
+  queja: () => radicarQueja()
+};
+
+async function renderTramites() {
+  const contenedor = document.getElementById('pageContent');
+  contenedor.innerHTML = `
+    <div class="app-section" style="background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%); border: 2px solid #2563EB;">
+      <div style="font-size: 18px; font-weight: 800; color: var(--dark); margin-bottom: 4px;">Centro de trámites</div>
+      <div style="font-size: 14px; color: var(--text-light);">Realiza tus gestiones bancarias sin salir de FINNEX.</div>
+    </div>
+    <div class="tramites-grid" id="tramitesGrid"></div>
+  `;
+
+  const grid = document.getElementById('tramitesGrid');
+
+  TRAMITES.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'tramite-card';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.innerHTML = `
+      <div class="tramite-icono">${t.icono}</div>
+      <div class="tramite-titulo">${t.titulo}</div>
+      <div class="tramite-desc">${t.desc}</div>
+      <div class="tramite-link">Iniciar trámite ›</div>
+    `;
+
+    card.addEventListener('click', () => ejecutarTramite(t.id));
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        ejecutarTramite(t.id);
+      }
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function ejecutarTramite(id) {
+  const accion = ACCIONES_TRAMITE[id];
+  if (accion) accion();
+}
+
+// Obtiene nombre, cédula y datos básicos del usuario para los documentos PDF
+async function obtenerDatosDocumento() {
+  const userId = localStorage.getItem('user_id');
+  const { data: profile } = await supabaseClient.from('profiles').select('nombres, apellidos, cedula').eq('id', userId).single();
+  const nombre = ((profile?.nombres || '') + ' ' + (profile?.apellidos || '')).trim() || 'Cliente FINNEX';
+  return { nombre, cedula: profile?.cedula || 'N/A' };
+}
+
+// Encabezado común para los PDF de trámites
+function encabezadoPDF(doc, titulo) {
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(37, 99, 235);
+  doc.text('FINNEX', 105, 22, { align: 'center' });
+  doc.setFontSize(12);
+  doc.setTextColor(15, 23, 42);
+  doc.text(titulo, 105, 34, { align: 'center' });
+  doc.setDrawColor(37, 99, 235);
+  doc.setLineWidth(0.8);
+  doc.line(20, 40, 190, 40);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(51, 65, 85);
+}
+
+// 1. Certificación bancaria
+async function certificacionBancaria() {
+  if (window.toast) toast.info('Generando...', 'Preparando tu certificación');
+  const cuenta = await obtenerCuenta();
+  if (!cuenta) { if (window.toast) toast.error('Sin cuenta', 'No encontramos tu cuenta NEXA'); return; }
+  const { nombre, cedula } = await obtenerDatosDocumento();
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  encabezadoPDF(doc, 'CERTIFICACIÓN BANCARIA');
+  doc.text(`Certificamos que ${nombre}, identificado(a) con cédula ${cedula}, es titular`, 20, 55, { maxWidth: 170 });
+  doc.text(`de la cuenta NEXA No. ${cuenta.numero_cuenta}, abierta el ${formatearFechaCorta(cuenta.created_at)}.`, 20, 63, { maxWidth: 170 });
+  doc.text(`Saldo disponible a la fecha de expedición: ${formatearPesos(cuenta.saldo)}`, 20, 80);
+  doc.text(`Expedida el ${new Date().toLocaleDateString('es-CO')}.`, 20, 95);
+  doc.save(`certificacion_${cuenta.numero_cuenta}.pdf`);
+  if (window.toast) toast.success('Certificación descargada', 'Revisa tu carpeta de descargas');
+}
+
+// 2. Extracto de cuenta (últimos 30 días)
+async function extractoCuenta() {
+  if (window.toast) toast.info('Generando...', 'Preparando tu extracto');
+  const userId = localStorage.getItem('user_id');
+  const desde = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: movs } = await supabaseClient.from('movimientos').select('*')
+    .eq('user_id', userId).gte('created_at', desde).order('created_at', { ascending: true });
+  const cuenta = await obtenerCuenta();
+  const { nombre, cedula } = await obtenerDatosDocumento();
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  encabezadoPDF(doc, 'EXTRACTO DE CUENTA (ÚLTIMOS 30 DÍAS)');
+  doc.text(`Titular: ${nombre}  |  Cédula: ${cedula}`, 20, 50);
+  doc.text(`Cuenta NEXA: ${cuenta ? cuenta.numero_cuenta : 'N/A'}  |  Saldo actual: ${formatearPesos(cuenta ? cuenta.saldo : 0)}`, 20, 58);
+
+  let y = 72;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Fecha', 20, y); doc.text('Descripción', 60, y); doc.text('Monto', 170, y, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  y += 8;
+
+  if (!movs || movs.length === 0) {
+    doc.text('No hay movimientos en los últimos 30 días.', 20, y);
+  } else {
+    movs.forEach(m => {
+      const signo = m.tipo === 'ingreso' ? '+' : '-';
+      doc.text(formatearFechaCorta(m.created_at), 20, y);
+      doc.text(String(m.descripcion || '').slice(0, 55), 60, y);
+      doc.text(signo + formatearPesos(m.monto), 170, y, { align: 'right' });
+      y += 7;
+      if (y > 275) { doc.addPage(); y = 20; }
+    });
+  }
+  doc.save(`extracto_${cuenta ? cuenta.numero_cuenta : 'finnex'}.pdf`);
+  if (window.toast) toast.success('Extracto descargado', 'Revisa tu carpeta de descargas');
+}
+
+// 3. Reposición de tarjeta
+async function reponerTarjeta() {
+  if (!confirm('¿Deseas reponer tu tarjeta? Se generará un nuevo número y CVV, y la tarjeta anterior dejará de funcionar.')) return;
+  const userId = localStorage.getItem('user_id');
+  const numero = '4000 ' + Array.from({ length: 3 }, () => Math.floor(1000 + Math.random() * 9000)).join(' ');
+  const cvv = String(Math.floor(100 + Math.random() * 900));
+  const mes = String(Math.floor(1 + Math.random() * 12)).padStart(2, '0');
+  const anio = String(new Date().getFullYear() + 4).slice(-2);
+
+  const { error } = await supabaseClient.from('tarjetas')
+    .update({ numero, cvv, fecha_expiracion: mes + '/' + anio, estado: 'activa' })
+    .eq('user_id', userId);
+  if (error) { if (window.toast) toast.error('Error', error.message); return; }
+
+  await crearNotificacion(userId, '🔄 Tarjeta repuesta', 'Tu nueva tarjeta terminada en ' + numero.slice(-4) + ' ya está activa.', 'success');
+  if (window.toast) toast.success('Tarjeta repuesta', 'Tu nueva tarjeta ya está disponible');
+  navegarA('flowcard');
+}
+
+// 4. Paz y salvo (solo si no hay créditos activos)
+async function pazYSalvo() {
+  const userId = localStorage.getItem('user_id');
+  const { data: activos } = await supabaseClient.from('creditos').select('id').eq('user_id', userId).eq('estado', 'activo');
+  if (activos && activos.length > 0) {
+    if (window.toast) toast.warning('Crédito pendiente', `Tienes ${activos.length} crédito(s) sin pagar`);
+    return;
+  }
+  const { data: pagados } = await supabaseClient.from('creditos').select('id').eq('user_id', userId).eq('estado', 'pagado');
+  if (!pagados || pagados.length === 0) {
+    if (window.toast) toast.info('Sin créditos', 'No tienes créditos para certificar');
+    return;
+  }
+  const { nombre, cedula } = await obtenerDatosDocumento();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  encabezadoPDF(doc, 'CERTIFICADO DE PAZ Y SALVO');
+  doc.text(`FINNEX certifica que ${nombre}, identificado(a) con cédula ${cedula},`, 20, 55, { maxWidth: 170 });
+  doc.text(`no registra obligaciones pendientes con la entidad y ha pagado la totalidad`, 20, 63, { maxWidth: 170 });
+  doc.text(`de sus créditos (${pagados.length}).`, 20, 71);
+  doc.text(`Expedido el ${new Date().toLocaleDateString('es-CO')}.`, 20, 90);
+  doc.save(`paz_y_salvo_${cedula}.pdf`);
+  if (window.toast) toast.success('Paz y salvo descargado', 'Documento generado');
+}
+
+// 5. Cajita: abre la página y el modal de creación
+async function crearCajitaTramite() {
+  await navegarA('nexusbox');
+  abrirNuevaCajita();
+}
+
+// 6. Cambiar clave: abre la sección de contraseña en Configuración
+async function cambiarClaveTramite() {
+  await navegarA('perfil');
+  const box = document.getElementById('cambioPasswordBox');
+  if (box) {
+    box.style.display = 'block';
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// 7. Topes de transacciones (se guardan en localStorage y se validan en enviarDinero)
+function obtenerTopes() {
+  return JSON.parse(localStorage.getItem('nexus_topes') || '{"porTransaccion": 5000000}');
+}
+
+function cambiarTopes() {
+  const actual = obtenerTopes();
+  const nuevo = prompt('Nuevo tope por transacción (COP, mínimo $10.000):', actual.porTransaccion);
+  const valor = parseFloat(nuevo);
+  if (!nuevo || isNaN(valor) || valor < 10000) {
+    if (window.toast) toast.error('Valor inválido', 'El tope debe ser de al menos $10.000');
+    return;
+  }
+  localStorage.setItem('nexus_topes', JSON.stringify({ porTransaccion: valor }));
+  if (window.toast) toast.success('Tope actualizado', 'Nuevo tope: ' + formatearDinero(valor));
+}
+
+// 8. Radicar queja o reclamo
+async function radicarQueja() {
+  const motivo = prompt('Motivo de tu queja (ej: cobro no reconocido, error en transferencia):');
+  if (!motivo) return;
+  const detalle = prompt('Cuéntanos qué pasó:');
+  if (!detalle) return;
+
+  const userId = localStorage.getItem('user_id');
+  const radicado = 'QJ-' + Date.now().toString().slice(-8);
+
+  const { error } = await supabaseClient.from('quejas').insert({
+    user_id: userId, radicado, motivo, descripcion: detalle, estado: 'radicada'
+  });
+  if (error) { if (window.toast) toast.error('Error', error.message); return; }
+
+  await crearNotificacion(userId, '📝 Queja radicada', 'Tu número de radicado es ' + radicado + '. Te contactaremos pronto.', 'info');
+  if (window.toast) toast.success('Queja radicada', 'Tu radicado es ' + radicado);
+}
+
 // ============ CHAT CON LUCI ============
 
 function toggleChat() {
@@ -2698,7 +2982,7 @@ async function enviarChat() {
     const systemPrompt = `Eres ${CONFIG.ASISTENTE_NOMBRE}, la asistente virtual de NexusPay, un banco digital colombiano.
 PERSONALIDAD: Te llamas ${CONFIG.ASISTENTE_NOMBRE}. Eres cálida, cercana y eficiente. Hablas en español y tuteas. Máximo 3 líneas.
 CONTEXTO: Nombre: ${nombre}, Tipo: ${tipoUsuario}, Saldo: ${formatearDinero(saldo)}.
-PRODUCTOS: NexusCredit (Microcrédito, Leasing, Factoring), NexusPagos (cuenta de ahorros NEXA), NexusCard, NexusSave (VELA: bolsillos y metas de ahorro; NEXT: ahorro programado), NexusInvest, NEXO (CDT), NexusShield, NexusBusiness, NexusAnalytics, NexusBox, FINNEX (activos circulares: alquiler/compra de equipos reacondicionados).`;
+PRODUCTOS: NexusCredit (Microcrédito, Leasing, Factoring), NexusPagos (cuenta de ahorros NEXA), NexusCard, NexusSave (VELA: bolsillos y metas de ahorro; NEXT: ahorro programado), NexusInvest, NEXO (CDT), NexusShield, NexusBusiness, NexusAnalytics, NexusBox, FINNEX (activos circulares: alquiler/compra de equipos reacondicionados), Trámites (certificados, extractos, reposición de tarjeta, paz y salvo, quejas).`;
 
     const historialTexto = chatHistorial.slice(-6).map(m => (m.rol === 'user' ? 'Usuario: ' : 'Luci: ') + m.texto).join('\n');
     const promptCompleto = systemPrompt + '\n\n' + (historialTexto ? 'CONVERSACION:\n' + historialTexto + '\n\n' : '') + 'Usuario: ' + mensaje;

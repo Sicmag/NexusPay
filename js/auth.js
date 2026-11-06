@@ -1,6 +1,9 @@
-// Manejo de login y registro con Supabase
+// ============================================================
+// FINNEX - Autenticación (Login y Registro)
+// ============================================================
 
 document.addEventListener('DOMContentLoaded', function () {
+  
   // 1. Control de las Pestañas (Login / Registro)
   document.querySelectorAll('.auth-tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
@@ -26,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 3. LOGIN
+  // 3. LÓGICA DE INICIO DE SESIÓN
   const formLogin = document.getElementById('formLogin');
   if (formLogin) {
     formLogin.addEventListener('submit', async function (e) {
@@ -42,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
+        // Guardamos la sesión en el localStorage
         localStorage.setItem('sb_access_token', data.session.access_token);
         localStorage.setItem('sb_refresh_token', data.session.refresh_token);
         localStorage.setItem('user_id', data.user.id);
@@ -50,15 +54,22 @@ document.addEventListener('DOMContentLoaded', function () {
         msg.className = 'form-message success';
         msg.textContent = 'Ingresando a FINNEX...';
 
-        setTimeout(function () { window.location.href = 'app.html'; }, 800);
+        // Transición suave (Fade out) antes de ir a la App
+        document.body.style.transition = 'opacity 0.5s';
+        document.body.style.opacity = '0';
+
+        setTimeout(function () { 
+          window.location.href = 'app.html'; 
+        }, 500);
+
       } catch (error) {
         msg.className = 'form-message error';
-        msg.textContent = 'Error: ' + (error.message || 'No se pudo iniciar sesion');
+        msg.textContent = 'Error: ' + (error.message || 'Correo o contraseña incorrectos');
       }
     });
   }
 
-  // 4. REGISTRO
+  // 4. LÓGICA DE REGISTRO
   const formRegistro = document.getElementById('formRegistro');
   if (formRegistro) {
     formRegistro.addEventListener('submit', async function (e) {
@@ -73,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
       msg.className = 'form-message';
       msg.textContent = '';
 
-      // Si es emprendedor, validamos el NIT
+      // Si es emprendedor, validamos que llene el NIT y el Nombre del Negocio
       let nombreNegocio = null, nit = null;
       if (tipoUsuario === 'emprendedor') {
         nombreNegocio = document.getElementById('regNombreNegocio').value.trim();
@@ -86,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       try {
-        // Creamos el usuario en Supabase Auth
+        // A. Creamos el usuario en Supabase Auth
         const { data, error } = await supabaseClient.auth.signUp({
           email: email,
           password: password,
@@ -103,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (error) throw error;
 
-        // Actualizamos la tabla profiles con los datos adicionales
+        // B. Actualizamos la tabla 'profiles' con los datos adicionales
         if (data.user) {
           await supabaseClient.from('profiles').update({
             tipo_usuario: tipoUsuario,
@@ -116,6 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         msg.textContent = 'Cuenta creada con éxito. Revisa tu correo para confirmar.';
         formRegistro.reset();
         if (camposEmprendedor) camposEmprendedor.style.display = 'none';
+        
       } catch (error) {
         msg.className = 'form-message error';
         msg.textContent = 'Error: ' + (error.message || 'No se pudo crear la cuenta');
@@ -124,15 +136,23 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+// ============ FUNCIONES GLOBALES ============
+
+// Función para cerrar sesión
 async function cerrarSesion() {
   await supabaseClient.auth.signOut();
+  
+  // Borramos solo los datos de sesión (mantenemos la preferencia del tema oscuro)
   localStorage.removeItem('sb_access_token');
   localStorage.removeItem('sb_refresh_token');
   localStorage.removeItem('user_id');
   localStorage.removeItem('user_email');
+  
+  // Redirigimos al login
   window.location.href = 'login.html';
 }
 
+// Función para verificar si hay una sesión activa al entrar a app.html
 async function verificarSesion() {
   const accessToken = localStorage.getItem('sb_access_token');
   const refreshToken = localStorage.getItem('sb_refresh_token');
@@ -156,9 +176,16 @@ async function verificarSesion() {
   return data.session;
 }
 
+// Función para obtener los datos del perfil del usuario
 async function obtenerDatosUsuario() {
   const userId = localStorage.getItem('user_id');
   if (!userId) return null;
-  const { data } = await supabaseClient.from('profiles').select('nombres, apellidos, cedula, telefono').eq('id', userId).single();
+  
+  const { data } = await supabaseClient
+    .from('profiles')
+    .select('nombres, apellidos, cedula, telefono')
+    .eq('id', userId)
+    .single();
+    
   return data;
 }
