@@ -6,200 +6,739 @@
   <title>Productos - FINNEX</title>
   <link rel="icon" type="image/png" href="logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* =========================================================
+       1. VARIABLES (paleta de FINNEX)
+       ========================================================= */
     :root {
-      --wine: #6A0D2E;      /* Rojo Vino Principal */
+      --wine: #6A0D2E;
       --wine-dark: #3E0721;
-      --gold: #D4AF37;      /* Dorado */
-      --bone: #F4F1EE;      /* Hueso (Fondo claro) */
-      --text: #2D2D2D;      /* Texto oscuro sin llegar al negro */
-      --text-light: #7A7A7A;
-      --white: #FFFFFF;
+      --wine-soft: rgba(106, 13, 46, .08);
+      --gold: #D1B474;
+      --gold-soft: rgba(209, 180, 116, .18);
+      --gold-strong: #D4AF37;
+      --bone: #F5F0E8;
+      --bone-2: #EFEAE2;
+      --bg-card: #FFFFFF;
+      --border: #E5E0D8;
+      --dark: #1E293B;
+      --ink: #2D2D2D;
+      --text-light: #64748B;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(30, 41, 59, .06);
+      --nav-h: 80px;
     }
-    body { font-family: 'Inter', sans-serif; background: var(--bone); color: var(--text); line-height: 1.6; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
-    /* NAVBAR */
-    .navbar { background: rgba(244, 241, 238, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; padding: 16px 0; border-bottom: 1px solid rgba(106, 13, 46, 0.1); }
-    .nav-inner { display: flex; justify-content: space-between; align-items: center; }
-    .logo { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 900; color: var(--wine); text-decoration: none; letter-spacing: -1px; }
-    .logo img { width: 40px; height: 40px; border-radius: 8px; }
-    .nav-links { display: flex; gap: 32px; align-items: center; }
-    .nav-links a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 15px; transition: color 0.2s; }
-    .nav-links a:hover, .nav-links a.active { color: var(--wine); }
-    .btn-nav { background: var(--wine); color: var(--white) !important; padding: 10px 24px; border-radius: 100px; font-weight: 600; transition: all 0.2s; }
-    .btn-nav:hover { background: var(--wine-dark); transform: translateY(-2px); }
+    /* =========================================================
+       2. BASE
+       ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bone);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+    a { color: inherit; }
+    img { max-width: 100%; height: auto; display: block; }
+    button { font-family: inherit; }
+    .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
-    /* HEADER */
-    .page-header { padding: 80px 0 60px; text-align: center; background: linear-gradient(180deg, var(--bone) 0%, #EBE5E0 100%); }
-    .page-header h1 { font-size: 48px; font-weight: 900; color: var(--wine); margin-bottom: 16px; letter-spacing: -1.5px; }
-    .page-header p { font-size: 18px; color: var(--text-light); max-width: 600px; margin: 0 auto; }
+    /* =========================================================
+       3. NAVBAR SUPERIOR
+       ========================================================= */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      min-height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .logo img { width: 40px; height: 40px; object-fit: contain; }
+    .logo-text {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--wine);
+      letter-spacing: -.3px;
+    }
 
-    /* PRODUCTO ESTRELLA */
-    .product-featured { background: linear-gradient(135deg, var(--wine) 0%, var(--wine-dark) 100%); border-radius: 24px; padding: 60px; color: var(--white); display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; margin-bottom: 40px; box-shadow: 0 20px 40px rgba(106, 13, 46, 0.2); }
-    .featured-badge { display: inline-block; background: var(--gold); color: var(--wine-dark); padding: 6px 16px; border-radius: 100px; font-size: 12px; font-weight: 800; margin-bottom: 20px; }
-    .product-featured h3 { font-size: 36px; font-weight: 900; margin-bottom: 16px; }
-    .product-featured p { font-size: 16px; opacity: 0.9; margin-bottom: 32px; }
-    .btn-gold { background: var(--gold); color: var(--wine-dark); padding: 14px 32px; border-radius: 100px; text-decoration: none; font-weight: 800; display: inline-block; transition: transform 0.2s; }
-    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); }
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      flex: 1;
+      min-width: 0;
+    }
+    .nav-link {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color .2s;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--wine); }
+    .nav-link .caret { font-size: 10px; transition: transform .2s; }
+
+    /* Desplegable Productos y servicios */
+    .nav-dropdown { position: relative; }
+    .dropdown-panel {
+      position: absolute;
+      top: calc(100% + 14px);
+      left: -16px;
+      width: 560px;
+      padding: 18px;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 18px 40px rgba(30, 41, 59, .14);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: opacity .2s, transform .2s, visibility .2s;
+    }
+    .nav-dropdown.open .dropdown-panel,
+    .nav-dropdown:hover .dropdown-panel,
+    .nav-dropdown:focus-within .dropdown-panel {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .nav-dropdown.open .caret,
+    .nav-dropdown:hover .caret { transform: rotate(180deg); }
+    .dropdown-panel a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      transition: background .15s;
+    }
+    .dropdown-panel a:hover { background: var(--wine-soft); color: var(--wine); }
+    .dropdown-panel .dp-icon {
+      width: 34px; height: 34px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: var(--bone);
+      font-size: 17px;
+    }
+
+    /* Acciones de la derecha */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .btn-dark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 22px;
+      border-radius: 100px;
+      background: var(--ink);
+      color: #FFF;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background .2s, transform .2s;
+    }
+    .btn-dark:hover { background: #000; transform: translateY(-1px); }
+
+    .link-card {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: #FFFFFF;
+      box-shadow: 0 2px 10px rgba(30, 41, 59, .08);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color .2s;
+    }
+    .link-card:hover { color: var(--wine); }
+
+    .btn-gold-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 26px;
+      border-radius: 100px;
+      background: var(--gold-strong);
+      color: var(--wine-dark);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .btn-gold-outline:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(212, 175, 55, .35); }
+
+    .menu-toggle {
+      display: none;
+      width: 44px; height: 44px;
+      flex-shrink: 0;
+      margin-left: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #FFF;
+      font-size: 20px;
+      color: var(--wine);
+      cursor: pointer;
+      align-items: center; justify-content: center;
+    }
+
+    /* Ruta de navegación (migas) */
+    .breadcrumb-bar { background: var(--bone-2); border-bottom: 1px solid var(--border); }
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 46px;
+      font-size: 14px;
+      color: var(--text-light);
+    }
+    .breadcrumb a { color: var(--ink); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--wine); }
+    .breadcrumb .sep { color: var(--text-light); }
+    .breadcrumb .current { font-weight: 700; color: var(--ink); }
+
+    /* =========================================================
+       4. ENCABEZADO DE PÁGINA
+       ========================================================= */
+    .page-header {
+      padding: 56px 0 40px;
+      text-align: center;
+    }
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: var(--gold-soft);
+      color: #7A5F1B;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .page-header h1 {
+      margin: 0 0 14px;
+      font-size: clamp(30px, 4.6vw, 44px);
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--wine);
+      line-height: 1.15;
+    }
+    .page-header h1 span { color: var(--gold); }
+    .page-header p {
+      max-width: 620px;
+      margin: 0 auto;
+      font-size: clamp(15px, 2vw, 17px);
+      color: var(--text-light);
+    }
+
+    /* =========================================================
+       5. PRODUCTO DESTACADO
+       ========================================================= */
+    .product-featured {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 36px;
+      align-items: center;
+      padding: 44px;
+      border-radius: 20px;
+      color: #FFF;
+      background: linear-gradient(135deg, var(--wine) 0%, var(--wine-dark) 100%);
+      box-shadow: 0 14px 30px rgba(106, 13, 46, .2);
+    }
+    .featured-badge {
+      display: inline-block;
+      margin-bottom: 16px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: var(--gold);
+      color: var(--wine-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .product-featured h3 {
+      margin: 0 0 12px;
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 900;
+      line-height: 1.2;
+    }
+    .product-featured p { margin: 0 0 26px; font-size: 15px; opacity: .92; }
+    .btn-gold {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 48px;
+      padding: 13px 28px;
+      border-radius: 100px;
+      background: var(--gold);
+      color: var(--wine-dark);
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(209, 180, 116, .35); }
     .featured-visual { text-align: center; }
-    .featured-icon { font-size: 100px; margin-bottom: 24px; }
-    .featured-stats { display: flex; gap: 16px; justify-content: center; }
-    .featured-stat { background: rgba(255,255,255,0.1); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3); }
-    .fs-label { font-size: 12px; color: var(--gold); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
-    .fs-value { font-size: 20px; font-weight: 800; }
-
-    /* GRID DE PRODUCTOS */
-    .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding-bottom: 80px; }
-    .product-card { background: var(--white); border-radius: 20px; padding: 32px; border: 1px solid rgba(106, 13, 46, 0.05); transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-    .product-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(106, 13, 46, 0.08); border-color: rgba(212, 175, 55, 0.4); }
-    .product-icon { width: 56px; height: 56px; background: var(--bone); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 20px; }
-    .product-card h3 { font-size: 20px; font-weight: 800; color: var(--wine); margin-bottom: 12px; }
-    .product-card p { font-size: 14px; color: var(--text-light); margin-bottom: 16px; }
-    .product-tag { display: inline-block; background: rgba(212, 175, 55, 0.15); color: #997A15; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; }
-
-    /* FOOTER */
-    .footer { background: var(--wine-dark); color: rgba(255,255,255,0.7); padding: 60px 0 30px; }
-    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-    .footer-brand { color: var(--white); font-size: 24px; font-weight: 900; margin-bottom: 16px; }
-    .footer h4 { color: var(--gold); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
-    .footer a { display: block; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 10px; transition: color 0.2s; }
-    .footer a:hover { color: var(--gold); }
-    .footer-bottom { padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 13px; }
-
-    @media (max-width: 968px) {
-      .product-featured { grid-template-columns: 1fr; padding: 40px 24px; }
-      .products-grid { grid-template-columns: repeat(2, 1fr); }
-      .footer-grid { grid-template-columns: 1fr 1fr; }
+    .featured-icon { font-size: 80px; line-height: 1; margin-bottom: 20px; }
+    .featured-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
     }
+    .featured-stat {
+      padding: 12px 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(209, 180, 116, .35);
+    }
+    .fs-label {
+      margin-bottom: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .fs-value { font-size: 16px; font-weight: 800; }
+
+    /* =========================================================
+       6. CATÁLOGO
+       ========================================================= */
+    .section-title {
+      margin: 56px 0 20px;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--dark);
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
+      gap: 18px;
+      padding-bottom: 20px;
+    }
+    .product-card {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 24px;
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--gold);
+      box-shadow: var(--shadow);
+      transition: transform .25s, box-shadow .25s;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 26px rgba(106, 13, 46, .1);
+    }
+    .product-icon {
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+      border-radius: 12px;
+      background: var(--wine-soft);
+      font-size: 24px;
+    }
+    .product-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--wine);
+    }
+    .product-card p {
+      flex: 1;
+      margin: 0 0 16px;
+      font-size: 14px;
+      color: var(--text-light);
+    }
+    .product-tag {
+      align-self: flex-start;
+      padding: 5px 12px;
+      border-radius: 100px;
+      background: var(--gold-soft);
+      color: #7A5F1B;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* =========================================================
+       7. FOOTER
+       ========================================================= */
+    .footer {
+      margin-top: 56px;
+      padding: 40px 0 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--border);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+      gap: 28px;
+      margin-bottom: 30px;
+    }
+    .footer-brand { margin-bottom: 10px; font-size: 20px; font-weight: 900; color: var(--wine); }
+    .footer p { margin: 0; font-size: 14px; color: var(--text-light); }
+    .footer h4 {
+      margin: 0 0 12px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--wine);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .footer a {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-light);
+      text-decoration: none;
+    }
+    .footer a:hover { color: var(--wine); }
+    .footer-bottom {
+      padding: 18px 0 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    /* =========================================================
+       8. RESPONSIVE
+       ========================================================= */
+
+    /* Laptop chica: se ocultan los botones secundarios */
+    @media (max-width: 1180px) {
+      .link-card { display: none; }
+    }
+
+    /* Tablet y celular: menú hamburguesa */
+    @media (max-width: 1023px) {
+      .container { padding: 0 20px; }
+      .menu-toggle { display: inline-flex; }
+      .nav-inner { gap: 16px; }
+      .nav-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 8px 20px 20px;
+        background: #FFFFFF;
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 18px 30px rgba(30, 41, 59, .1);
+        display: none;
+        max-height: calc(100vh - var(--nav-h));
+        overflow-y: auto;
+      }
+      .nav-menu.open { display: flex; }
+      .nav-link {
+        width: 100%;
+        justify-content: space-between;
+        padding: 14px 4px;
+        border-bottom: 1px solid #F1EDE6;
+        font-size: 15px;
+      }
+      .nav-dropdown { width: 100%; }
+      .dropdown-panel {
+        position: static;
+        width: 100%;
+        grid-template-columns: 1fr;
+        box-shadow: none;
+        border: none;
+        padding: 4px 0 8px;
+        display: none;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+      }
+      .nav-dropdown.open .dropdown-panel { display: grid; }
+      .nav-dropdown:hover .dropdown-panel { display: none; }
+      .nav-dropdown.open:hover .dropdown-panel { display: grid; }
+      .nav-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding-top: 16px;
+        order: 2;
+      }
+      .nav-actions .btn-dark,
+      .nav-actions .btn-gold-outline,
+      .nav-actions .link-card {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+      }
+      .nav-actions .link-card { display: flex; }
+      .page-header { padding: 44px 0 34px; }
+      .product-featured { grid-template-columns: 1fr; padding: 34px; }
+      .featured-visual { display: none; }
+      .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .footer-grid > div:first-child { grid-column: 1 / -1; }
+    }
+
+    /* Celular */
     @media (max-width: 640px) {
-      .products-grid { grid-template-columns: 1fr; }
-      .page-header h1 { font-size: 32px; }
+      body { font-size: 14px; }
+      :root { --nav-h: 66px; }
+      .logo img { width: 34px; height: 34px; }
+      .logo-text { font-size: 19px; }
+      .breadcrumb { font-size: 13px; }
+      .page-header { padding: 34px 0 28px; }
+      .product-featured { padding: 26px 22px; border-radius: 16px; }
+      .featured-visual { display: block; }
+      .featured-icon { font-size: 60px; margin-bottom: 12px; }
+      .featured-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .btn-gold { width: 100%; }
+      .section-title { margin: 42px 0 16px; font-size: 19px; }
+      .products-grid { grid-template-columns: 1fr; gap: 14px; }
+      .product-card { padding: 20px; }
+      .footer-grid { grid-template-columns: 1fr; gap: 22px; }
+    }
+
+    @media (max-width: 380px) {
+      .featured-stats { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <nav class="navbar">
+  <!-- ======================= NAVBAR ======================= -->
+  <header class="site-header">
     <div class="container nav-inner">
       <a href="index.html" class="logo">
-        <img src="logo.png" alt="FINNEX"> FINNEX
+        <img src="logo.png" alt="FINNEX">
+        <span class="logo-text">FINNEX</span>
       </a>
-      <div class="nav-links">
-        <a href="productos.html" class="active">Productos</a>
-        <a href="nosotros.html">Nosotros</a>
-        <a href="contacto.html">Contacto</a>
-        <a href="login.html" class="btn-nav">Ingresar</a>
-      </div>
-    </div>
-  </nav>
 
-  <header class="page-header">
-    <div class="container">
-      <h1>Ecosistema Financiero <span style="color: var(--gold);">FINNEX</span></h1>
-      <p>Soluciones diseñadas para personas naturales, emprendedores y pequeños negocios.</p>
+      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">☰</button>
+
+      <nav class="nav-menu" id="navMenu">
+        <a href="index.html" class="nav-link">Inicio</a>
+
+        <div class="nav-dropdown" id="dropdown">
+          <button class="nav-link active" id="dropdownBtn" aria-expanded="false" aria-haspopup="true">
+            Productos y servicios <span class="caret">▼</span>
+          </button>
+          <div class="dropdown-panel">
+            <a href="productos.html#nexa"><span class="dp-icon">💸</span> NEXA (Ahorros)</a>
+            <a href="productos.html#tarjeta"><span class="dp-icon">🎴</span> Tarjeta FNX</a>
+            <a href="productos.html#credito"><span class="dp-icon">💳</span> Crédito de libre inversión</a>
+            <a href="productos.html#nexo"><span class="dp-icon">📈</span> NEXO (CDT)</a>
+            <a href="productos.html#cajitas"><span class="dp-icon">🎁</span> Cajitas FNX</a>
+            <a href="productos.html#vela"><span class="dp-icon">🏦</span> VELA / NEXT</a>
+            <a href="productos.html#safe"><span class="dp-icon">🛡️</span> FIN-SAFE</a>
+            <a href="productos.html#biz"><span class="dp-icon">💼</span> FIN-BIZ</a>
+            <a href="productos.html#360"><span class="dp-icon">📊</span> FIN-360</a>
+            <a href="productos.html#activos"><span class="dp-icon">♻️</span> FINNEX Activos</a>
+            <a href="productos.html#nexar"><span class="dp-icon">🤝</span> Familia NEXAR</a>
+            <a href="productos.html#tramites"><span class="dp-icon">📋</span> Trámites en línea</a>
+          </div>
+        </div>
+
+        <a href="nosotros.html" class="nav-link">Nosotros</a>
+        <a href="contacto.html" class="nav-link">Contacto</a>
+
+        <div class="nav-actions">
+          <a href="login.html#tramites" class="btn-dark">Trámites digitales</a>
+          <a href="login.html" class="link-card">Banca Virtual Personas</a>
+          <a href="login.html" class="btn-gold-outline">Entrar</a>
+        </div>
+      </nav>
     </div>
   </header>
 
-  <section class="container">
-    <!-- PRODUCTO ESTRELLA -->
-    <div class="product-featured">
+  <!-- ======================= MIGAS DE PAN ======================= -->
+  <div class="breadcrumb-bar">
+    <div class="container breadcrumb">
+      <a href="index.html">Inicio</a>
+      <span class="sep">›</span>
+      <span>Productos y servicios</span>
+      <span class="sep">›</span>
+      <span class="current">Productos</span>
+    </div>
+  </div>
+
+  <!-- ======================= ENCABEZADO ======================= -->
+  <section class="container page-header">
+    <span class="eyebrow">Portafolio de productos</span>
+    <h1>Ecosistema financiero <span>FINNEX</span></h1>
+    <p>Soluciones diseñadas para personas naturales, emprendedores y pequeños negocios.</p>
+  </section>
+
+  <main class="container">
+
+    <!-- PRODUCTO DESTACADO -->
+    <div class="product-featured" id="credito">
       <div>
-        <span class="featured-badge">⭐ FAMILIA NEXAR</span>
-        <h3>Créditos Productivos</h3>
-        <p>Microcréditos inteligentes con IA. Analizamos tu flujo de caja digital, calculamos tu score en segundos y aprobamos en menos de 24 horas. Hasta $5.000.000 COP con tasas preferenciales.</p>
-        <a href="login.html" class="btn-gold">Solicitar Crédito</a>
+        <span class="featured-badge">⭐ Producto destacado</span>
+        <h3>Crédito de libre inversión</h3>
+        <p>Evaluamos tu perfil y tu capacidad de pago en segundos. Verás tu cuota, tu tasa y tu plan de pagos antes de solicitar, sin sorpresas. Montos desde $500.000 hasta $30.000.000 COP.</p>
+        <a href="login.html" class="btn-gold">Solicitar crédito</a>
       </div>
       <div class="featured-visual">
         <div class="featured-icon">💳</div>
         <div class="featured-stats">
-          <div class="featured-stat"><div class="fs-label">Aprobación</div><div class="fs-value">&lt; 24h</div></div>
-          <div class="featured-stat"><div class="fs-label">Tasa desde</div><div class="fs-value">8%</div></div>
+          <div class="featured-stat"><div class="fs-label">Evaluación</div><div class="fs-value">En segundos</div></div>
+          <div class="featured-stat"><div class="fs-label">Plazo</div><div class="fs-value">6 a 60 meses</div></div>
+          <div class="featured-stat"><div class="fs-label">Seguro</div><div class="fs-value">Incluido</div></div>
         </div>
       </div>
     </div>
 
-    <!-- GRID DE PRODUCTOS -->
+    <!-- CATÁLOGO -->
+    <h2 class="section-title">Todos nuestros productos</h2>
+
     <div class="products-grid">
-      <div class="product-card">
+      <div class="product-card" id="nexa">
         <div class="product-icon">💸</div>
-        <h3>NEXA (Cuenta de Ahorros)</h3>
-        <p>Administra tus recursos, consulta saldos y realiza transferencias digitales instantáneas.</p>
+        <h3>NEXA (Cuenta de ahorros)</h3>
+        <p>Administra tus recursos, consulta tu saldo y envía dinero a otros usuarios de forma instantánea.</p>
         <span class="product-tag">Captación</span>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" id="tarjeta">
         <div class="product-icon">🎴</div>
         <h3>Tarjeta FNX</h3>
-        <p>Tarjeta débito digital. Congela y descongela en un toque. Control total de tu cupo.</p>
+        <p>Tarjeta débito digital. Congélala o descongélala en un toque y controla tu cupo disponible.</p>
         <span class="product-tag">Tarjeta</span>
       </div>
 
-      <div class="product-card">
-        <div class="product-icon">🏦</div>
-        <h3>VELA / NEXT</h3>
-        <p>Bolsillos y metas de ahorro. Ahorro programado para inversión productiva.</p>
+      <div class="product-card" id="cajitas">
+        <div class="product-icon">🎁</div>
+        <h3>Cajitas FNX</h3>
+        <p>Separa tu dinero en cajitas para cada objetivo, con rendimiento diario y meta opcional.</p>
         <span class="product-tag">Ahorro</span>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" id="vela">
+        <div class="product-icon">🏦</div>
+        <h3>VELA / NEXT</h3>
+        <p>Bolsillos y metas de ahorro, con ahorro programado para tus próximas inversiones.</p>
+        <span class="product-tag">Ahorro</span>
+      </div>
+
+      <div class="product-card" id="nexo">
         <div class="product-icon">📈</div>
         <h3>NEXO (CDT)</h3>
-        <p>Certificado de Depósito a Término. Invierte desde $100.000 COP con tasas garantizadas.</p>
+        <p>Certificado de Depósito a Término con tasa fija. Invierte desde $100.000 COP en plazos de 90, 180 o 360 días.</p>
         <span class="product-tag">Inversión</span>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" id="safe">
         <div class="product-icon">🛡️</div>
         <h3>FIN-SAFE</h3>
-        <p>Seguridad y alertas. Protección digital para tus operaciones y datos personales.</p>
+        <p>Verificación de identidad, seguridad y alertas para proteger tus operaciones y tus datos.</p>
         <span class="product-tag">Seguridad</span>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" id="biz">
         <div class="product-icon">💼</div>
         <h3>FIN-BIZ</h3>
-        <p>Gestión para pequeños negocios. Herramientas de análisis y administración.</p>
+        <p>Cuenta empresarial para pequeños negocios, con NIT y herramientas de administración.</p>
         <span class="product-tag">Empresarial</span>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" id="360">
         <div class="product-icon">📊</div>
         <h3>FIN-360</h3>
-        <p>Bienestar y análisis financiero. Visualiza ingresos, gastos y presupuestos.</p>
+        <p>Presupuesto mensual y análisis de ingresos y gastos para tomar mejores decisiones.</p>
         <span class="product-tag">Analítica</span>
       </div>
 
-      <div class="product-card">
+      <div class="product-card" id="activos">
         <div class="product-icon">♻️</div>
         <h3>FINNEX Activos</h3>
-        <p>Economía circular. Accede a equipos productivos mediante reutilización o alquiler.</p>
+        <p>Economía circular. Accede a equipos productivos reacondicionados mediante compra o alquiler.</p>
         <span class="product-tag">Sostenibilidad</span>
+      </div>
+
+      <div class="product-card" id="nexar">
+        <div class="product-icon">🤝</div>
+        <h3>Familia NEXAR</h3>
+        <p>Financiación productiva para emprendedores: microcrédito, leasing y factoring digital.</p>
+        <span class="product-tag">Crédito empresarial</span>
+      </div>
+
+      <div class="product-card" id="tramites">
+        <div class="product-icon">📋</div>
+        <h3>Trámites en línea</h3>
+        <p>Certificación bancaria, extractos, paz y salvo, reposición de tarjeta y radicación de quejas, sin filas.</p>
+        <span class="product-tag">Servicios</span>
       </div>
 
       <div class="product-card">
         <div class="product-icon">🤖</div>
-        <h3>LUCI</h3>
-        <p>Asistente financiero digital. Resuelve tus dudas sobre productos y navegación.</p>
+        <h3>Luci</h3>
+        <p>Asistente virtual que resuelve tus dudas sobre productos, saldos y navegación dentro de FINNEX.</p>
         <span class="product-tag">Asistente IA</span>
       </div>
     </div>
-  </section>
 
+  </main>
+
+  <!-- ======================= FOOTER ======================= -->
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
         <div>
           <div class="footer-brand">FINNEX</div>
-          <p style="font-size: 14px;">Fintech colombiana enfocada en democratizar el acceso al crédito para emprendedores digitales.</p>
+          <p>Fintech colombiana enfocada en democratizar el acceso al crédito para personas naturales, emprendedores y pequeños negocios.</p>
         </div>
         <div>
           <h4>Productos</h4>
-          <a href="#">NEXAR</a>
-          <a href="#">NEXA</a>
-          <a href="#">NEXO</a>
-          <a href="#">FIN-SAFE</a>
+          <a href="productos.html#nexa">Cuentas y ahorro</a>
+          <a href="productos.html#credito">Créditos</a>
+          <a href="productos.html#nexo">Inversiones</a>
+          <a href="productos.html#safe">Seguridad</a>
         </div>
         <div>
           <h4>Compañía</h4>
@@ -218,6 +757,68 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      const menuToggle = document.getElementById('menuToggle');
+      const navMenu = document.getElementById('navMenu');
+      const dropdown = document.getElementById('dropdown');
+      const dropdownBtn = document.getElementById('dropdownBtn');
+
+      // Menú hamburguesa (tablet y celular)
+      menuToggle.addEventListener('click', function () {
+        const abierto = navMenu.classList.toggle('open');
+        menuToggle.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+        menuToggle.textContent = abierto ? '✕' : '☰';
+      });
+
+      // Desplegable "Productos y servicios" (al tocar, en móvil)
+      dropdownBtn.addEventListener('click', function (e) {
+        if (window.innerWidth <= 1023) {
+          e.preventDefault();
+          const abierto = dropdown.classList.toggle('open');
+          dropdownBtn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+        }
+      });
+
+      // Cierra el desplegable si se hace clic fuera
+      document.addEventListener('click', function (e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove('open');
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Escape cierra todo
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          navMenu.classList.remove('open');
+          dropdown.classList.remove('open');
+          menuToggle.textContent = '☰';
+          menuToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Al elegir un enlace, cierra el menú móvil
+      navMenu.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          navMenu.classList.remove('open');
+          menuToggle.textContent = '☰';
+          menuToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      // Al pasar a escritorio, limpia estados móviles
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 1023) {
+          navMenu.classList.remove('open');
+          dropdown.classList.remove('open');
+          menuToggle.textContent = '☰';
+          menuToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    })();
+  </script>
 
 </body>
 </html>
