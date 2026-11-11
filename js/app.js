@@ -210,7 +210,9 @@ async function navegarA(page) {
 
   const titulos = {
     dashboard: ['Inicio', 'Resumen de tu cuenta'],
-    flowpay: ['Transactions', 'Transferencias y pagos'],
+    flowpay: ['Mis cuentas', 'Saldo, recargas y movimientos'],
+    transferencias: ['Transferencias', 'Envía dinero a otros usuarios'],
+    pagos: ['Pagos y servicios', 'Paga tus servicios'],
     flowcard: ['Credit Cards', 'Tu tarjeta digital'],
     flowsave: ['Savings', 'Ahorro programado'],
     flowinvest: tipoUsuario === 'natural' ? ['Investments', 'CDT'] : ['Investments', 'NexusInvest'],
@@ -237,7 +239,9 @@ async function navegarA(page) {
   try {
     switch (page) {
       case 'dashboard': await renderDashboard(); break;
-      case 'flowpay': await renderFlowPay(); break;
+      case 'flowpay': await renderFlowPay('cuentas'); break;
+      case 'transferencias': await renderFlowPay('enviar'); break;
+      case 'pagos': await renderFlowPay('servicios'); break;
       case 'flowcard': await renderFlowCard(); break;
       case 'flowsave': await renderFlowSave(); break;
       case 'flowinvest':
@@ -262,6 +266,16 @@ async function navegarA(page) {
     console.error(error);
     content.innerHTML = mostrarAlerta('Error: ' + error.message, 'error');
   }
+}
+
+// Abre una página y activa una de sus pestañas (ej: irAPestana('flowpay', 'servicios'))
+async function irAPestana(page, tab, aviso) {
+  await navegarA(page);
+  if (tab) {
+    const btn = document.querySelector('.app-tab[data-tab="' + tab + '"]');
+    if (btn) btn.click();
+  }
+  if (aviso && window.toast) toast.info(aviso[0], aviso[1]);
 }
 
 // ============ DATOS ============
@@ -313,27 +327,17 @@ async function renderDashboard() {
 
   let totalIngresos = 0;
   let totalEgresos = 0;
-  const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  const ingresosPorDia = [0, 0, 0, 0, 0, 0, 0];
-  const egresosPorDia = [0, 0, 0, 0, 0, 0, 0];
 
   if (movimientos && movimientos.length > 0) {
     movimientos.forEach(m => {
-      const dia = new Date(m.created_at).getDay();
       if (m.tipo === 'ingreso') {
         totalIngresos += Number(m.monto);
-        ingresosPorDia[dia] += Number(m.monto);
       } else {
         totalEgresos += Number(m.monto);
-        egresosPorDia[dia] += Number(m.monto);
       }
     });
   }
 
-  // --- LÓGICA FIN-360 (PRESUPUESTO) ---
-  const presupuestoGuardado = localStorage.getItem('nexus_presupuesto') || 2000000;
-  const porcentajeGastado = presupuestoGuardado > 0 ? (totalEgresos / presupuestoGuardado) * 100 : 0;
-  const colorBarra = porcentajeGastado > 90 ? '#EF4444' : (porcentajeGastado > 70 ? '#F59E0B' : '#10B981');
 
   const html = `
     <div class="dash-grid-2col">
@@ -402,21 +406,6 @@ async function renderDashboard() {
       </div>
     </div>
 
-    <div class="app-section" style="background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%); border: 2px solid #2563EB; margin-bottom: 24px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
-        <div style="font-size: 16px; font-weight: 800; color: var(--dark);">FIN-360: Presupuesto Mensual</div>
-        <button class="btn-secondary-sm" onclick="editarPresupuesto()">⚙️ Editar</button>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-light); margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-        <span>Gastado: <strong>${formatearDinero(totalEgresos)}</strong></span>
-        <span>Límite: <strong>${formatearDinero(presupuestoGuardado)}</strong></span>
-      </div>
-      <div style="width: 100%; height: 12px; background: var(--bg-soft); border-radius: 100px; overflow: hidden;">
-        <div style="height: 100%; width: ${Math.min(porcentajeGastado, 100)}%; background: ${colorBarra}; border-radius: 100px; transition: width 0.5s;"></div>
-      </div>
-      <div style="text-align: right; font-size: 12px; font-weight: 700; color: ${colorBarra}; margin-top: 6px;">${porcentajeGastado.toFixed(1)}% consumido</div>
-    </div>
-
     <div class="dash-grid-2col" style="margin-bottom: 24px;">
       <div class="widget-metric">
         <div class="widget-icon blue">💵</div>
@@ -434,78 +423,36 @@ async function renderDashboard() {
       </div>
     </div>
 
-    <div class="dash-grid-3col">
-      <div class="app-section" style="margin-bottom:0;">
-        <div class="section-heading">Weekly Activity</div>
-        <div class="chart-box"><canvas id="chartWeekly"></canvas></div>
+    <!-- ACCIONES RÁPIDAS -->
+    <section class="app-section quick-actions" id="accionesRapidas">
+      <div class="qa-title">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.5z"/></svg>
+        Acciones rápidas
       </div>
+      <div class="quick-grid">
+        <button type="button" class="quick-tile" onclick="navegarA('transferencias')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 2.5 2.5 10l7 3 3 7z"/><path d="m21.5 2.5-12 10.5"/></svg>
+          <span>Transferir<br>dinero</span>
+        </button>
+        <button type="button" class="quick-tile" onclick="navegarA('pagos')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h3"/></svg>
+          <span>Pagar<br>servicios</span>
+        </button>
+        <button type="button" class="quick-tile" onclick="irAPestana('pagos', null, ['Recarga tu celular', 'Elige tu operador: Claro, Movistar o Tigo'])">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18.5h2"/><path d="M12 7v6"/><path d="M9 10h6"/></svg>
+          <span>Recargar<br>celular</span>
+        </button>
+        <button type="button" class="quick-tile" onclick="navegarA('flowcard')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+          <span>Pagar con<br>tarjeta</span>
+        </button>
+      </div>
+    </section>
 
-      <div class="app-section" style="margin-bottom:0;">
-        <div class="section-heading">Expense Statistics</div>
-        <div class="chart-box chart-pie"><canvas id="chartPie"></canvas></div>
-      </div>
-    </div>
   `;
 
   document.getElementById('pageContent').innerHTML = html;
 
-  setTimeout(() => {
-    const ctxWeekly = document.getElementById('chartWeekly');
-    if (ctxWeekly) {
-      new Chart(ctxWeekly, {
-        type: 'bar',
-        data: {
-          labels: diasSemana,
-          datasets: [
-            { label: 'Ingresos', data: ingresosPorDia, backgroundColor: '#CCB3E2', borderRadius: 4 }, // Lila
-            { label: 'Egresos', data: egresosPorDia, backgroundColor: '#D1B474', borderRadius: 4 } // Dorado
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: document.body.classList.contains('dark-mode') ? '#E2E8F0' : '#1E293B' } } },
-          scales: {
-            y: { beginAtZero: true, grid: { display: false }, ticks: { color: document.body.classList.contains('dark-mode') ? '#94A3B8' : '#64748B' } },
-            x: { grid: { display: false }, ticks: { color: document.body.classList.contains('dark-mode') ? '#94A3B8' : '#64748B' } }
-          }
-        }
-      });
-    }
-
-    const ctxPie = document.getElementById('chartPie');
-    if (ctxPie) {
-      let gastosServicios = 0, gastosTarjeta = 0, gastosCreditos = 0, otros = 0;
-      if (movimientos) {
-        movimientos.forEach(m => {
-          if (m.tipo === 'egreso') {
-            const desc = (m.descripcion || '').toLowerCase();
-            if (desc.includes('servicio') || desc.includes('claro') || desc.includes('netflix')) gastosServicios += Number(m.monto);
-            else if (desc.includes('tarjeta')) gastosTarjeta += Number(m.monto);
-            else if (desc.includes('credito') || desc.includes('cuota')) gastosCreditos += Number(m.monto);
-            else otros += Number(m.monto);
-          }
-        });
-      }
-      new Chart(ctxPie.getContext('2d'), {
-        type: 'doughnut',
-        data: {
-          labels: ['Servicios', 'Tarjeta', 'Créditos', 'Otros'],
-          datasets: [{
-            data: [gastosServicios, gastosTarjeta, gastosCreditos, otros],
-            backgroundColor: ['#D946EF', '#2563EB', '#F59E0B', '#334155'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '70%',
-          plugins: { legend: { display: false } }
-        }
-      });
-    }
-  }, 100);
 }
 
 // ============ FIN-360 (PRESUPUESTO) ============
@@ -682,7 +629,7 @@ async function abrirCDT() {
 
 // ============ NEXUSPAGOS ============
 
-async function renderFlowPay() {
+async function renderFlowPay(vista = 'cuentas') {
   const cuenta = await obtenerCuenta();
   const saldo = cuenta ? Number(cuenta.saldo) : 0;
   const userIdActual = localStorage.getItem('user_id');
@@ -716,15 +663,13 @@ async function renderFlowPay() {
       </div>
     </div>
 
-    <div class="app-tabs">
-      <button class="app-tab active" data-tab="enviar">Enviar</button>
-      <button class="app-tab" data-tab="recargar">Recargar</button>
+    ${vista === 'cuentas' ? `<div class="app-tabs">
+      <button class="app-tab active" data-tab="recargar">Recargar</button>
       <button class="app-tab" data-tab="retirar">Retirar con codigo</button>
-      <button class="app-tab" data-tab="servicios">Servicios</button>
       <button class="app-tab" data-tab="historial">Historial</button>
-    </div>
+    </div>` : ''}
 
-    <div class="app-tab-content active" id="tab-enviar">
+    <div class="app-tab-content${vista === 'enviar' ? ' active' : ''}" id="tab-enviar">
       <div class="app-section">
         <div class="app-section-title">Nueva transferencia</div>
         ${otros.slice(0, 4).length > 0 ? `
@@ -757,7 +702,7 @@ async function renderFlowPay() {
       </div>
     </div>
 
-    <div class="app-tab-content" id="tab-recargar">
+    <div class="app-tab-content${vista === 'cuentas' ? ' active' : ''}" id="tab-recargar">
       <div class="app-section">
         <div class="app-section-title">Recargar saldo</div>
         <div class="app-form-group">
@@ -779,7 +724,7 @@ async function renderFlowPay() {
       </div>
     </div>
 
-    <div class="app-tab-content" id="tab-servicios">
+    <div class="app-tab-content${vista === 'servicios' ? ' active' : ''}" id="tab-servicios">
       <div class="app-section">
         <div class="app-section-title">Pagar servicios</div>
 
@@ -898,7 +843,7 @@ async function enviarDinero() {
     if (window.toast) toast.success('Transferencia exitosa', 'Enviaste ' + formatearDinero(monto) + ' a ' + receptor);
     reproducirSonido();
     await actualizarSaldoSidebar();
-    setTimeout(() => navegarA('flowpay'), 1500);
+    setTimeout(() => navegarA('transferencias'), 1500);
   } else {
     if (window.toast) toast.error('Error', (data ? data.message : 'No se pudo transferir'));
   }
@@ -930,7 +875,7 @@ async function pagarServicio() {
     if (window.toast) toast.success('Pago exitoso', 'Pagaste ' + servicio + ' por ' + formatearDinero(monto));
     reproducirSonido();
     await actualizarSaldoSidebar();
-    setTimeout(() => navegarA('flowpay'), 1500);
+    setTimeout(() => navegarA('pagos'), 1500);
   } else {
     if (window.toast) toast.error('Error', (data ? data.message : 'No se pudo pagar'));
   }
