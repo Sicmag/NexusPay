@@ -174,7 +174,11 @@
       .menu-btn { display: block; }
       .has-drop { width: 100%; padding: 0; }
       .dropdown { position: static; width: 100%; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: none; padding: 4px 0 0 8px; }
-      .nav-links.open { display: flex; flex-direction: column; align-items: flex-start; position: absolute; top: 76px; left: 0; right: 0; background: var(--white); padding: 20px 24px; border-bottom: 1px solid var(--line); box-shadow: 0 12px 24px rgba(0, 0, 0, .08); }
+      .nav-inner { gap: 16px; }
+      .nav-actions { gap: 8px; }
+      .nav-links { display: none; }
+      .nav-links.open { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; position: absolute; top: 76px; left: 0; right: 0; max-height: calc(100vh - 76px); overflow-y: auto; background: var(--white); padding: 20px 24px; border-bottom: 1px solid var(--line); box-shadow: 0 12px 24px rgba(0, 0, 0, .08); }
+      .nav-links.open > a, .nav-links.open .has-drop > a { display: block; width: 100%; padding: 10px 0; }
       .hero-inner { grid-template-columns: 1fr; gap: 40px; }
       .features-grid { grid-template-columns: 1fr 1fr; }
       .products-wrap { grid-template-columns: 1fr; }
@@ -195,6 +199,11 @@
       .channel { grid-template-columns: 1fr; }
       .channel .pic { min-height: 140px; }
       .nav-actions .btn-dark { display: none; }
+      .nav-inner { gap: 10px; }
+      .logo { font-size: 20px; }
+      .logo img { width: 34px; height: 34px; }
+      .nav-access span { display: none; }
+      .nav-access .btn-gold { padding: 10px 20px; }
       .tabs { gap: 14px; }
     }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
@@ -383,6 +392,7 @@
   <script>
     var nav = document.getElementById('navLinks');
     document.getElementById('menuBtn').onclick = function () { nav.classList.toggle('open'); };
+    nav.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { nav.classList.remove('open'); }); });
 
 
 
