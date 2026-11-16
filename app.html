@@ -15,6 +15,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Luci: botones de voz del chat -->
+  <style>
+    .chat-voice-toggle { background: transparent; border: none; color: inherit; font-size: 18px; line-height: 1; cursor: pointer; padding: 6px; border-radius: 50%; opacity: .8; transition: opacity .2s, background .2s; }
+    .chat-voice-toggle:hover, .chat-voice-toggle.activa { opacity: 1; background: rgba(255,255,255,0.18); }
+    .chat-mic { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(128,128,128,.35); background: rgba(128,128,128,.12); color: inherit; font-size: 18px; line-height: 1; cursor: pointer; transition: all .2s; }
+    .chat-mic:hover { transform: scale(1.06); }
+    .chat-mic.escuchando { background: #e74c3c; border-color: #e74c3c; animation: luciMicPulse 1.2s infinite; }
+    @keyframes luciMicPulse { 0% { box-shadow: 0 0 0 0 rgba(231,76,60,.45); } 70% { box-shadow: 0 0 0 12px rgba(231,76,60,0); } 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); } }
+  </style>
 </head>
 <!-- dark-mode = el look de la imagen (vino + dorado). Quítalo para arrancar en claro. -->
 <body class="app-body dark-mode">
@@ -191,15 +200,19 @@
     <div class="chat-header">
       <div class="chat-header-info">
         <div class="chat-header-name">Luci</div>
-        <div class="chat-header-status">En línea</div>
+        <div class="chat-header-status" id="chatStatus">En línea</div>
       </div>
-      <button class="chat-close" onclick="toggleChat()" aria-label="Cerrar chat">×</button>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <button class="chat-voice-toggle" id="chatVozBtn" onclick="toggleVozLuci()" title="Respuestas en voz: desactivadas" aria-label="Activar o desactivar respuestas en voz">🔇</button>
+        <button class="chat-close" onclick="toggleChat()" aria-label="Cerrar chat">×</button>
+      </div>
     </div>
     <div class="chat-messages" id="chatMessages">
       <div class="chat-message chat-bot">Hola! Soy Luci, tu asistente de FINNEX. ¿En qué te ayudo hoy? 💜</div>
     </div>
     <div class="chat-input-wrapper">
-      <input class="chat-input" id="chatInput" placeholder="Escribe tu pregunta..." onkeypress="if(event.key==='Enter') enviarChat()">
+      <button class="chat-mic" id="chatMicBtn" onclick="escucharLuci()" title="Hablar con Luci" aria-label="Hablar con Luci">🎙</button>
+      <input class="chat-input" id="chatInput" placeholder="Escribe o habla con Luci..." onkeypress="if(event.key==='Enter') enviarChat()">
       <button class="chat-send" onclick="enviarChat()" aria-label="Enviar">➤</button>
     </div>
   </div>
