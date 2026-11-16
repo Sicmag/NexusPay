@@ -2897,69 +2897,551 @@ async function radicarQueja() {
   if (window.toast) toast.success('Queja radicada', 'Tu radicado es ' + radicado);
 }
 
-// ============ CHAT CON LUCI ============
+// ============ CHAT CON LUCI (Groq + voz ElevenLabs) ============
+//
+// Configuración (js/config.js). Ya existentes:
+//   CONFIG.GROQ_API_KEY, CONFIG.URL_GROQ, CONFIG.MODELO_GROQ, CONFIG.ASISTENTE_NOMBRE
+// Nuevas (opcionales, solo para la voz natural):
+//   CONFIG.ELEVENLABS_API_KEY, CONFIG.ELEVENLABS_VOICE_ID, CONFIG.ELEVENLABS_MODEL
+// Si no hay clave de ElevenLabs o falla, Luci usa la voz del navegador.
 
-function toggleChat() {
-  document.getElementById('chatWindow').classList.toggle('open');
+// ---------- Identidad de FINNEX (completa estos campos) ----------
+// El documento del portafolio no incluye misión ni visión. Escríbelas
+// aquí y Luci las usará; si quedan vacías, dirá que no tiene esa información.
+const LUCI_MISION = '';
+const LUCI_VISION = '';
+
+// ---------- Conocimiento del portafolio ----------
+const LUCI_INFO = `
+QUÉ ES FINNEX
+FINNEX es una solución financiera digital pensada para personas naturales,
+emprendedores y pequeños negocios. Su portafolio tiene cuatro componentes
+que se complementan: productos de captación (ahorro), productos de
+colocación (financiación, familia NEXAR), herramientas fintech de
+acompañamiento y una línea de economía circular. La idea es que los
+servicios se conecten según la necesidad del usuario: por ejemplo, alguien
+organiza sus gastos, define una meta de ahorro y sigue su avance; un
+emprendedor entiende los movimientos de su negocio y, si lo necesita,
+explora financiación o acceso a equipos.
+
+=== PRODUCTOS DE CAPTACIÓN (AHORRO) ===
+
+CUENTA DE AHORROS
+- Producto principal para administrar el dinero por canales digitales:
+  consultar saldos y movimientos y hacer operaciones autorizadas.
+- Tasa: 0,08 % E.A., liquidada y abonada diariamente sobre el saldo.
+- Apertura y manejo digital, sin desplazamientos. Sin monto mínimo de
+  apertura ni saldo mínimo permanente.
+- Notificaciones de movimientos y acceso a herramientas de análisis.
+- Requisitos: validar identidad, ser mayor de edad y mantener los datos
+  actualizados. Retiros y transferencias tienen límites operativos y de
+  seguridad. Puede quedar inactiva si no tiene movimientos por el periodo
+  del reglamento.
+
+BOLSILLOS Y METAS DE AHORRO
+- Funcionalidad de la cuenta de ahorros (no es una cuenta aparte) para
+  separar dinero por objetivos: gastos previstos, una compra, un fondo de
+  emergencias o una inversión productiva.
+- Rentabilidad de hasta 9,00 % E.A. para recursos de ciertas metas, si se
+  cumplen las condiciones. No es rentabilidad garantizada.
+- Se pueden crear varios bolsillos con nombre y objetivo, definir monto y
+  fecha, hacer aportes manuales o programados, ver el avance, y pausar,
+  modificar o finalizar la meta. Crearlos no tiene costo.
+- Hay que tener la cuenta de ahorros FINNEX activa. El dinero puede volver
+  al saldo disponible según las reglas del producto.
+- Útil para emprendedores: planear la compra de herramientas o separar
+  fondos para mantenimiento de equipos.
+
+CDT (CERTIFICADO DE DEPÓSITO A TÉRMINO)
+- Ahorro con plazo y rentabilidad definidos al constituirlo.
+- Tasas: 90 días 10,75 % E.A.; 180 días 11,25 % E.A.; 360 días 12,00 % E.A.
+- Monto mínimo de apertura: 50.000 pesos.
+- La tasa pactada se mantiene durante todo el plazo. Los recursos quedan
+  comprometidos hasta el vencimiento y no hay redención anticipada ordinaria.
+- Al vencer se puede pedir el capital con los rendimientos o renovar, si está
+  disponible. Se entrega un certificado digital con monto, plazo, tasa y
+  vencimiento. Las retenciones e impuestos se informan al constituirlo.
+
+AHORRO PROGRAMADO PARA INVERSIÓN PRODUCTIVA
+- Para emprendedores y pequeños negocios que quieren reunir recursos propios
+  para herramientas, equipos, inventario, mantenimiento o capital inicial.
+- Se define el monto objetivo, el plazo y la periodicidad de aportes
+  (semanal, quincenal o mensual), con recordatorios y seguimiento del avance.
+- Aportes manuales o automáticos. Si se omite un aporte no hay sanción
+  automática, pero puede afectar la meta y la rentabilidad. Retirar antes de
+  tiempo puede hacer perder beneficios. Al terminar se dispone del dinero.
+- Con autorización del cliente, el comportamiento de ahorro puede servir
+  como referencia para ofrecerle financiación (por ejemplo microcrédito), sin
+  que eso garantice la aprobación.
+
+=== FINANCIACIÓN: FAMILIA NEXAR ===
+Opciones para emprendedores y pequeños negocios. Siempre hay estudio de
+capacidad de pago, y antes de aceptar se informan tasa, plazo, cuotas,
+costos y consecuencias del incumplimiento. Las tasas son de referencia.
+
+MICROCRÉDITO PRODUCTIVO
+- Para insumos, herramientas, adecuación del lugar de trabajo o inventario.
+- Referencia urbano: 28,00 a 48,00 % E.A. Referencia rural: 21,00 a
+  30,00 % E.A. La tasa final depende de la modalidad legal, el monto y los
+  límites vigentes.
+- Requiere acreditar identidad y actividad económica; la aprobación depende
+  del estudio de capacidad de pago y riesgo. Los recursos deben ir a una
+  actividad productiva. Pagos en cuotas periódicas según el flujo de caja.
+
+CRÉDITO ROTATIVO
+- Para personas naturales mayores de edad, emprendedores y pequeños negocios.
+- Cupo aprobado de 500.000 a 10.000.000 de pesos, sujeto a evaluación. Se
+  usa total o parcialmente y se reutiliza al pagar. Los intereses se cobran
+  solo sobre lo que se usó, no sobre todo el cupo.
+- Tasa de referencia: 24,00 % E.A. (aprox. 1,81 % mensual vencido), que
+  puede variar según el perfil de riesgo y el mercado, dentro de los límites
+  legales.
+- Pago mensual con un valor mínimo informado; se pueden hacer abonos extra.
+  El cupo se revisa periódicamente. Si hay mora pueden cobrarse intereses
+  moratorios dentro de los límites legales.
+- Se podrá consultar cupo disponible, saldo usado, pagos y vencimientos desde
+  los canales digitales.
+
+LEASING PRODUCTIVO
+- Permite usar equipos, herramientas, maquinaria o vehículos para trabajar sin
+  comprarlos de inmediato, pagando cuotas periódicas y conservando liquidez.
+- Tasa fija de referencia: desde 18,57 % hasta 28 % E.A. para plazos de hasta
+  60 meses; tasa variable para plazos de más de 5 años.
+- Puede incluir opción de compra al final si se pacta (con su valor y
+  condiciones). Plazo, cuotas, mantenimiento y seguros quedan en el contrato.
+  Requiere evaluación financiera y se hace con una entidad autorizada.
+- No es un alquiler ordinario ni siempre una compra financiada.
+
+FACTORING DIGITAL
+- Para negocios con facturas por cobrar que necesitan liquidez antes de que su
+  cliente pague.
+- Tasa de descuento de referencia: 22,00 a 24,00 % E.A.
+- Monto mínimo de la operación: 3.000.000 de pesos (suma de las facturas).
+  Se negocia entre el 80 % y el 100 % del valor neto de la factura. Plazos de
+  factura: 30, 60 y 90 días.
+- Las facturas deben ser válidas, verificables y de operaciones reales. Se
+  evalúa la factura y el riesgo del pagador; descuento, comisiones y costos se
+  informan antes de aceptar. No toda factura se convierte automáticamente en
+  liquidez.
+
+=== HERRAMIENTAS FINTECH ===
+Complementan los productos con organización, análisis, seguridad y
+orientación; no los reemplazan ni toman decisiones por el usuario.
+
+FIN-360 (bienestar y análisis financiero)
+Ayuda a organizar ingresos, gastos, presupuestos y metas de ahorro, con
+resúmenes y visualizaciones. Permite ver en qué categorías se gasta más y
+comparar con los objetivos. Sirve a personas y a pequeños negocios. No
+garantiza ahorro ni predice resultados; una variación no explica por sí sola
+sus causas.
+
+LUCI (asistente financiero digital)
+Soy yo. Oriento sobre el uso de la plataforma, explico conceptos financieros
+generales, ayudo a encontrar funcionalidades e informo sobre los productos.
+Doy orientación general, no recomendaciones financieras personalizadas, y no
+reemplazo la lectura del contrato ni la asesoría especializada.
+
+FIN-SAFE (seguridad y alertas)
+Alertas de movimientos, notificaciones de actividad, recordatorios de
+seguridad y consejos para proteger credenciales y datos. Una alerta no
+equivale a una detección infalible de fraude.
+
+FIN-BIZ (gestión para pequeños negocios)
+Apoyo para registrar y consultar ingresos y gastos del negocio, organizarlos
+por categorías, seguir obligaciones y ver información básica de su
+comportamiento. Sirve a negocios físicos y digitales. No es un sistema
+contable ni reemplaza obligaciones contables o tributarias.
+
+FIN-EASY (accesibilidad y facilidad de uso)
+Criterio de diseño de toda la plataforma: navegación clara, textos
+comprensibles, explicación de términos financieros, buen contraste, textos
+legibles y compatibilidad con tecnologías de apoyo. No es un producto
+financiero independiente.
+
+=== ECONOMÍA CIRCULAR ===
+Línea (FINNEX Activos Circulares) para acceder a bienes útiles en actividades
+productivas sin depender solo de comprar equipos nuevos.
+
+=== DÓNDE ENCONTRAR CADA COSA EN LA APP (menú lateral) ===
+- Inicio: resumen de la cuenta.
+- Mis cuentas: la cuenta de ahorros (NEXA).
+- Tarjetas: la tarjeta FNX del usuario. No tienes más detalles de ella.
+- Transferencias y Pagos y servicios: para enviar dinero y pagar servicios.
+- Ahorro e inversión: el CDT (NEXO) y otras opciones de ahorro e inversión.
+- Créditos: para personas naturales aparece como "Crédito Personal"; para emprendedores como "FAMILIA NEXAR" (microcrédito, leasing y factoring).
+- Seguros: seguros y protección. No tienes más detalles de esta sección.
+- Más productos: Cajitas FNX (organizar el dinero en cajitas), VELA / NEXT (VELA son los bolsillos y metas de ahorro, NEXT es el ahorro programado) y Simulador de crédito. Los emprendedores además ven FIN-BIZ, FIN-360 y FINNEX Activos (la línea de economía circular para alquilar o comprar equipos reacondicionados).
+- Trámites: certificación bancaria, extractos de cuenta, congelar tarjeta, reposición de tarjeta, solicitar crédito NEXAR, simular un crédito, paz y salvo, abrir un CDT, crear una meta de ahorro, crear una Cajita FNX, actualizar datos, verificación biométrica, cambiar la clave, cambiar topes y radicar una queja o reclamo.
+- Configuración: ajustes de la cuenta. Cerrar sesión está al final del menú.
+Si el usuario quiere hacer algo (por ejemplo abrir un CDT o congelar la tarjeta), indícale la opción exacta del menú o de Trámites. Si pregunta por un producto que no aparece en su menú, explícale qué es y que puede no estar disponible para su tipo de usuario.
+`;
+
+// ---------- Estado ----------
+let luciOcupado = false;
+let luciEscuchando = false;
+let luciVozActiva = false;
+let luciReconocimiento = null;
+let luciAudio = null;
+let luciAudioURL = null;
+let luciVozToken = 0;
+
+function luciCfg() {
+  const c = (typeof CONFIG !== 'undefined' && CONFIG) ? CONFIG : {};
+  return {
+    nombre: c.ASISTENTE_NOMBRE || 'Luci',
+    groqKey: c.GROQ_API_KEY || '',
+    groqUrl: c.URL_GROQ || 'https://api.groq.com/openai/v1/chat/completions',
+    groqModelo: c.MODELO_GROQ || 'openai/gpt-oss-120b',
+    elKey: c.ELEVENLABS_API_KEY || '',
+    elVoz: c.ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL',
+    elModelo: c.ELEVENLABS_MODEL || 'eleven_multilingual_v2'
+  };
 }
 
-async function enviarChat() {
+// ---------- Interfaz ----------
+
+function luciEstado(texto) {
+  const el = document.getElementById('chatStatus');
+  if (el) el.textContent = texto || 'En línea';
+}
+
+function luciAgregarMensaje(clase, texto, id) {
+  const cont = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-message ' + clase;
+  div.textContent = texto;
+  if (id) div.id = id;
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+  return div;
+}
+
+function toggleChat() {
+  const ventana = document.getElementById('chatWindow');
+  ventana.classList.toggle('open');
+  if (!ventana.classList.contains('open')) luciDetenerTodo();
+}
+
+function toggleVozLuci() {
+  luciVozActiva = !luciVozActiva;
+  const btn = document.getElementById('chatVozBtn');
+  if (btn) {
+    btn.textContent = luciVozActiva ? '🔊' : '🔇';
+    btn.classList.toggle('activa', luciVozActiva);
+    btn.title = luciVozActiva ? 'Respuestas en voz: activadas' : 'Respuestas en voz: desactivadas';
+  }
+  if (!luciVozActiva) luciDetenerAudio();
+}
+
+function luciDetenerAudio() {
+  luciVozToken++;
+  if (luciAudio) { try { luciAudio.pause(); } catch (e) {} luciAudio = null; }
+  if (luciAudioURL) { URL.revokeObjectURL(luciAudioURL); luciAudioURL = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  luciEstado('En línea');
+}
+
+function luciDetenerTodo() {
+  luciDetenerAudio();
+  if (luciReconocimiento && luciEscuchando) { try { luciReconocimiento.abort(); } catch (e) {} }
+}
+
+// ---------- Voz de salida (ElevenLabs con respaldo del navegador) ----------
+
+function luciTextoParaVoz(texto) {
+  return String(texto)
+    .replace(/[*_#`>~]/g, '')
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\bE\.?\s?A\.?/g, 'efectivo anual')
+    .replace(/\bM\.?\s?V\.?/g, 'mes vencido')
+    .replace(/\s*%/g, ' por ciento')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function luciHablarNavegador(texto, token) {
+  return new Promise(resolve => {
+    if (!window.speechSynthesis) return resolve();
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'es-CO';
+    u.onstart = () => { if (token === luciVozToken) luciEstado('Hablando...'); };
+    u.onend = u.onerror = () => resolve();
+    window.speechSynthesis.speak(u);
+  });
+}
+
+async function luciHablar(texto) {
+  const cfg = luciCfg();
+  const limpio = luciTextoParaVoz(texto);
+  if (!limpio) return;
+
+  luciDetenerAudio();
+  const token = luciVozToken;
+
+  try {
+    if (!cfg.elKey) throw new Error('Sin clave de ElevenLabs');
+
+    luciEstado('Preparando voz...');
+    const resp = await fetch(
+      'https://api.elevenlabs.io/v1/text-to-speech/' + cfg.elVoz + '?output_format=mp3_44100_128',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'audio/mpeg',
+          'xi-api-key': cfg.elKey
+        },
+        body: JSON.stringify({
+          text: limpio,
+          model_id: cfg.elModelo,
+          voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+        })
+      }
+    );
+
+    if (!resp.ok) throw new Error('ElevenLabs HTTP ' + resp.status + ': ' + (await resp.text()));
+
+    const blob = await resp.blob();
+    if (!blob.type.startsWith('audio/') || blob.size < 1000) throw new Error('Audio inválido');
+
+    // Si el usuario cerró el chat o pidió otra cosa mientras se generaba
+    if (token !== luciVozToken) return;
+
+    luciAudioURL = URL.createObjectURL(blob);
+    luciAudio = new Audio(luciAudioURL);
+    luciEstado('Hablando...');
+
+    await new Promise((resolve, reject) => {
+      luciAudio.onended = resolve;
+      luciAudio.onerror = () => reject(new Error('No se pudo reproducir el audio'));
+      luciAudio.play().catch(reject);
+    });
+  } catch (e) {
+    if (token !== luciVozToken) return;
+    console.warn('Luci: voz alternativa →', e.message);
+    await luciHablarNavegador(limpio, token);
+  } finally {
+    if (token === luciVozToken) {
+      if (luciAudioURL) { URL.revokeObjectURL(luciAudioURL); luciAudioURL = null; }
+      luciAudio = null;
+      luciEstado('En línea');
+    }
+  }
+}
+
+// ---------- Voz de entrada (micrófono) ----------
+
+function escucharLuci() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    luciAgregarMensaje('chat-bot', 'Tu navegador no permite hablar conmigo por voz. Prueba con Chrome o escríbeme.');
+    return;
+  }
+
+  if (luciEscuchando) { luciReconocimiento.stop(); return; }
+  if (luciOcupado) return;
+
+  luciDetenerAudio();
+
+  const btn = document.getElementById('chatMicBtn');
+  const input = document.getElementById('chatInput');
+  const rec = new SR();
+  luciReconocimiento = rec;
+  rec.lang = 'es-CO';
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  let hubo = false;
+
+  rec.onstart = () => {
+    luciEscuchando = true;
+    if (btn) btn.classList.add('escuchando');
+    luciEstado('Escuchando...');
+  };
+
+  rec.onresult = ev => {
+    const texto = ev.results[0][0].transcript.trim();
+    if (!texto) return;
+    hubo = true;
+    input.value = texto;
+    enviarChat(true);
+  };
+
+  rec.onerror = ev => {
+    const avisos = {
+      'not-allowed': 'Permite el acceso al micrófono para poder hablar conmigo.',
+      'service-not-allowed': 'Permite el acceso al micrófono para poder hablar conmigo.',
+      'audio-capture': 'No encontré un micrófono disponible.',
+      'network': 'Hubo un error de red al reconocer tu voz.',
+      'no-speech': 'No te escuché, intenta de nuevo.'
+    };
+    if (ev.error !== 'aborted' && avisos[ev.error]) luciAgregarMensaje('chat-bot', avisos[ev.error]);
+  };
+
+  rec.onend = () => {
+    luciEscuchando = false;
+    if (btn) btn.classList.remove('escuchando');
+    if (!luciOcupado && !hubo) luciEstado('En línea');
+  };
+
+  try {
+    rec.start();
+  } catch (e) {
+    luciEscuchando = false;
+    if (btn) btn.classList.remove('escuchando');
+  }
+}
+
+// ---------- Cerebro (Groq) ----------
+
+function luciPromptSistema(nombreUsuario, saldoTexto) {
+  const cfg = luciCfg();
+  const identidad = [
+    LUCI_MISION ? 'MISIÓN DE FINNEX: ' + LUCI_MISION : '',
+    LUCI_VISION ? 'VISIÓN DE FINNEX: ' + LUCI_VISION : ''
+  ].filter(Boolean).join('\n');
+
+  return `Eres ${cfg.nombre}, la asistente financiera digital de FINNEX, un banco digital colombiano. Hablas como una persona: cálida, cercana y eficiente.
+
+CONTEXTO DEL USUARIO (ya inició sesión en la app)
+- Nombre: ${nombreUsuario}
+- Tipo de usuario: ${tipoUsuario === 'emprendedor' ? 'emprendedor o pequeño negocio' : 'persona natural'}
+- Saldo de su cuenta: ${saldoTexto}
+
+TU FUNCIÓN
+Orientar sobre los productos y herramientas de FINNEX, explicar conceptos financieros generales relacionados y ayudar al usuario a encontrar cada funcionalidad en el menú de la app.
+
+REGLAS DE ESTILO
+1. Español colombiano, tuteas al usuario y lo llamas por su nombre de vez en cuando.
+2. Máximo tres oraciones cortas. Si piden un panorama general, nombra las categorías en una sola oración y pregunta cuál le interesa.
+3. Sin listas, viñetas, negrillas ni símbolos raros. Puedes usar un emoji de vez en cuando.
+
+REGLAS DE CONTENIDO
+4. Responde solo con la información de referencia. Si un dato no está ahí (una cifra, un requisito o un costo), dilo con honestidad y sugiere confirmarlo con un asesor de FINNEX. Nunca inventes.
+5. Las tasas y montos son de referencia: preséntalos como "tasa de referencia" o "hasta", nunca como garantía. Aclara que las condiciones definitivas se informan antes de aceptar cualquier producto.
+6. Da orientación general, no recomendaciones personalizadas. No digas que algo "te conviene" ni prometas aprobación de créditos, rentabilidad o resultados. Si el caso lo requiere, sugiere hablar con una persona.
+7. Si preguntan algo ajeno a FINNEX o a las finanzas, responde amablemente: "Solo puedo ayudarte con temas de FINNEX, como sus productos y servicios financieros. ¿Qué te gustaría saber?"
+8. Solo conoces el nombre, el tipo de usuario y el saldo indicados arriba. Puedes decir el saldo si te lo preguntan (si dice "oculto", no lo menciones y explica que el usuario lo tiene oculto). No conoces movimientos, tarjetas ni otros datos, y no puedes hacer operaciones tú misma: indícale en qué parte del menú o de Trámites puede hacerlas.
+9. Nunca pidas contraseñas, PIN, claves ni códigos de seguridad; si el usuario te los da, pídele que no los comparta.
+
+${identidad ? identidad + '\n' : 'Sobre la misión y la visión de FINNEX no tienes información disponible: si preguntan, dilo con amabilidad.\n'}
+INFORMACIÓN DE REFERENCIA
+${LUCI_INFO}`;
+}
+
+async function luciPreguntarGroq(mensaje, nombreUsuario, saldoTexto) {
+  const cfg = luciCfg();
+  if (!cfg.groqKey) throw new Error('Falta CONFIG.GROQ_API_KEY en js/config.js');
+
+  const mensajes = [
+    { role: 'system', content: luciPromptSistema(nombreUsuario, saldoTexto) },
+    ...chatHistorial.slice(-8).map(m => ({
+      role: m.rol === 'user' ? 'user' : 'assistant',
+      content: m.texto
+    })),
+    { role: 'user', content: mensaje }
+  ];
+
+  const cuerpo = {
+    model: cfg.groqModelo,
+    messages: mensajes,
+    temperature: 0.4,
+    max_completion_tokens: 1024
+  };
+  if (/gpt-oss/i.test(cfg.groqModelo)) cuerpo.reasoning_effort = 'low';
+
+  const controlador = new AbortController();
+  const timeout = setTimeout(() => controlador.abort(), 30000);
+
+  try {
+    const resp = await fetch(cfg.groqUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + cfg.groqKey
+      },
+      body: JSON.stringify(cuerpo),
+      signal: controlador.signal
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error((data && data.error && data.error.message) || ('Groq HTTP ' + resp.status));
+
+    const texto = data && data.choices && data.choices[0] && data.choices[0].message &&
+      data.choices[0].message.content;
+    if (!texto || !texto.trim()) throw new Error('Groq devolvió una respuesta vacía');
+
+    return texto.trim().replace(/\*\*/g, '').replace(/^#+\s*/gm, '');
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('Luci tardó demasiado en responder');
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// ---------- Enviar mensaje ----------
+
+async function enviarChat(desdeVoz) {
+  if (luciOcupado) return;
+
   const input = document.getElementById('chatInput');
   const mensaje = input.value.trim();
   if (!mensaje) return;
 
-  const mensajes = document.getElementById('chatMessages');
-  mensajes.innerHTML += '<div class="chat-message chat-user">' + escapeHtml(mensaje) + '</div>';
-  input.value = '';
-  mensajes.scrollTop = mensajes.scrollHeight;
+  luciOcupado = true;
+  luciDetenerAudio();
 
-  const loading = document.createElement('div');
-  loading.className = 'chat-message chat-bot chat-loading';
-  loading.textContent = 'Luci esta escribiendo...';
-  loading.id = 'chatLoading';
-  mensajes.appendChild(loading);
-  mensajes.scrollTop = mensajes.scrollHeight;
+  luciAgregarMensaje('chat-user', mensaje);
+  input.value = '';
+  luciAgregarMensaje('chat-bot chat-loading', 'Luci está escribiendo...', 'chatLoading');
+  luciEstado('Pensando...');
 
   try {
-    const saldo = await obtenerSaldo();
+    let saldoTexto = 'no disponible';
+    try {
+      if (saldosOcultos) {
+        saldoTexto = 'oculto (el usuario tiene los saldos ocultos)';
+      } else {
+        const saldo = await obtenerSaldo();
+        saldoTexto = formatearDinero(saldo) + ' pesos';
+      }
+    } catch (e) { /* el chat sigue funcionando sin el saldo */ }
+
     const nombre = (datosPersonales && datosPersonales.nombres) ? datosPersonales.nombres : 'Usuario';
 
-    const systemPrompt = `Eres ${CONFIG.ASISTENTE_NOMBRE}, la asistente virtual de NexusPay, un banco digital colombiano.
-PERSONALIDAD: Te llamas ${CONFIG.ASISTENTE_NOMBRE}. Eres cálida, cercana y eficiente. Hablas en español y tuteas. Máximo 3 líneas.
-CONTEXTO: Nombre: ${nombre}, Tipo: ${tipoUsuario}, Saldo: ${formatearDinero(saldo)}.
-PRODUCTOS: NexusCredit (Microcrédito, Leasing, Factoring), NexusPagos (cuenta de ahorros NEXA), NexusCard, NexusSave (VELA: bolsillos y metas de ahorro; NEXT: ahorro programado), NexusInvest, NEXO (CDT), NexusShield, NexusBusiness, NexusAnalytics, NexusBox, FINNEX (activos circulares: alquiler/compra de equipos reacondicionados), Trámites (certificados, extractos, reposición de tarjeta, paz y salvo, quejas).`;
+    const respuesta = await luciPreguntarGroq(mensaje, nombre, saldoTexto);
 
-    const historialTexto = chatHistorial.slice(-6).map(m => (m.rol === 'user' ? 'Usuario: ' : 'Luci: ') + m.texto).join('\n');
-    const promptCompleto = systemPrompt + '\n\n' + (historialTexto ? 'CONVERSACION:\n' + historialTexto + '\n\n' : '') + 'Usuario: ' + mensaje;
-
-    const response = await fetch(CONFIG.URL_GEMINI + CONFIG.MODELO_GEMINI + ':generateContent?key=' + CONFIG.GEMINI_API_KEY, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: promptCompleto }] }],
-        generationConfig: { temperature: 0.6, maxOutputTokens: 250 }
-      }),
-    });
-
-    const result = await response.json();
-    if (!result.candidates || !result.candidates[0]) throw new Error(result.error?.message || 'Error IA');
-
-    const respuesta = result.candidates[0].content.parts[0].text;
-    const loadingEl = document.getElementById('chatLoading');
-    if (loadingEl) loadingEl.remove();
+    const cargando = document.getElementById('chatLoading');
+    if (cargando) cargando.remove();
 
     chatHistorial.push({ rol: 'user', texto: mensaje });
     chatHistorial.push({ rol: 'bot', texto: respuesta });
     if (chatHistorial.length > 10) chatHistorial = chatHistorial.slice(-10);
 
-    mensajes.innerHTML += '<div class="chat-message chat-bot">' + escapeHtml(respuesta) + '</div>';
-    mensajes.scrollTop = mensajes.scrollHeight;
+    luciAgregarMensaje('chat-bot', respuesta);
+    luciEstado('En línea');
+
+    // Responde en voz si el usuario habló o si activó el altavoz
+    if (desdeVoz === true || luciVozActiva) luciHablar(respuesta);
 
   } catch (e) {
-    const loadingEl = document.getElementById('chatLoading');
-    if (loadingEl) loadingEl.remove();
-    mensajes.innerHTML += '<div class="chat-message chat-bot">Lo siento, hubo un error.</div>';
-    mensajes.scrollTop = mensajes.scrollHeight;
+    const cargando = document.getElementById('chatLoading');
+    if (cargando) cargando.remove();
+    luciAgregarMensaje('chat-bot', 'Lo siento, hubo un error. Intenta de nuevo en un momento.');
+    luciEstado('En línea');
+    console.error('Error en chat de Luci:', e);
     if (window.toast) toast.error('Error en chat', e.message);
+  } finally {
+    luciOcupado = false;
   }
 }
+
+// Oculta el micrófono si el navegador no soporta reconocimiento de voz
+(function () {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('chatMicBtn');
+  if (!SR && btn) btn.style.display = 'none';
+})();
