@@ -471,69 +471,12 @@ function editarPresupuesto() {
 
 async function renderSimulador() {
   if (tipoUsuario === 'natural') return renderSimuladorNatural();
-  const html = `
-    <div class="app-section">
-      <div class="app-section-title">Simulador de Crédito</div>
-      <div class="slider-container">
-        <label class="app-form-label">Monto a solicitar: <span id="lblMonto" style="color:var(--primary); font-size:18px;">$1.000.000</span></label>
-        <input type="range" class="slider" id="simMonto" min="100000" max="5000000" step="100000" value="1000000" oninput="calcularSimulacion()">
-      </div>
-      <div class="app-form-group">
-        <label class="app-form-label">Plazo (días)</label>
-        <select class="app-form-select" id="simPlazo" onchange="calcularSimulacion()">
-          <option value="30">30 días</option>
-          <option value="60">60 días</option>
-          <option value="90" selected>90 días</option>
-          <option value="120">120 días</option>
-        </select>
-      </div>
-    </div>
-    <div class="dash-grid-2col">
-      <div class="widget-metric">
-        <div class="widget-icon blue">💵</div>
-        <div class="widget-info"><div class="label">Cuota estimada</div><div class="value" id="lblCuota">$0</div></div>
-      </div>
-      <div class="widget-metric">
-        <div class="widget-icon green">📈</div>
-        <div class="widget-info"><div class="label">Tasa estimada</div><div class="value" id="lblTasa">18% E.A.</div></div>
-      </div>
-    </div>
-    <div class="app-section" id="semaforoBox">
-      <div class="app-section-title">Capacidad de pago</div>
-      <div id="semaforoMsg" class="alert alert-success">🟢 Cuota saludable</div>
-    </div>
-    <button class="btn-primary btn-large" onclick="navegarA('creditos')">Ir a solicitar crédito</button>
-  `;
-  document.getElementById('pageContent').innerHTML = html;
-  calcularSimulacion();
+  return renderSimuladorEmprendedor();
 }
 
 function calcularSimulacion() {
   if (tipoUsuario === 'natural') return calcularSimulacionNatural();
-  const montoEl = document.getElementById('simMonto');
-  const plazoEl = document.getElementById('simPlazo');
-  if (!montoEl || !plazoEl) return;
-  const monto = parseFloat(montoEl.value);
-  const plazo = parseInt(plazoEl.value);
-  document.getElementById('lblMonto').textContent = formatearDinero(monto);
-  const tasaAnual = 0.18;
-  const tasaPeriodo = (tasaAnual * plazo) / 365;
-  const interes = monto * tasaPeriodo;
-  const totalPagar = monto + interes;
-  const numCuotas = plazo / 30;
-  const cuotaMensual = totalPagar / numCuotas;
-  document.getElementById('lblCuota').textContent = formatearDinero(cuotaMensual);
-  const semaforoMsg = document.getElementById('semaforoMsg');
-  if (cuotaMensual > 500000) {
-    semaforoMsg.className = 'alert alert-error';
-    semaforoMsg.textContent = '🔴 Cuota muy alta.';
-  } else if (cuotaMensual > 200000) {
-    semaforoMsg.className = 'alert alert-warning';
-    semaforoMsg.textContent = '🟡 Cuota moderada.';
-  } else {
-    semaforoMsg.className = 'alert alert-success';
-    semaforoMsg.textContent = '🟢 Cuota saludable.';
-  }
+  return calcularSimulacionEmprendedor();
 }
 
 // ============ CDT (Para Persona Natural) ============
@@ -637,8 +580,7 @@ async function renderFlowPay(vista = 'cuentas') {
   const { data: perfil } = await supabaseClient.from('profiles').select('es_admin').eq('id', userIdActual).single();
   const esAdmin = perfil && perfil.es_admin === true;
 
-  const { data: usuarios } = await supabaseClient.from('usuarios_registrados').select('*');
-  const otros = (usuarios || []).filter(u => u.user_id !== userIdActual);
+  const contactos = obtenerContactos();
 
   const { data: transferencias } = await supabaseClient
     .from('transferencias').select('*')
@@ -666,29 +608,27 @@ async function renderFlowPay(vista = 'cuentas') {
     ${vista === 'cuentas' ? `<div class="app-tabs">
       <button class="app-tab active" data-tab="recargar">Recargar</button>
       <button class="app-tab" data-tab="retirar">Retirar con codigo</button>
+      <button class="app-tab" data-tab="contactos">Contactos</button>
       <button class="app-tab" data-tab="historial">Historial</button>
     </div>` : ''}
 
     <div class="app-tab-content${vista === 'enviar' ? ' active' : ''}" id="tab-enviar">
       <div class="app-section">
         <div class="app-section-title">Nueva transferencia</div>
-        ${otros.slice(0, 4).length > 0 ? `
-          <label class="app-form-label">Contactos frecuentes</label>
+        ${contactos.length > 0 ? `
+          <label class="app-form-label">Mis contactos</label>
           <div class="contactos-grid">
-            ${otros.slice(0, 4).map(c => `
-              <div class="contacto-item" onclick="document.getElementById('payReceptor').value='${c.email}'">
-                <div class="contacto-avatar">${c.email.charAt(0).toUpperCase()}</div>
-                <div class="contacto-nombre">${c.email.split('@')[0]}</div>
+            ${contactos.map(c => `
+              <div class="contacto-item" data-email="${escapeHtml(c.email)}" onclick="usarContacto(this)">
+                <div class="contacto-avatar">${escapeHtml(c.nombre.charAt(0).toUpperCase())}</div>
+                <div class="contacto-nombre">${escapeHtml(c.nombre)}</div>
               </div>
             `).join('')}
           </div>
         ` : ''}
         <div class="app-form-group">
-          <label class="app-form-label">Destinatario (Correo)</label>
-          <select class="app-form-select" id="payReceptor">
-            <option value="">Selecciona o escribe abajo</option>
-            ${otros.map(u => '<option value="' + u.email + '">' + u.email + '</option>').join('')}
-          </select>
+          <label class="app-form-label">Destinatario (correo de la cuenta)</label>
+          <input class="app-form-input" type="email" id="payReceptor" placeholder="correo@ejemplo.com" autocomplete="off">
         </div>
         <div class="app-form-group">
           <label class="app-form-label">Monto (COP)</label>
@@ -710,6 +650,36 @@ async function renderFlowPay(vista = 'cuentas') {
           <input class="app-form-input" type="number" id="recargarMonto" min="10000" value="100000">
         </div>
         <button class="btn-primary btn-large" onclick="recargarSaldo()">Recargar</button>
+      </div>
+    </div>
+
+    <div class="app-tab-content" id="tab-contactos">
+      <div class="app-section">
+        <div class="app-section-title">Guardar contacto</div>
+        <div class="app-form-group">
+          <label class="app-form-label">Nombre</label>
+          <input class="app-form-input" type="text" id="contactoNombre" maxlength="40" placeholder="Mamá, Juan, Mi socio...">
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Correo de su cuenta FINNEX</label>
+          <input class="app-form-input" type="email" id="contactoEmail" placeholder="correo@ejemplo.com" autocomplete="off">
+        </div>
+        <button class="btn-primary btn-large" onclick="guardarContacto()">Guardar contacto</button>
+      </div>
+      <div class="app-section">
+        <div class="app-section-title">Mis contactos</div>
+        ${contactos.length > 0 ? contactos.map(c => `
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="contacto-avatar">${escapeHtml(c.nombre.charAt(0).toUpperCase())}</div>
+              <div><div style="font-weight:700; color:var(--dark);">${escapeHtml(c.nombre)}</div><div style="font-size:13px; color:var(--text-light);">${escapeHtml(c.email)}</div></div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-primary" data-email="${escapeHtml(c.email)}" onclick="enviarAContacto(this)">Enviar dinero</button>
+              <button class="btn-secondary-sm" data-email="${escapeHtml(c.email)}" onclick="eliminarContacto(this)" aria-label="Eliminar contacto">🗑️</button>
+            </div>
+          </div>
+        `).join('') : '<p style="color:var(--text-light);">Aún no tienes contactos guardados.</p>'}
       </div>
     </div>
 
@@ -814,30 +784,106 @@ function activarTabs() {
   });
 }
 
+// ---- Contactos guardados (por usuario, en este navegador) ----
+
+function claveContactos() {
+  return 'finnex_contactos_' + (localStorage.getItem('user_id') || '');
+}
+
+function obtenerContactos() {
+  try {
+    const lista = JSON.parse(localStorage.getItem(claveContactos()) || '[]');
+    return Array.isArray(lista) ? lista.filter(c => c && c.nombre && c.email) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function guardarListaContactos(lista) {
+  localStorage.setItem(claveContactos(), JSON.stringify(lista));
+}
+
+// Busca a una persona registrada por su correo. Devuelve { persona, error }
+async function buscarPersonaPorCorreo(email) {
+  const { data, error } = await supabaseClient
+    .from('usuarios_registrados').select('user_id, email').eq('email', email).maybeSingle();
+  return { persona: data || null, error: error || null };
+}
+
+async function guardarContacto() {
+  const nombre = document.getElementById('contactoNombre').value.trim();
+  const email = document.getElementById('contactoEmail').value.trim().toLowerCase();
+
+  if (!nombre || !email) { if (window.toast) toast.error('Campos incompletos', 'Escribe el nombre y el correo'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { if (window.toast) toast.error('Correo inválido', 'Revisa que el correo esté bien escrito'); return; }
+  if (email === (localStorage.getItem('user_email') || '').toLowerCase()) { if (window.toast) toast.error('Contacto inválido', 'Ese es tu propio correo'); return; }
+
+  const lista = obtenerContactos();
+  if (lista.some(c => c.email === email)) { if (window.toast) toast.warning('Ya existe', 'Ese contacto ya está guardado'); return; }
+
+  const { persona, error } = await buscarPersonaPorCorreo(email);
+  if (error) { if (window.toast) toast.error('Error', error.message); return; }
+  if (!persona) { if (window.toast) toast.error('Persona no encontrada', 'No hay ninguna cuenta registrada con ese correo'); return; }
+
+  lista.push({ nombre, email });
+  guardarListaContactos(lista);
+  if (window.toast) toast.success('Contacto guardado', nombre);
+  await renderFlowPay('cuentas');
+  const tab = document.querySelector('.app-tab[data-tab="contactos"]');
+  if (tab) tab.click();
+}
+
+function eliminarContacto(btn) {
+  const email = btn.getAttribute('data-email');
+  if (!confirm('¿Eliminar este contacto?')) return;
+  guardarListaContactos(obtenerContactos().filter(c => c.email !== email));
+  if (window.toast) toast.success('Contacto eliminado', 'Se quitó de tu lista');
+  renderFlowPay('cuentas').then(() => {
+    const tab = document.querySelector('.app-tab[data-tab="contactos"]');
+    if (tab) tab.click();
+  });
+}
+
+// Click en un contacto dentro de Transferencias: llena el correo
+function usarContacto(el) {
+  const input = document.getElementById('payReceptor');
+  if (input) { input.value = el.getAttribute('data-email'); document.getElementById('payMonto').focus(); }
+}
+
+// Botón "Enviar dinero" dentro de la lista de contactos
+async function enviarAContacto(btn) {
+  const email = btn.getAttribute('data-email');
+  await navegarA('transferencias');
+  const input = document.getElementById('payReceptor');
+  if (input) { input.value = email; document.getElementById('payMonto').focus(); }
+}
+
 async function enviarDinero() {
-  const receptor = document.getElementById('payReceptor').value;
+  const receptor = document.getElementById('payReceptor').value.trim().toLowerCase();
   const monto = parseFloat(document.getElementById('payMonto').value);
   const concepto = document.getElementById('payConcepto').value || 'Sin concepto';
 
   if (!receptor || !monto || monto <= 0) { if (window.toast) toast.error('Campos incompletos', 'Completa todos los campos'); return; }
 
-  // Validación del tope por transacción (Trámites > Cambiar topes)
-  const topes = obtenerTopes();
-  if (monto > topes.porTransaccion) {
-    if (window.toast) toast.error('Supera tu tope', 'Tu límite por transacción es ' + formatearDinero(topes.porTransaccion));
+  if (receptor === (localStorage.getItem('user_email') || '').toLowerCase()) {
+    if (window.toast) toast.error('Destinatario inválido', 'No puedes enviarte dinero a ti mismo');
     return;
   }
+
+  // La cuenta del destinatario debe existir antes de mover el dinero
+  const { persona: receptorInfo, error: errBusqueda } = await buscarPersonaPorCorreo(receptor);
+  if (errBusqueda) { if (window.toast) toast.error('Error', errBusqueda.message); return; }
+  if (!receptorInfo) { if (window.toast) toast.error('Persona no encontrada', 'No hay ninguna cuenta registrada con ese correo'); return; }
 
   if (window.toast) toast.info('Procesando...', 'Enviando transferencia');
 
   const { data, error } = await supabaseClient.rpc('transferir_dinero', {
-    p_receptor_email: receptor.toLowerCase(), p_monto: monto, p_concepto: concepto,
+    p_receptor_email: receptor, p_monto: monto, p_concepto: concepto,
   });
 
   if (error) { if (window.toast) toast.error('Error', error.message); return; }
 
   if (data && data.success) {
-    const { data: receptorInfo } = await supabaseClient.from('usuarios_registrados').select('user_id').eq('email', receptor.toLowerCase()).single();
     if (receptorInfo) await crearNotificacion(receptorInfo.user_id, '💸 Dinero recibido', 'Recibiste ' + formatearDinero(monto) + ' de ' + localStorage.getItem('user_email'), 'success');
     await crearNotificacion(localStorage.getItem('user_id'), '✅ Transferencia enviada', 'Enviaste ' + formatearDinero(monto) + ' a ' + receptor, 'success');
     if (window.toast) toast.success('Transferencia exitosa', 'Enviaste ' + formatearDinero(monto) + ' a ' + receptor);
@@ -1704,7 +1750,7 @@ const POLITICA_NATURAL = {
 };
 
 // Contexto interno del cliente (se carga en renderCreditos)
-let creditoNaturalCtx = { verificado: false, obligacionesInternas: 0, creditosPagados: 0 };
+let creditoCtx = { verificado: false, obligacionesInternas: 0, creditosPagados: 0 };
 
 function formatearPesos(valor) {
   return '$' + Math.round(Number(valor) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -1861,9 +1907,9 @@ function leerFormularioNatural() {
   return {
     ingresos: num('credIngresos'),
     obligacionesDeclaradas: num('credObligaciones'),
-    obligacionesInternas: creditoNaturalCtx.obligacionesInternas,
-    creditosPagados: creditoNaturalCtx.creditosPagados,
-    verificado: creditoNaturalCtx.verificado,
+    obligacionesInternas: creditoCtx.obligacionesInternas,
+    creditosPagados: creditoCtx.creditosPagados,
+    verificado: creditoCtx.verificado,
     vinculacion: el('credVinculacion').value,
     antiguedadMeses: num('credAntiguedad'),
     historial: el('credHistorialNat').value,
@@ -1896,7 +1942,7 @@ function previsualizarCreditoNatural() {
   if (ev.motivos.length > 0) {
     html += '<ul style="margin:0 0 8px 18px;font-size:13px;">' + ev.motivos.map(m => '<li>' + m + '</li>').join('') + '</ul>';
   }
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:10px;margin-top:8px;">' +
+  html += lineaObligaciones(ev) + '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:10px;margin-top:8px;">' +
     celda('Cuota mensual (incluye seguro)', formatearPesos(cuotaMostrada)) +
     celda('Tasa', ev.tasaEA.toFixed(2).replace('.', ',') + '% E.A. (' + (ev.tasaMensual * 100).toFixed(2).replace('.', ',') + '% mensual)') +
     celda('Plazo', ev.plazoMeses + ' cuotas mensuales') +
@@ -1923,6 +1969,12 @@ async function solicitarCreditoNatural() {
   await new Promise(r => setTimeout(r, 1200));
 
   const ev = evaluarCreditoNatural(p);
+  return procesarResultadoCredito(p, ev, tipo, previsualizarCreditoNatural, 'preapNatural');
+}
+
+// Rechazo, contraoferta o aprobación con desembolso. Lo usan personas naturales y emprendedores.
+async function procesarResultadoCredito(p, ev, tipo, repintar, idPanel) {
+  const userId = localStorage.getItem('user_id');
   const plazoDias = p.plazoMeses * 30;
 
   // --- Rechazo: se registra la solicitud y se explica el motivo ---
@@ -1934,8 +1986,8 @@ async function solicitarCreditoNatural() {
     });
     if (errRech) console.error('No se pudo registrar la solicitud rechazada:', errRech.message);
     await crearNotificacion(userId, '❌ Solicitud de crédito no aprobada', ev.motivos[0] || 'No cumples la política de crédito.', 'warning');
-    previsualizarCreditoNatural();
-    const box = document.getElementById('preapNatural');
+    repintar();
+    const box = document.getElementById(idPanel);
     if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     if (window.toast) toast.error('Solicitud no aprobada', ev.motivos[0] || 'No cumples la política de crédito');
     return;
@@ -2003,6 +2055,337 @@ async function solicitarCreditoNatural() {
   reproducirSonido();
   if (window.toast) toast.success('¡Crédito Aprobado!', 'El dinero ya está en tu cuenta');
   navegarA('dashboard');
+}
+
+// Muestra cuánto pesan las deudas actuales en la evaluación (así se entiende por qué se aprueba o se rechaza)
+function lineaObligaciones(ev) {
+  if (!ev.obligaciones) return '';
+  const internas = creditoCtx.obligacionesInternas || 0;
+  return '<div style="font-size:13px;margin:6px 0;">Cuotas mensuales que ya tienes: <b>' + formatearPesos(ev.obligaciones) + '</b>' +
+    (internas > 0 ? ' (incluye ' + formatearPesos(internas) + ' de tus créditos activos en FINNEX)' : '') + '.</div>';
+}
+
+// ============ POLÍTICA DE CRÉDITO - EMPRENDEDORES (FAMILIA NEXAR) ============
+// Misma lógica de evaluación que personas naturales, adaptada a cada producto:
+//  1. Reglas de exclusión: identidad verificada (KYC), ingreso mínimo, antigüedad del negocio, mora vigente,
+//     monto y plazo permitidos para el producto elegido.
+//  2. Score de riesgo (0-1000) -> categoría A/B/C -> tasa E.A. del producto.
+//  3. Capacidad de pago: (cuotas actuales + cuota nueva) <= límite del producto sobre los ingresos del negocio.
+//  4. Cuota fija (sistema francés) + seguro. Si pide más de lo que puede pagar -> contraoferta.
+// Los montos, plazos, tasas y límites son parámetros de referencia del portafolio FINNEX: ajústalos aquí.
+const POLITICA_EMPRENDEDOR = {
+  INGRESO_MINIMO_SMMLV: 1,
+  SEGURO_VIDA_MENSUAL: 0.0005,
+  SCORE_MINIMO: 500,
+  CATEGORIAS: [
+    { nombre: 'A', scoreMin: 800 },
+    { nombre: 'B', scoreMin: 650 },
+    { nombre: 'C', scoreMin: 500 }
+  ],
+  PRODUCTOS: {
+    'Microcrédito Productivo': {
+      desc: 'Para insumos, herramientas, adecuación del local o inventario.',
+      montoMin: 300000, montoMax: 10000000, plazos: [3, 6, 12, 18, 24],
+      antiguedadMin: 6, limite: 0.35, tasas: { A: 28, B: 36, C: 44 }
+    },
+    'Crédito Pequeños Negocios': {
+      desc: 'Capital de trabajo para hacer crecer tu negocio.',
+      montoMin: 2000000, montoMax: 50000000, plazos: [6, 12, 24, 36, 48],
+      antiguedadMin: 12, limite: 0.35, tasas: { A: 24, B: 27, C: 30 }
+    },
+    'Leasing Productivo': {
+      desc: 'Usa equipos, herramientas o maquinaria sin comprarlos de inmediato.',
+      montoMin: 3000000, montoMax: 60000000, plazos: [12, 24, 36, 48, 60],
+      antiguedadMin: 12, limite: 0.40, tasas: { A: 18.57, B: 23, C: 28 }
+    },
+    'Factoring Digital': {
+      desc: 'Liquidez inmediata por tus facturas por cobrar (30, 60 o 90 días).',
+      montoMin: 3000000, montoMax: 30000000, plazos: [1, 2, 3],
+      antiguedadMin: 6, limite: 0.80, tasas: { A: 22, B: 23, C: 24 }
+    }
+  }
+};
+
+function productoEmprendedor(nombre) {
+  return POLITICA_EMPRENDEDOR.PRODUCTOS[nombre] || null;
+}
+
+// Score de riesgo del negocio (0-1000). El monto pedido se evalúa aparte, en la capacidad de pago.
+function calcularScoreEmprendedor(p) {
+  const P = POLITICA_NATURAL; // el SMMLV vive en la política de naturales
+
+  // 1. Historial crediticio (máx. 400). Se toma lo mejor entre lo declarado y lo que FINNEX ya conoce.
+  const declarados = { 'Sin historial': 0, '1 credito pagado': 1, '2-3 creditos pagados': 2, 'Mas de 3 creditos': 4 }[p.historial] || 0;
+  const pagados = Math.max(declarados, p.creditosPagados || 0);
+  let historial;
+  if (p.historial === 'Mora vigente') historial = 0;
+  else if (p.historial === 'Mora ocasional resuelta') historial = 120;
+  else historial = pagados >= 4 ? 400 : pagados >= 2 ? 360 : pagados >= 1 ? 300 : 220;
+
+  // 2. Antigüedad del negocio (máx. 250)
+  const m = p.mesesNegocio;
+  const antiguedad = m >= 36 ? 250 : m >= 24 ? 210 : m >= 12 ? 160 : m >= 6 ? 100 : 40;
+
+  // 3. Nivel de ingresos del negocio en SMMLV (máx. 150)
+  const smmlvs = p.ingresos / P.SMMLV;
+  const ingresos = smmlvs >= 6 ? 150 : smmlvs >= 4 ? 120 : smmlvs >= 2 ? 80 : smmlvs >= 1 ? 40 : 0;
+
+  // 4. Endeudamiento actual, antes del nuevo crédito (máx. 200)
+  const ratio = p.ingresos > 0 ? p.obligaciones / p.ingresos : 1;
+  const endeudamiento = ratio <= 0.10 ? 200 : ratio <= 0.20 ? 160 : ratio <= 0.30 ? 100 : ratio <= 0.40 ? 40 : 0;
+
+  return { score: historial + antiguedad + ingresos + endeudamiento };
+}
+
+// Evaluación completa (función pura: no toca la base de datos ni el DOM). Devuelve la misma forma que evaluarCreditoNatural.
+function evaluarCreditoEmprendedor(p) {
+  const P = POLITICA_EMPRENDEDOR;
+  const SMMLV = POLITICA_NATURAL.SMMLV;
+  const prod = productoEmprendedor(p.producto);
+  const motivos = [];
+  const obligaciones = (p.obligacionesDeclaradas || 0) + (p.obligacionesInternas || 0);
+  const n = p.plazoMeses;
+
+  const r = {
+    decision: 'RECHAZADO', contraoferta: false, motivos: motivos,
+    score: 0, categoria: null, tasaEA: 0, tasaMensual: 0, plazoMeses: n,
+    monto_aprobado: 0, montoMaximo: 0, cuotaMaxima: 0,
+    cuotaPedida: 0, cuotaBase: 0, seguro: 0, cuotaTotal: 0, totalPagar: 0, totalIntereses: 0,
+    endeudamientoPost: null, obligaciones: obligaciones, limite: prod ? prod.limite : 0
+  };
+  if (!prod) { motivos.push('Selecciona un producto válido.'); return r; }
+
+  // --- Reglas de exclusión ---
+  if (!p.verificado) motivos.push('Debes verificar tu identidad (KYC) en el menú Verificación antes de solicitar un crédito.');
+  if (p.ingresos < P.INGRESO_MINIMO_SMMLV * SMMLV) {
+    motivos.push('Los ingresos mensuales de tu negocio deben ser de al menos ' + P.INGRESO_MINIMO_SMMLV + ' SMMLV (' + formatearPesos(P.INGRESO_MINIMO_SMMLV * SMMLV) + ').');
+  }
+  if (p.mesesNegocio < prod.antiguedadMin) {
+    motivos.push('Para ' + p.producto + ' tu negocio debe tener al menos ' + prod.antiguedadMin + ' meses de funcionamiento.');
+  }
+  if (p.historial === 'Mora vigente') motivos.push('Tienes obligaciones en mora. Ponte al día para poder aplicar.');
+  if (p.monto < prod.montoMin) motivos.push('El monto mínimo para ' + p.producto + ' es ' + formatearPesos(prod.montoMin) + '.');
+  if (p.monto > prod.montoMax) motivos.push('El monto máximo para ' + p.producto + ' es ' + formatearPesos(prod.montoMax) + '.');
+  if (prod.plazos.indexOf(n) === -1) motivos.push('El plazo para ' + p.producto + ' debe ser de ' + prod.plazos.join(', ') + ' meses.');
+
+  // --- Score y categoría ---
+  const sc = calcularScoreEmprendedor({ ingresos: p.ingresos, obligaciones: obligaciones, historial: p.historial, mesesNegocio: p.mesesNegocio, creditosPagados: p.creditosPagados });
+  r.score = sc.score;
+  const cat = P.CATEGORIAS.find(c => sc.score >= c.scoreMin) || null;
+  if (!cat) motivos.push('Tu perfil de riesgo (score ' + sc.score + ') no alcanza el mínimo de ' + P.SCORE_MINIMO + ' puntos.');
+  const catRef = cat || P.CATEGORIAS[P.CATEGORIAS.length - 1];
+  r.categoria = cat ? cat.nombre : null;
+  r.tasaEA = prod.tasas[catRef.nombre];
+  r.tasaMensual = tasaMensualDesdeEA(r.tasaEA);
+
+  // --- Capacidad de pago ---
+  const factorCuota = cuotaFrancesa(1, r.tasaMensual, n) + P.SEGURO_VIDA_MENSUAL; // cuota total por cada peso prestado
+  r.cuotaPedida = Math.round(p.monto * factorCuota);
+  const cuotaMaxima = Math.max(0, p.ingresos * prod.limite - obligaciones);
+  r.cuotaMaxima = Math.round(cuotaMaxima);
+  r.montoMaximo = factorCuota > 0 ? Math.max(0, Math.min(prod.montoMax, Math.floor(cuotaMaxima / factorCuota / 10000) * 10000)) : 0;
+  r.endeudamientoPost = p.ingresos > 0 ? (obligaciones + r.cuotaPedida) / p.ingresos : null;
+
+  if (motivos.length === 0) {
+    if (p.monto <= r.montoMaximo) {
+      r.monto_aprobado = p.monto;
+    } else if (r.montoMaximo >= prod.montoMin) {
+      r.monto_aprobado = r.montoMaximo;
+      r.contraoferta = true;
+    } else {
+      motivos.push('Los ingresos de tu negocio no alcanzan para asumir una nueva cuota: tus obligaciones ya usan ' + Math.round((obligaciones / p.ingresos) * 100) + '% de tus ingresos y el límite para este producto es ' + Math.round(prod.limite * 100) + '%.');
+    }
+  }
+  if (motivos.length > 0) return r;
+
+  // --- Condiciones finales del crédito aprobado ---
+  const monto = r.monto_aprobado;
+  r.cuotaBase = Math.round(monto * cuotaFrancesa(1, r.tasaMensual, n));
+  r.seguro = Math.round(monto * P.SEGURO_VIDA_MENSUAL);
+  r.cuotaTotal = r.cuotaBase + r.seguro;
+  r.totalPagar = r.cuotaTotal * n;
+  r.totalIntereses = Math.max(0, r.cuotaBase * n - monto);
+  r.endeudamientoPost = (obligaciones + r.cuotaTotal) / p.ingresos;
+  r.decision = 'APROBADO';
+  return r;
+}
+
+function leerFormularioEmprendedor() {
+  const el = id => document.getElementById(id);
+  if (!el('credMonto') || !el('credMeses')) return null;
+  const num = id => parseFloat(el(id).value) || 0;
+  return {
+    producto: el('credTipo').value,
+    ingresos: num('credIngresos'),
+    obligacionesDeclaradas: num('credObligaciones'),
+    obligacionesInternas: creditoCtx.obligacionesInternas,
+    creditosPagados: creditoCtx.creditosPagados,
+    verificado: creditoCtx.verificado,
+    mesesNegocio: num('credMeses'),
+    historial: el('credHistorial').value,
+    monto: num('credMonto'),
+    plazoMeses: parseInt(el('credPlazo').value) || 0
+  };
+}
+
+// Al cambiar de producto: actualiza los plazos permitidos, el texto de ayuda y la preaprobación
+function actualizarPlazosEmprendedor() {
+  const selProd = document.getElementById('credTipo');
+  const selPlazo = document.getElementById('credPlazo');
+  if (!selProd || !selPlazo) return;
+  const prod = productoEmprendedor(selProd.value);
+  if (!prod) return;
+  const actual = parseInt(selPlazo.value);
+  const elegido = prod.plazos.indexOf(actual) !== -1 ? actual : prod.plazos[Math.floor(prod.plazos.length / 2)];
+  selPlazo.innerHTML = prod.plazos.map(m => '<option value="' + m + '"' + (m === elegido ? ' selected' : '') + '>' + m + (m === 1 ? ' mes' : ' meses') + '</option>').join('');
+  const info = document.getElementById('credProdInfo');
+  if (info) info.textContent = prod.desc + ' Monto de ' + formatearPesos(prod.montoMin) + ' a ' + formatearPesos(prod.montoMax) + '. Negocio con al menos ' + prod.antiguedadMin + ' meses.';
+  previsualizarCreditoEmprendedor();
+}
+
+function previsualizarCreditoEmprendedor() {
+  const box = document.getElementById('preapEmprendedor');
+  const p = leerFormularioEmprendedor();
+  if (!box || !p) return;
+  const ev = evaluarCreditoEmprendedor(p);
+
+  let clase, titulo;
+  if (ev.decision === 'APROBADO' && !ev.contraoferta) {
+    clase = 'alert-success'; titulo = '🟢 Preaprobado: la cuota cabe en las finanzas de tu negocio';
+  } else if (ev.decision === 'APROBADO') {
+    clase = 'alert-warning'; titulo = '🟡 Podemos aprobarte hasta ' + formatearPesos(ev.montoMaximo) + ' con la capacidad de pago de tu negocio';
+  } else {
+    clase = 'alert-error'; titulo = '🔴 Con estos datos no podríamos aprobar el crédito';
+  }
+
+  const cuotaMostrada = ev.decision === 'APROBADO' ? ev.cuotaTotal : ev.cuotaPedida;
+  const celda = (label, valor) => '<div><div style="font-size:12px;color:var(--text-light);">' + label + '</div><div style="font-weight:700;color:var(--text);">' + valor + '</div></div>';
+
+  let html = '<div class="alert ' + clase + '" style="display:block;"><div style="font-weight:700;margin-bottom:8px;">' + titulo + '</div>';
+  if (ev.motivos.length > 0) {
+    html += '<ul style="margin:0 0 8px 18px;font-size:13px;">' + ev.motivos.map(m => '<li>' + m + '</li>').join('') + '</ul>';
+  }
+  if (ev.tasaEA) {
+    html += lineaObligaciones(ev) + '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:10px;margin-top:8px;">' +
+      celda('Cuota mensual (incluye seguro)', formatearPesos(cuotaMostrada)) +
+      celda('Tasa', ev.tasaEA.toFixed(2).replace('.', ',') + '% E.A. (' + (ev.tasaMensual * 100).toFixed(2).replace('.', ',') + '% mensual)') +
+      celda('Plazo', ev.plazoMeses + (ev.plazoMeses === 1 ? ' cuota mensual' : ' cuotas mensuales')) +
+      celda('Total a pagar', ev.decision === 'APROBADO' ? formatearPesos(ev.totalPagar) : formatearPesos(ev.cuotaPedida * ev.plazoMeses)) +
+      celda('Endeudamiento con este crédito', ev.endeudamientoPost === null ? '-' : Math.round(ev.endeudamientoPost * 100) + '% (límite ' + Math.round(ev.limite * 100) + '%)') +
+      celda('Categoría de riesgo / Score', (ev.categoria || 'No aplica') + ' / ' + ev.score) +
+      '</div>';
+  }
+  html += '<div style="font-size:11px;color:var(--text-light);margin-top:10px;">Tasas y montos de referencia: la tasa depende de tu categoría de riesgo y las condiciones definitivas se informan antes de aceptar. El seguro de vida deudores (' + (POLITICA_EMPRENDEDOR.SEGURO_VIDA_MENSUAL * 100).toFixed(2).replace('.', ',') + '% mensual) está incluido en la cuota.</div></div>';
+  box.innerHTML = html;
+}
+
+async function solicitarCreditoEmprendedor() {
+  const p = leerFormularioEmprendedor();
+  if (!p) return;
+
+  if (!document.getElementById('credAutorizacion').checked) {
+    if (window.toast) toast.error('Falta autorización', 'Debes autorizar la consulta en centrales de riesgo y el tratamiento de datos');
+    return;
+  }
+
+  if (window.toast) toast.info('Analizando...', 'Evaluando tu negocio y su capacidad de pago');
+  await new Promise(r => setTimeout(r, 1200));
+
+  const ev = evaluarCreditoEmprendedor(p);
+  return procesarResultadoCredito(p, ev, p.producto, previsualizarCreditoEmprendedor, 'preapEmprendedor');
+}
+
+// ---- Simulador para emprendedores (mismo motor: cuota y tasa coherentes con el crédito real) ----
+function renderSimuladorEmprendedor() {
+  const nombres = Object.keys(POLITICA_EMPRENDEDOR.PRODUCTOS);
+  const html = `
+    <div class="app-section">
+      <div class="app-section-title">Simulador de Crédito Familia NEXAR</div>
+      <div class="app-form-group">
+        <label class="app-form-label">Producto</label>
+        <select class="app-form-select" id="simProducto" onchange="ajustarSimuladorEmprendedor()">
+          ${nombres.map(n => '<option value="' + n + '">' + n + '</option>').join('')}
+        </select>
+      </div>
+      <div class="slider-container">
+        <label class="app-form-label">Monto a solicitar: <span id="lblMonto" style="color:var(--primary); font-size:18px;"></span></label>
+        <input type="range" class="slider" id="simMonto" oninput="calcularSimulacion()">
+      </div>
+      <div class="app-form-group">
+        <label class="app-form-label">Plazo (meses)</label>
+        <select class="app-form-select" id="simPlazo" onchange="calcularSimulacion()"></select>
+      </div>
+      <div class="app-form-group">
+        <label class="app-form-label">Ingresos mensuales de tu negocio (COP)</label>
+        <input class="app-form-input" type="number" id="simIngresos" value="4000000" oninput="calcularSimulacion()">
+      </div>
+    </div>
+    <div class="dash-grid-2col">
+      <div class="widget-metric">
+        <div class="widget-icon blue">💵</div>
+        <div class="widget-info"><div class="label">Cuota mensual estimada</div><div class="value" id="lblCuota">$0</div></div>
+      </div>
+      <div class="widget-metric">
+        <div class="widget-icon green">📈</div>
+        <div class="widget-info"><div class="label">Tasa de referencia</div><div class="value" id="lblTasa">-</div></div>
+      </div>
+    </div>
+    <div class="app-section" id="semaforoBox">
+      <div class="app-section-title">Capacidad de pago</div>
+      <div id="semaforoMsg" class="alert alert-success">🟢 Cuota saludable</div>
+      <div style="font-size:12px;color:var(--text-light);margin-top:10px;">Valores de referencia (categoría B). La tasa final depende de tu perfil y la aprobación depende del estudio de capacidad de pago. La cuota incluye seguro de vida deudores.</div>
+    </div>
+    <button class="btn-primary btn-large" onclick="navegarA('creditos')">Ir a solicitar crédito</button>
+  `;
+  document.getElementById('pageContent').innerHTML = html;
+  ajustarSimuladorEmprendedor();
+}
+
+function ajustarSimuladorEmprendedor() {
+  const prod = productoEmprendedor(document.getElementById('simProducto').value);
+  if (!prod) return;
+  const slider = document.getElementById('simMonto');
+  slider.min = prod.montoMin;
+  slider.max = prod.montoMax;
+  slider.step = prod.montoMin <= 500000 ? 100000 : 500000;
+  slider.value = Math.min(prod.montoMax, prod.montoMin * 3);
+  const mid = prod.plazos[Math.floor(prod.plazos.length / 2)];
+  document.getElementById('simPlazo').innerHTML = prod.plazos.map(m => '<option value="' + m + '"' + (m === mid ? ' selected' : '') + '>' + m + (m === 1 ? ' mes' : ' meses') + '</option>').join('');
+  calcularSimulacionEmprendedor();
+}
+
+function calcularSimulacionEmprendedor() {
+  const P = POLITICA_EMPRENDEDOR;
+  const prodEl = document.getElementById('simProducto');
+  const montoEl = document.getElementById('simMonto');
+  const plazoEl = document.getElementById('simPlazo');
+  const ingresosEl = document.getElementById('simIngresos');
+  if (!prodEl || !montoEl || !plazoEl || !ingresosEl) return;
+  const prod = productoEmprendedor(prodEl.value);
+  if (!prod) return;
+  const monto = parseFloat(montoEl.value);
+  const meses = parseInt(plazoEl.value) || prod.plazos[0];
+  const ingresos = parseFloat(ingresosEl.value) || 0;
+  document.getElementById('lblMonto').textContent = formatearPesos(monto);
+
+  const tasaEA = prod.tasas.B;
+  const cuota = Math.round(monto * (cuotaFrancesa(1, tasaMensualDesdeEA(tasaEA), meses) + P.SEGURO_VIDA_MENSUAL));
+  document.getElementById('lblCuota').textContent = formatearPesos(cuota);
+  document.getElementById('lblTasa').textContent = tasaEA.toFixed(2).replace('.', ',') + '% E.A.';
+
+  const semaforoMsg = document.getElementById('semaforoMsg');
+  const ratio = ingresos > 0 ? cuota / ingresos : 1;
+  const limite = Math.round(prod.limite * 100);
+  if (ratio > prod.limite) {
+    semaforoMsg.className = 'alert alert-error';
+    semaforoMsg.textContent = '🔴 La cuota (' + Math.round(ratio * 100) + '% de los ingresos de tu negocio) supera el límite de ' + limite + '% para este producto.';
+  } else if (ratio > prod.limite * 0.7) {
+    semaforoMsg.className = 'alert alert-warning';
+    semaforoMsg.textContent = '🟡 Cuota exigente (' + Math.round(ratio * 100) + '% de los ingresos de tu negocio).';
+  } else {
+    semaforoMsg.className = 'alert alert-success';
+    semaforoMsg.textContent = '🟢 Cuota saludable (' + Math.round(ratio * 100) + '% de los ingresos de tu negocio).';
+  }
 }
 
 // ---- Simulador para personas naturales (usa el mismo motor: cuota y tasa coherentes con el crédito real) ----
@@ -2094,9 +2477,9 @@ async function renderCreditos() {
   // LÓGICA DUAL: FORMULARIO DIFERENTE PARA NATURAL Y EMPRENDEDOR
   // =========================================================
   // Contexto interno del cliente natural (KYC + obligaciones y pagos con NexusPay) para el motor de evaluación
-  if (tipoUsuario === 'natural') {
+  {
     const { data: perfilKyc } = await supabaseClient.from('profiles').select('verificado').eq('id', userId).single();
-    creditoNaturalCtx = {
+    creditoCtx = {
       verificado: !!(perfilKyc && perfilKyc.verificado),
       obligacionesInternas: (creditos || []).filter(c => c.estado === 'activo').reduce((a, c) => a + Number(c.valor_cuota || 0), 0),
       creditosPagados: (creditos || []).filter(c => c.estado === 'pagado').length
@@ -2160,30 +2543,50 @@ async function renderCreditos() {
       </div>
     `;
   } else {
-    // Formulario para Emprendedores (Documento SENA)
+    // Formulario para Emprendedores (Familia NEXAR): el resultado depende de lo que se escribe aquí
     formularioHTML = `
       <div class="app-section">
         <div class="app-section-title">Familia NEXAR (Financiación Productiva)</div>
+        <p style="color:var(--text-light); font-size:14px; margin-bottom:16px;">Evaluamos tu negocio y su capacidad de pago: la tasa depende de tu categoría de riesgo y el monto que podemos aprobarte, de los ingresos que declares.</p>
         <div class="app-form-group">
           <label class="app-form-label">Producto</label>
-          <select class="app-form-select" id="credTipo">
+          <select class="app-form-select" id="credTipo" onchange="actualizarPlazosEmprendedor()">
             <option value="Microcrédito Productivo">Microcrédito Productivo</option>
             <option value="Crédito Pequeños Negocios">Crédito Pequeños Negocios</option>
             <option value="Leasing Productivo">Leasing Productivo (Equipos)</option>
             <option value="Factoring Digital">Factoring Digital</option>
           </select>
+          <div id="credProdInfo" style="font-size:12px;color:var(--text-light);margin-top:4px;"></div>
         </div>
-        <div class="app-form-group"><label class="app-form-label">Ingresos del negocio (COP)</label><input class="app-form-input" type="number" id="credIngresos" value="4000000"></div>
-        <div class="app-form-group"><label class="app-form-label">Meses con el negocio</label><input class="app-form-input" type="number" id="credMeses" value="12"></div>
-        <div class="app-form-group"><label class="app-form-label">Monto (COP)</label><input class="app-form-input" type="number" id="credMonto" value="2000000"></div>
+        <div class="app-form-group"><label class="app-form-label">Ingresos mensuales del negocio (COP)</label><input class="app-form-input" type="number" id="credIngresos" value="4000000" min="0" oninput="previsualizarCreditoEmprendedor()"></div>
+        <div class="app-form-group"><label class="app-form-label">Meses con el negocio</label><input class="app-form-input" type="number" id="credMeses" value="12" min="0" oninput="previsualizarCreditoEmprendedor()"></div>
         <div class="app-form-group">
-          <label class="app-form-label">Plazo (días)</label>
-          <select class="app-form-select" id="credPlazo">
-            <option value="30">30 dias</option><option value="60">60 dias</option><option value="90" selected>90 dias</option><option value="120">120 dias</option><option value="180">180 dias</option>
+          <label class="app-form-label">Otras obligaciones mensuales (cuotas de créditos, tarjetas, arriendo financiero)</label>
+          <input class="app-form-input" type="number" id="credObligaciones" value="0" min="0" oninput="previsualizarCreditoEmprendedor()">
+          <div style="font-size:12px;color:var(--text-light);margin-top:4px;">Las cuotas de tus créditos activos en FINNEX se suman automáticamente.</div>
+        </div>
+        <div class="app-form-group">
+          <label class="app-form-label">Historial crediticio (declarado)</label>
+          <select class="app-form-select" id="credHistorial" onchange="previsualizarCreditoEmprendedor()">
+            <option value="Sin historial">Sin historial</option>
+            <option value="1 credito pagado">1 crédito pagado</option>
+            <option value="2-3 creditos pagados">2-3 créditos pagados</option>
+            <option value="Mas de 3 creditos">Más de 3 créditos pagados</option>
+            <option value="Mora ocasional resuelta">Mora ocasional ya resuelta</option>
+            <option value="Mora vigente">Tengo obligaciones en mora</option>
           </select>
         </div>
-        <div class="app-form-group"><label class="app-form-label">Historial</label><select class="app-form-select" id="credHistorial"><option>Sin historial</option><option>1 credito pagado</option><option>2-3 creditos pagados</option><option>Mas de 3 creditos</option></select></div>
-        <button class="btn-primary btn-large" onclick="solicitarCredito()">Analizar con IA</button>
+        <div class="app-form-group"><label class="app-form-label">Monto (COP)</label><input class="app-form-input" type="number" id="credMonto" value="2000000" min="0" oninput="previsualizarCreditoEmprendedor()"></div>
+        <div class="app-form-group">
+          <label class="app-form-label">Plazo (meses)</label>
+          <select class="app-form-select" id="credPlazo" onchange="previsualizarCreditoEmprendedor()"></select>
+        </div>
+        <div id="preapEmprendedor" style="margin: 16px 0;"></div>
+        <label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; color:var(--text-light); margin-bottom:16px; cursor:pointer;">
+          <input type="checkbox" id="credAutorizacion" style="margin-top:3px;">
+          <span>Autorizo a FINNEX a consultar y reportar mi información en centrales de riesgo y a tratar mis datos personales conforme a la Ley 1266 de 2008 y la Ley 1581 de 2012.</span>
+        </label>
+        <button class="btn-primary btn-large" onclick="solicitarCredito()">Solicitar Crédito</button>
       </div>
     `;
   }
@@ -2225,6 +2628,7 @@ async function renderCreditos() {
   document.getElementById('pageContent').innerHTML = html;
   activarTabs();
   if (tipoUsuario === 'natural') previsualizarCreditoNatural();
+  else actualizarPlazosEmprendedor();
 }
 
 async function pagarCuota(creditoId, valorCuota) {
@@ -2249,77 +2653,9 @@ async function pagarCuota(creditoId, valorCuota) {
 }
 
 async function solicitarCredito() {
-  // Personas naturales: motor de evaluación bancario. Emprendedores: lógica Familia NEXAR (abajo).
+  // Personas naturales: política de crédito de consumo. Emprendedores: política Familia NEXAR por producto.
   if (tipoUsuario === 'natural') return solicitarCreditoNatural();
-
-  if (window.toast) toast.info('Analizando...', 'La IA esta revisando tu solicitud');
-
-  const monto = parseFloat(document.getElementById('credMonto').value) || 1000000;
-  const plazo = parseInt(document.getElementById('credPlazo').value) || 90;
-  const tipo = document.getElementById('credTipo').value;
-  const userId = localStorage.getItem('user_id');
-
-  await new Promise(r => setTimeout(r, 1500));
-
-  const tasaAnual = 15; // 15% E.A.
-  const numCuotas = Math.max(1, Math.floor(plazo / 30));
-  const tasaPeriodo = (tasaAnual / 100) * (plazo / 365); // Interés simple para el plazo
-
-  const totalIntereses = monto * tasaPeriodo;
-  const totalPagar = monto + totalIntereses;
-  const valorCuota = totalPagar / numCuotas;
-
-  // 1. Guardamos la solicitud
-  const { data: solicitud, error: errSol } = await supabaseClient.from('solicitudes').insert({
-    user_id: userId,
-    monto_solicitado: monto,
-    plazo_dias: plazo,
-    tipo_negocio: tipo,
-    ingresos_mensuales: 3000000,
-    score: 750,
-    decision: 'APROBADO',
-    monto_aprobado: monto,
-    tasa_sugerida: tasaAnual
-  }).select().single();
-
-  if (errSol) { if (window.toast) toast.error('Error en solicitud', errSol.message); return; }
-
-  // 2. Creamos el crédito con TODOS los campos obligatorios calculados
-  const { error: errCred } = await supabaseClient.from('creditos').insert({
-    user_id: userId,
-    solicitud_id: solicitud.id,
-    monto_aprobado: monto,
-    tasa_anual: tasaAnual,
-    plazo_dias: plazo,
-    num_cuotas: numCuotas,
-    valor_cuota: valorCuota,
-    total_intereses: totalIntereses,
-    total_pagar: totalPagar,
-    saldo_pendiente: totalPagar,
-    estado: 'activo',
-    cuotas_pagadas: 0
-  });
-
-  if (errCred) { if (window.toast) toast.error('Error en crédito', errCred.message); return; }
-
-  // 3. Desembolso del dinero a la cuenta
-  await supabaseClient.rpc('recargar_saldo', { p_monto: monto });
-
-  // 4. Registramos el movimiento
-  await supabaseClient.from('movimientos').insert({
-    user_id: userId,
-    tipo: 'ingreso',
-    monto: monto,
-    descripcion: 'Desembolso: ' + tipo // Guardará "Desembolso: Leasing Productivo"
-  });
-
-  // 5. Notificamos
-  await crearNotificacion(userId, '💸 Crédito Desembolsado', 'Se han consignado ' + formatearDinero(monto) + ' en tu cuenta.', 'success');
-
-  reproducirSonido();
-  if (window.toast) toast.success('¡Crédito Aprobado!', 'El dinero ya está en tu cuenta');
-
-  navegarA('dashboard');
+  return solicitarCreditoEmprendedor();
 }
 
 async function generarContratoPDF(creditoId) {
@@ -2896,7 +3232,6 @@ const TRAMITES = [
   { id: 'datos', titulo: 'Actualizar datos personales', desc: 'Cambia tu celular, correo o dirección.', icono: '👤' },
   { id: 'verificacion', titulo: 'Verificación biométrica', desc: 'Valida tu identidad con FIN-SAFE (KYC) de forma segura.', icono: '🛡️' },
   { id: 'clave', titulo: 'Cambiar tu clave', desc: 'Bloquea o actualiza tu clave principal cuando lo necesites.', icono: '🔐' },
-  { id: 'topes', titulo: 'Cambiar topes de transacciones', desc: 'Personaliza los límites de tus movimientos.', icono: '📏' },
   { id: 'queja', titulo: 'Radicar una queja o reclamo', desc: 'Cuéntanos qué pasó y te ayudamos a resolverlo.', icono: '📝' }
 ];
 
@@ -2914,7 +3249,6 @@ const ACCIONES_TRAMITE = {
   datos: () => navegarA('perfil'),
   verificacion: () => navegarA('verificacion'),
   clave: () => cambiarClaveTramite(),
-  topes: () => cambiarTopes(),
   queja: () => radicarQueja()
 };
 
@@ -3100,24 +3434,7 @@ async function cambiarClaveTramite() {
   }
 }
 
-// 7. Topes de transacciones (se guardan en localStorage y se validan en enviarDinero)
-function obtenerTopes() {
-  return JSON.parse(localStorage.getItem('nexus_topes') || '{"porTransaccion": 5000000}');
-}
-
-function cambiarTopes() {
-  const actual = obtenerTopes();
-  const nuevo = prompt('Nuevo tope por transacción (COP, mínimo $10.000):', actual.porTransaccion);
-  const valor = parseFloat(nuevo);
-  if (!nuevo || isNaN(valor) || valor < 10000) {
-    if (window.toast) toast.error('Valor inválido', 'El tope debe ser de al menos $10.000');
-    return;
-  }
-  localStorage.setItem('nexus_topes', JSON.stringify({ porTransaccion: valor }));
-  if (window.toast) toast.success('Tope actualizado', 'Nuevo tope: ' + formatearDinero(valor));
-}
-
-// 8. Radicar queja o reclamo
+// 7. Radicar queja o reclamo
 async function radicarQueja() {
   const motivo = prompt('Motivo de tu queja (ej: cobro no reconocido, error en transferencia):');
   if (!motivo) return;
@@ -3310,7 +3627,7 @@ productivas sin depender solo de comprar equipos nuevos.
 - Créditos: para personas naturales aparece como "Crédito Personal"; para emprendedores como "FAMILIA NEXAR" (microcrédito, leasing y factoring).
 - Seguros: seguros y protección. No tienes más detalles de esta sección.
 - Más productos: Cajitas FNX (organizar el dinero en cajitas), VELA / NEXT (VELA son los bolsillos y metas de ahorro, NEXT es el ahorro programado) y Simulador de crédito. Los emprendedores además ven FIN-BIZ, FIN-360 y FINNEX Activos (la línea de economía circular para alquilar o comprar equipos reacondicionados).
-- Trámites: certificación bancaria, extractos de cuenta, congelar tarjeta, reposición de tarjeta, solicitar crédito NEXAR, simular un crédito, paz y salvo, abrir un CDT, crear una meta de ahorro, crear una Cajita FNX, actualizar datos, verificación biométrica, cambiar la clave, cambiar topes y radicar una queja o reclamo.
+- Trámites: certificación bancaria, extractos de cuenta, congelar tarjeta, reposición de tarjeta, solicitar crédito NEXAR, simular un crédito, paz y salvo, abrir un CDT, crear una meta de ahorro, crear una Cajita FNX, actualizar datos, verificación biométrica, cambiar la clave y radicar una queja o reclamo.
 - Configuración: ajustes de la cuenta. Cerrar sesión está al final del menú.
 Si el usuario quiere hacer algo (por ejemplo abrir un CDT o congelar la tarjeta), indícale la opción exacta del menú o de Trámites. Si pregunta por un producto que no aparece en su menú, explícale qué es y que puede no estar disponible para su tipo de usuario.
 `;
