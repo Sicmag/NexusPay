@@ -1,5 +1,5 @@
 // js/loader.js
-// Pantalla de carga con logo NexusPay
+// Pantalla de carga con logo FinNex
 
 (function() {
   'use strict';
