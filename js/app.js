@@ -1285,30 +1285,270 @@ async function contratarSeguro() {
   navegarA('flowshield');
 }
 
-// ============ NEXUSBUSINESS ============
+// ============ NEXUSBUSINESS / FIN-BIZ ============
+// Gestión para pequeños negocios: ingresos y gastos por categoría,
+// obligaciones por pagar y resumen mensual. Las cuentas empresariales se conservan.
 
-async function renderFlowBusiness() {
+const BIZ_CATEGORIAS = {
+  ingreso: ['Ventas', 'Servicios prestados', 'Cobro de facturas', 'Otros ingresos'],
+  gasto: ['Inventario', 'Nómina', 'Arriendo', 'Servicios públicos', 'Marketing', 'Transporte', 'Impuestos', 'Mantenimiento', 'Obligaciones', 'Otros gastos']
+};
+
+let bizTab = 'resumen';
+let bizMes = null; // formato YYYY-MM
+
+function opcionesCategoriaBiz(tipo) {
+  return BIZ_CATEGORIAS[tipo].map(c => '<option value="' + c + '">' + c + '</option>').join('');
+}
+
+function cambiarTipoBiz() {
+  const tipo = document.getElementById('bizTipo').value;
+  document.getElementById('bizCategoria').innerHTML = opcionesCategoriaBiz(tipo);
+}
+
+function cambiarMesBiz(valor) {
+  if (!valor) return;
+  bizMes = valor;
+  renderFlowBusiness();
+}
+
+function barrasCategoriaBiz(mapa, total, color) {
+  const filas = Object.entries(mapa).sort((a, b) => b[1] - a[1]);
+  if (filas.length === 0) return '<p style="color:var(--text-light); font-size:14px;">Sin registros este mes.</p>';
+  return filas.map(([cat, valor]) => {
+    const pct = total > 0 ? (valor / total) * 100 : 0;
+    return '<div style="margin-bottom:14px;">' +
+      '<div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; color:var(--text);"><span>' + escapeHtml(cat) + '</span><span><strong>' + formatearDinero(valor) + '</strong> · ' + pct.toFixed(0) + '%</span></div>' +
+      '<div style="width:100%; height:8px; background:var(--bg-soft); border-radius:100px; overflow:hidden;"><div style="height:100%; width:' + pct + '%; background:' + color + '; border-radius:100px;"></div></div></div>';
+  }).join('');
+}
+
+async function renderFlowBusiness(tab) {
+  if (tab) bizTab = tab;
   const userId = localStorage.getItem('user_id');
-  const { data: cuentas } = await supabaseClient.from('cuentas_empresariales').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  const hoy = formatoFechaISO(new Date());
+  if (!bizMes) bizMes = hoy.slice(0, 7);
 
-  let html = '<div class="app-tabs"><button class="app-tab active" data-tab="mis-empresas">Mis cuentas</button><button class="app-tab" data-tab="nueva-empresa">Nueva cuenta</button></div><div class="app-tab-content active" id="tab-mis-empresas">';
+  const [rCuentas, rMovs, rObls] = await Promise.all([
+    supabaseClient.from('cuentas_empresariales').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+    supabaseClient.from('negocio_movimientos').select('*').eq('user_id', userId).order('fecha', { ascending: false }).order('id', { ascending: false }).limit(1000),
+    supabaseClient.from('negocio_obligaciones').select('*').eq('user_id', userId).order('fecha_vencimiento', { ascending: true })
+  ]);
 
-  if (cuentas && cuentas.length > 0) {
-    cuentas.forEach(c => {
-      html += '<div style="display:flex; justify-content:space-between; padding:16px; border-bottom:1px solid var(--border);"><div><h4 style="font-weight:700; color:var(--dark);">🏢 ' + c.nombre_negocio + '</h4><p style="font-size:13px; color:var(--text-light);">NIT: ' + (c.nit || 'N/A') + ' | ' + (c.categoria || 'General') + '</p></div><div style="font-weight:800; color:var(--primary);">' + formatearDinero(c.saldo) + '</div></div>';
-    });
-  } else {
-    html += '<div class="app-section"><p style="color:var(--text-light);">No tienes cuentas empresariales.</p></div>';
-  }
+  const cuentas = rCuentas.data || [];
+  const tablasFaltan = !!(rMovs.error || rObls.error);
+  const todosMovs = rMovs.data || [];
+  const obls = rObls.data || [];
 
-  html += '</div><div class="app-tab-content" id="tab-nueva-empresa"><div class="app-section"><div class="app-section-title">Crear cuenta</div>' +
-    '<div class="app-form-group"><label class="app-form-label">Nombre del negocio</label><input class="app-form-input" type="text" id="empNombre"></div>' +
-    '<div class="app-form-group"><label class="app-form-label">NIT (obligatorio)</label><input class="app-form-input" type="text" id="empNit"></div>' +
-    '<div class="app-form-group"><label class="app-form-label">Categoria</label><select class="app-form-select" id="empCategoria"><option>E-commerce</option><option>Servicios</option><option>Tecnologia</option><option>Alimentos</option><option>Moda</option><option>Educacion</option><option>Otro</option></select></div>' +
-    '<button class="btn-primary btn-large" onclick="crearEmpresa()">Crear cuenta</button></div></div>';
+  // ---- Cálculos del mes seleccionado ----
+  const movsMes = todosMovs.filter(m => String(m.fecha).slice(0, 7) === bizMes);
+  let ingresos = 0, gastos = 0;
+  const porCatIng = {}, porCatGas = {};
+  movsMes.forEach(m => {
+    const v = Number(m.monto);
+    if (m.tipo === 'ingreso') { ingresos += v; porCatIng[m.categoria] = (porCatIng[m.categoria] || 0) + v; }
+    else { gastos += v; porCatGas[m.categoria] = (porCatGas[m.categoria] || 0) + v; }
+  });
+  const utilidad = ingresos - gastos;
+  const margen = ingresos > 0 ? Math.round((utilidad / ingresos) * 100) : 0;
+
+  const pendientes = obls.filter(o => o.estado === 'pendiente');
+  const vencidas = pendientes.filter(o => o.fecha_vencimiento < hoy);
+  const totalPendiente = pendientes.reduce((a, o) => a + Number(o.monto), 0);
+
+  const alertaTablas = tablasFaltan
+    ? mostrarAlerta('FIN-BIZ aún no tiene sus tablas en la base de datos. Ejecuta el SQL de negocio_movimientos y negocio_obligaciones en Supabase.', 'warning')
+    : '';
+
+  // ---- Encabezado + selector de mes ----
+  let html = alertaTablas +
+    '<div class="app-section" style="background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%); border: 2px solid #2563EB; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">' +
+      '<div><div style="font-size:18px; font-weight:800; color:var(--dark); margin-bottom:4px;">FIN-BIZ · Gestión de tu negocio</div>' +
+      '<div style="font-size:14px; color:var(--text-light);">Registra ingresos y gastos, controla tus obligaciones y mira cómo va tu negocio.</div></div>' +
+      '<div><label class="app-form-label" style="margin-bottom:4px;">Mes</label><input class="app-form-input" type="month" value="' + bizMes + '" onchange="cambiarMesBiz(this.value)"></div>' +
+    '</div>';
+
+  // ---- Pestañas ----
+  const act = t => bizTab === t ? ' active' : '';
+  html += '<div class="app-tabs">' +
+    '<button class="app-tab' + act('resumen') + '" data-tab="biz-resumen">Resumen</button>' +
+    '<button class="app-tab' + act('movimientos') + '" data-tab="biz-movimientos">Movimientos</button>' +
+    '<button class="app-tab' + act('obligaciones') + '" data-tab="biz-obligaciones">Obligaciones' + (vencidas.length > 0 ? ' 🔴' : '') + '</button>' +
+    '<button class="app-tab' + act('cuentas') + '" data-tab="biz-cuentas">Mis cuentas</button>' +
+  '</div>';
+
+  // ---- TAB RESUMEN ----
+  html += '<div class="app-tab-content' + act('resumen') + '" id="tab-biz-resumen">' +
+    '<div class="dash-grid-2col">' +
+      '<div class="widget-metric"><div class="widget-icon green">📈</div><div class="widget-info"><div class="label">Ingresos del mes</div><div class="value text-green">' + formatearDinero(ingresos) + '</div></div></div>' +
+      '<div class="widget-metric"><div class="widget-icon red">📉</div><div class="widget-info"><div class="label">Gastos del mes</div><div class="value text-red">' + formatearDinero(gastos) + '</div></div></div>' +
+      '<div class="widget-metric"><div class="widget-icon blue">💵</div><div class="widget-info"><div class="label">Utilidad del mes</div><div class="value ' + (utilidad >= 0 ? 'text-green' : 'text-red') + '">' + formatearDinero(utilidad) + '</div></div></div>' +
+      '<div class="widget-metric"><div class="widget-icon yellow">📊</div><div class="widget-info"><div class="label">Margen</div><div class="value">' + (ingresos > 0 ? margen + '%' : '-') + '</div></div></div>' +
+    '</div>' +
+    '<div class="dash-grid-2col">' +
+      '<div class="app-section"><div class="app-section-title">Ingresos por categoría</div>' + barrasCategoriaBiz(porCatIng, ingresos, '#10B981') + '</div>' +
+      '<div class="app-section"><div class="app-section-title">Gastos por categoría</div>' + barrasCategoriaBiz(porCatGas, gastos, '#EF4444') + '</div>' +
+    '</div>' +
+    '<div class="app-section"><div class="app-section-title">Obligaciones pendientes</div>' +
+      (pendientes.length === 0
+        ? '<p style="color:var(--text-light);">No tienes obligaciones pendientes. 🎉</p>'
+        : '<div style="margin-bottom:12px; font-size:14px; color:var(--text);">Total por pagar: <strong>' + formatearDinero(totalPendiente) + '</strong>' + (vencidas.length > 0 ? ' · <span style="color:var(--red); font-weight:700;">' + vencidas.length + ' vencida(s)</span>' : '') + '</div>' +
+          pendientes.slice(0, 4).map(o => {
+            const venc = o.fecha_vencimiento < hoy;
+            return '<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px;"><span>' + escapeHtml(o.nombre) + ' <span style="color:' + (venc ? 'var(--red)' : 'var(--text-light)') + '; font-size:12px;">· vence ' + o.fecha_vencimiento + '</span></span><strong>' + formatearDinero(o.monto) + '</strong></div>';
+          }).join('')) +
+    '</div>' +
+    '<div style="font-size:12px; color:var(--text-light); margin-top:8px;">FIN-BIZ es una herramienta de organización. No es un sistema contable ni reemplaza tus obligaciones contables o tributarias.</div>' +
+  '</div>';
+
+  // ---- TAB MOVIMIENTOS ----
+  html += '<div class="app-tab-content' + act('movimientos') + '" id="tab-biz-movimientos">' +
+    '<div class="app-section"><div class="app-section-title">Registrar movimiento</div>' +
+      '<div class="app-form-group"><label class="app-form-label">Tipo</label><select class="app-form-select" id="bizTipo" onchange="cambiarTipoBiz()"><option value="ingreso">🟢 Ingreso</option><option value="gasto">🔴 Gasto</option></select></div>' +
+      '<div class="app-form-group"><label class="app-form-label">Categoría</label><select class="app-form-select" id="bizCategoria">' + opcionesCategoriaBiz('ingreso') + '</select></div>' +
+      '<div class="app-form-group"><label class="app-form-label">Monto (COP)</label><input class="app-form-input" type="number" id="bizMonto" min="1" placeholder="150000"></div>' +
+      '<div class="app-form-group"><label class="app-form-label">Fecha</label><input class="app-form-input" type="date" id="bizFecha" value="' + hoy + '"></div>' +
+      '<div class="app-form-group"><label class="app-form-label">Descripción (opcional)</label><input class="app-form-input" type="text" id="bizDescripcion" maxlength="80" placeholder="Venta de pedido #12"></div>' +
+      '<button class="btn-primary btn-large" onclick="guardarMovimientoBiz()">Guardar movimiento</button>' +
+    '</div>' +
+    '<div class="app-section"><div class="app-section-title">Movimientos de ' + bizMes + '</div>' +
+      (movsMes.length === 0
+        ? '<p style="color:var(--text-light);">No hay movimientos este mes.</p>'
+        : '<div class="table-wrap"><table class="app-table"><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th style="text-align:right;">Monto</th><th></th></tr></thead><tbody>' +
+          movsMes.map(m => {
+            const esIng = m.tipo === 'ingreso';
+            return '<tr><td>' + m.fecha + '</td><td>' + (esIng ? '🟢 ' : '🔴 ') + escapeHtml(m.categoria) + '</td><td>' + escapeHtml(m.descripcion || '-') + '</td><td class="' + (esIng ? 'text-green' : 'text-red') + '" style="text-align:right;">' + (esIng ? '+' : '-') + formatearDinero(m.monto) + '</td><td><button class="btn-secondary-sm" onclick="eliminarMovimientoBiz(' + m.id + ')" style="font-size:11px;padding:4px 8px;" aria-label="Eliminar">🗑️</button></td></tr>';
+          }).join('') + '</tbody></table></div>') +
+    '</div>' +
+  '</div>';
+
+  // ---- TAB OBLIGACIONES ----
+  html += '<div class="app-tab-content' + act('obligaciones') + '" id="tab-biz-obligaciones">' +
+    '<div class="app-section"><div class="app-section-title">Nueva obligación</div>' +
+      '<div class="app-form-group"><label class="app-form-label">Nombre (ej: Arriendo del local, cuota proveedor)</label><input class="app-form-input" type="text" id="oblNombre" maxlength="60"></div>' +
+      '<div class="app-form-group"><label class="app-form-label">Monto (COP)</label><input class="app-form-input" type="number" id="oblMonto" min="1" placeholder="800000"></div>' +
+      '<div class="app-form-group"><label class="app-form-label">Fecha de vencimiento</label><input class="app-form-input" type="date" id="oblFecha" value="' + hoy + '"></div>' +
+      '<button class="btn-primary btn-large" onclick="guardarObligacionBiz()">Guardar obligación</button>' +
+    '</div>' +
+    '<div class="app-section"><div class="app-section-title">Mis obligaciones</div>' +
+      (obls.length === 0
+        ? '<p style="color:var(--text-light);">Aún no registras obligaciones.</p>'
+        : obls.map(o => {
+            const pagada = o.estado === 'pagada';
+            const venc = !pagada && o.fecha_vencimiento < hoy;
+            const badge = pagada ? '<span class="badge badge-green">Pagada</span>' : venc ? '<span class="badge badge-red">Vencida</span>' : '<span class="badge badge-yellow">Pendiente</span>';
+            return '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:14px 0; border-bottom:1px solid var(--border);">' +
+              '<div><div style="font-weight:700; color:var(--dark);">' + escapeHtml(o.nombre) + ' ' + badge + '</div><div style="font-size:13px; color:var(--text-light);">Vence: ' + o.fecha_vencimiento + '</div></div>' +
+              '<div style="display:flex; align-items:center; gap:8px;"><strong style="color:var(--text);">' + formatearDinero(o.monto) + '</strong>' +
+              (pagada ? '' : '<button class="btn-primary" onclick="pagarObligacionBiz(' + o.id + ')">Marcar pagada</button>') +
+              '<button class="btn-secondary-sm" onclick="eliminarObligacionBiz(' + o.id + ')" aria-label="Eliminar">🗑️</button></div></div>';
+          }).join('')) +
+    '</div>' +
+  '</div>';
+
+  // ---- TAB CUENTAS EMPRESARIALES (lógica original) ----
+  html += '<div class="app-tab-content' + act('cuentas') + '" id="tab-biz-cuentas">' +
+    '<div class="app-section"><div class="app-section-title">Cuentas empresariales</div>' +
+    (cuentas.length > 0
+      ? cuentas.map(c => '<div style="display:flex; justify-content:space-between; padding:16px 0; border-bottom:1px solid var(--border);"><div><h4 style="font-weight:700; color:var(--dark);">🏢 ' + escapeHtml(c.nombre_negocio) + '</h4><p style="font-size:13px; color:var(--text-light);">NIT: ' + escapeHtml(c.nit || 'N/A') + ' | ' + escapeHtml(c.categoria || 'General') + '</p></div><div style="font-weight:800; color:var(--primary);">' + formatearDinero(c.saldo) + '</div></div>').join('')
+      : '<p style="color:var(--text-light);">No tienes cuentas empresariales.</p>') +
+    '</div>' +
+    '<div class="app-section"><div class="app-section-title">Crear cuenta</div>' +
+      '<div class="app-form-group"><label class="app-form-label">Nombre del negocio</label><input class="app-form-input" type="text" id="empNombre"></div>' +
+      '<div class="app-form-group"><label class="app-form-label">NIT (obligatorio)</label><input class="app-form-input" type="text" id="empNit"></div>' +
+      '<div class="app-form-group"><label class="app-form-label">Categoria</label><select class="app-form-select" id="empCategoria"><option>E-commerce</option><option>Servicios</option><option>Tecnologia</option><option>Alimentos</option><option>Moda</option><option>Educacion</option><option>Otro</option></select></div>' +
+      '<button class="btn-primary btn-large" onclick="crearEmpresa()">Crear cuenta</button>' +
+    '</div>' +
+  '</div>';
 
   document.getElementById('pageContent').innerHTML = html;
   activarTabs();
+
+  // Recuerda la pestaña activa al volver a dibujar
+  document.querySelectorAll('.app-tab').forEach(btn => {
+    btn.addEventListener('click', () => { bizTab = btn.getAttribute('data-tab').replace('biz-', ''); });
+  });
+}
+
+async function guardarMovimientoBiz() {
+  const userId = localStorage.getItem('user_id');
+  const tipo = document.getElementById('bizTipo').value;
+  const categoria = document.getElementById('bizCategoria').value;
+  const monto = parseFloat(document.getElementById('bizMonto').value);
+  const fecha = document.getElementById('bizFecha').value;
+  const descripcion = document.getElementById('bizDescripcion').value.trim();
+
+  if (!monto || monto <= 0) { if (window.toast) toast.error('Monto inválido', 'Ingresa un monto mayor a 0'); return; }
+  if (!fecha) { if (window.toast) toast.error('Falta la fecha', 'Selecciona la fecha del movimiento'); return; }
+
+  const { error } = await supabaseClient.from('negocio_movimientos').insert({
+    user_id: userId, tipo, monto, categoria, descripcion: descripcion || null, fecha
+  });
+  if (error) { if (window.toast) toast.error('Error', error.message); return; }
+
+  reproducirSonido();
+  if (window.toast) toast.success(tipo === 'ingreso' ? 'Ingreso registrado' : 'Gasto registrado', categoria + ' por ' + formatearDinero(monto));
+  bizMes = fecha.slice(0, 7);
+  renderFlowBusiness('movimientos');
+}
+
+async function eliminarMovimientoBiz(id) {
+  if (!confirm('¿Eliminar este movimiento?')) return;
+  const userId = localStorage.getItem('user_id');
+  const { error } = await supabaseClient.from('negocio_movimientos').delete().eq('id', id).eq('user_id', userId);
+  if (error) { if (window.toast) toast.error('Error', error.message); return; }
+  if (window.toast) toast.success('Movimiento eliminado', 'Se quitó del registro');
+  renderFlowBusiness('movimientos');
+}
+
+async function guardarObligacionBiz() {
+  const userId = localStorage.getItem('user_id');
+  const nombre = document.getElementById('oblNombre').value.trim();
+  const monto = parseFloat(document.getElementById('oblMonto').value);
+  const fecha = document.getElementById('oblFecha').value;
+
+  if (!nombre) { if (window.toast) toast.error('Falta el nombre', 'Describe la obligación'); return; }
+  if (!monto || monto <= 0) { if (window.toast) toast.error('Monto inválido', 'Ingresa un monto mayor a 0'); return; }
+  if (!fecha) { if (window.toast) toast.error('Falta la fecha', 'Selecciona la fecha de vencimiento'); return; }
+
+  const { error } = await supabaseClient.from('negocio_obligaciones').insert({
+    user_id: userId, nombre, monto, fecha_vencimiento: fecha, estado: 'pendiente'
+  });
+  if (error) { if (window.toast) toast.error('Error', error.message); return; }
+
+  await crearNotificacion(userId, '📌 Obligación registrada', nombre + ' por ' + formatearDinero(monto) + ', vence el ' + fecha + '.', 'info');
+  if (window.toast) toast.success('Obligación guardada', nombre);
+  renderFlowBusiness('obligaciones');
+}
+
+async function pagarObligacionBiz(id) {
+  const userId = localStorage.getItem('user_id');
+  const { data: obl } = await supabaseClient.from('negocio_obligaciones').select('*').eq('id', id).eq('user_id', userId).single();
+  if (!obl) { if (window.toast) toast.error('No encontrada', 'La obligación no existe'); return; }
+
+  const { error } = await supabaseClient.from('negocio_obligaciones').update({ estado: 'pagada' }).eq('id', id).eq('user_id', userId);
+  if (error) { if (window.toast) toast.error('Error', error.message); return; }
+
+  // Opcional: registrarla también como gasto del negocio
+  if (confirm('¿Quieres registrar este pago también como gasto del negocio?')) {
+    await supabaseClient.from('negocio_movimientos').insert({
+      user_id: userId, tipo: 'gasto', monto: Number(obl.monto), categoria: 'Obligaciones',
+      descripcion: obl.nombre, fecha: formatoFechaISO(new Date())
+    });
+  }
+
+  reproducirSonido();
+  if (window.toast) toast.success('Obligación pagada', obl.nombre);
+  renderFlowBusiness('obligaciones');
+}
+
+async function eliminarObligacionBiz(id) {
+  if (!confirm('¿Eliminar esta obligación?')) return;
+  const userId = localStorage.getItem('user_id');
+  const { error } = await supabaseClient.from('negocio_obligaciones').delete().eq('id', id).eq('user_id', userId);
+  if (error) { if (window.toast) toast.error('Error', error.message); return; }
+  if (window.toast) toast.success('Obligación eliminada', 'Se quitó de la lista');
+  renderFlowBusiness('obligaciones');
 }
 
 async function crearEmpresa() {
@@ -1321,9 +1561,8 @@ async function crearEmpresa() {
   await supabaseClient.from('cuentas_empresariales').insert({ user_id: userId, nombre_negocio: nombre, nit, categoria, saldo: 0 });
   reproducirSonido();
   if (window.toast) toast.success('Cuenta empresarial creada', nombre);
-  navegarA('flowbusiness');
+  renderFlowBusiness('cuentas');
 }
-
 // ============ NEXUSANALYTICS ============
 
 async function renderFlowAnalytics() {
