@@ -9,7 +9,7 @@ const CONFIG = {
   // ============ API KEYS ============
   GEMINI_API_KEY: "AQ.Ab8RN6JmubjqgApHOaHJfmSz4x13IdgG7keieh7mJ3D4m_MmfA",
   GROQ_API_KEY: "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",
-  ELEVENLABS_API_KEY: "sk_e5c05b8ebb08e23c26ca51f9e5566ffafbbe3361c364f997",
+  ELEVENLABS_API_KEY: "sk_78da1fb7bc247f4509c4405b5f2c7c0b83ca1e517ffb96cd",
 
   // ============ GEMINI (ya no lo usa Luci; se conserva por si lo necesitas) ============
   MODELO_GEMINI: "gemini-3.5-flash-lite",
