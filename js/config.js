@@ -8,7 +8,7 @@ const CONFIG = {
 
   // ============ API KEYS ============
   GEMINI_API_KEY: "AQ.Ab8RN6JmubjqgApHOaHJfmSz4x13IdgG7keieh7mJ3D4m_MmfA",
-  GROQ_API_KEY: "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",
+  GROQ_API_KEY: "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",
   ELEVENLABS_API_KEY: "sk_78da1fb7bc247f4509c4405b5f2c7c0b83ca1e517ffb96cd",
 
   // ============ GEMINI (ya no lo usa Luci; se conserva por si lo necesitas) ============
